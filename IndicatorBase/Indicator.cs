@@ -145,7 +145,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static DataPeriods Period
         {
-            get { return Data.Period; }
+            get { return Data.DataSet.Period; }
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static double Point
         {
-            get { return Data.InstrProperties.Point; }
+            get { return Data.DataSet.InstrProperties.Point; }
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static int Digits
         {
-            get { return Data.InstrProperties.Digits; }
+            get { return Data.DataSet.InstrProperties.Digits; }
         }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static int Bars
         {
-            get { return Data.Bars; }
+            get { return Data.DataSet.Bars; }
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static DateTime[] Date
         {
-            get { return Data.Time; }
+            get { return Data.DataSet.Time; }
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static DateTime[] Time
         {
-            get { return Data.Time; }
+            get { return Data.DataSet.Time; }
         }
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static double[] Open
         {
-            get { return Data.Open; }
+            get { return Data.DataSet.Open; }
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static double[] High
         {
-            get { return Data.High; }
+            get { return Data.DataSet.High; }
         }
 
         /// <summary>
@@ -209,7 +209,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static double[] Low
         {
-            get { return Data.Low; }
+            get { return Data.DataSet.Low; }
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static double[] Close
         {
-            get { return Data.Close; }
+            get { return Data.DataSet.Close; }
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected static int[] Volume
         {
-            get { return Data.Volume; }
+            get { return Data.DataSet.Volume; }
         }
 
         /// <summary>
@@ -308,7 +308,19 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected bool PrepareUsePrevBarValueCheckBox(SlotTypes slotType)
         {
-            return Data.Strategy.PrepareUsePrevBarValueCheckBox(slotType);
+            //bool isChecked = true;
+            //switch (slotType)
+            //{
+            //    case SlotTypes.OpenFilter:
+            //        if (Slot[OpenSlot].IndParam.ExecutionTime == ExecutionTime.AtBarClosing)
+            //            isChecked = false;
+            //        break;
+            //    case SlotTypes.CloseFilter:
+            //        if (Slot[CloseSlot].IndParam.ExecutionTime == ExecutionTime.AtBarClosing)
+            //            isChecked = false;
+            //        break;
+            //}
+            return true;
         }
 
         /// <summary>
@@ -416,13 +428,13 @@ namespace Forex_Strategy_Builder
                     sigma = 0;
                     break;
                 case 1:
-                    sigma = Data.InstrProperties.Point*0.5;
+                    sigma = Data.DataSet.InstrProperties.Point*0.5;
                     break;
                 case 2:
-                    sigma = Data.InstrProperties.Point*0.05;
+                    sigma = Data.DataSet.InstrProperties.Point*0.05;
                     break;
                 case 3:
-                    sigma = Data.InstrProperties.Point*0.005;
+                    sigma = Data.DataSet.InstrProperties.Point*0.005;
                     break;
                 case 4:
                     sigma = 0.00005;

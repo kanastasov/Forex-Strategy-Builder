@@ -16,13 +16,13 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Arranges the orders inside the bar.
         /// </summary>
-        private static void BarInterpolation(int bar)
+        private void BarInterpolation(int bar)
         {
             BacktestEval eval;
-            double open = Open[bar];
-            double high = High[bar];
-            double low = Low[bar];
-            double close = Close[bar];
+            double open = DataSet.Open[bar];
+            double high = DataSet.High[bar];
+            double low = DataSet.Low[bar];
+            double close = DataSet.Close[bar];
             double current = open;
 
             int reachedIntrabar = 0;
@@ -142,7 +142,7 @@ namespace Forex_Strategy_Builder
                 }
 
 
-                if (_isScanning && Configs.UseTickData && IsTickData && TickData[bar] != null)
+                if (_isScanning && Configs.UseTickData && DataSet.IsTickData && DataSet.TickData[bar] != null)
                 {
                     isScanningResult = TickScanning(bar, eval,
                                                     ref current, ref reachedTick,
@@ -153,7 +153,7 @@ namespace Forex_Strategy_Builder
                                                     isClosingAmbiguity);
                 }
 
-                if (_isScanning && !isScanningResult && IntraBarsPeriods[bar] != Period)
+                if (_isScanning && !isScanningResult && DataSet.IntraBarsPeriods[bar] != DataSet.Period)
                 {
                     isScanningResult = IntrabarScanning(bar, eval, ref current,
                                                         ref reachedIntrabar, ref tradedIntrabar,
@@ -209,7 +209,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Tick Scanning
         /// </summary>
-        private static bool TickScanning(int bar, BacktestEval eval,
+        private bool TickScanning(int bar, BacktestEval eval,
                                          ref double current, ref int reachedTick,
                                          bool isTopReachable, bool isBottomReachable,
                                          bool isHigherPrice, bool isLowerPrice,
@@ -217,9 +217,9 @@ namespace Forex_Strategy_Builder
                                          Order orderHigher, Order orderLower,
                                          bool isClosingAmbiguity)
         {
-            double high = High[bar];
-            double low = Low[bar];
-            double close = Close[bar];
+            double high = DataSet.High[bar];
+            double low = DataSet.Low[bar];
+            double close = DataSet.Close[bar];
             bool isScanningResult = false;
 
             if (eval == BacktestEval.None)
@@ -228,11 +228,11 @@ namespace Forex_Strategy_Builder
                 if (!_session[bar].IsTopReached && !_session[bar].IsBottomReached)
                 {
                     // Neither the top nor the bottom was reached
-                    int tickCount = TickData[bar].Length;
+                    int tickCount = DataSet.TickData[bar].Length;
                     for (int tick = reachedTick; tick < tickCount; tick++)
                     {
                         reachedTick = tick;
-                        if (TickData[bar][tick] + _micron > high)
+                        if (DataSet.TickData[bar][tick] + _micron > high)
                         {
                             // Top found
                             current = high;
@@ -241,7 +241,7 @@ namespace Forex_Strategy_Builder
                             isScanningResult = true;
                             break;
                         }
-                        if (TickData[bar][tick] - _micron < low)
+                        if (DataSet.TickData[bar][tick] - _micron < low)
                         {
                             // Bottom found
                             current = low;
@@ -255,11 +255,11 @@ namespace Forex_Strategy_Builder
                 else if (!_session[bar].IsTopReached)
                 {
                     // Whether hit the Top
-                    int tickCount = TickData[bar].Length;
+                    int tickCount = DataSet.TickData[bar].Length;
                     for (int tick = reachedTick; tick < tickCount; tick++)
                     {
                         reachedTick = tick;
-                        if (TickData[bar][tick] + _micron > high)
+                        if (DataSet.TickData[bar][tick] + _micron > high)
                         {
                             // Top found
                             current = high;
@@ -273,11 +273,11 @@ namespace Forex_Strategy_Builder
                 else if (!_session[bar].IsBottomReached)
                 {
                     // Whether hit the Bottom
-                    int tickCount = TickData[bar].Length;
+                    int tickCount = DataSet.TickData[bar].Length;
                     for (int tick = reachedTick; tick < tickCount; tick++)
                     {
                         reachedTick = tick;
-                        if (TickData[bar][tick] - _micron < low)
+                        if (DataSet.TickData[bar][tick] - _micron < low)
                         {
                             // Bottom found
                             current = low;
@@ -309,11 +309,11 @@ namespace Forex_Strategy_Builder
                 if (!_session[bar].IsBottomReached && isBottomReachable)
                 {
                     // The order or the Bottom
-                    int tickCount = TickData[bar].Length;
+                    int tickCount = DataSet.TickData[bar].Length;
                     for (int tick = reachedTick; tick < tickCount; tick++)
                     {
                         reachedTick = tick;
-                        if (TickData[bar][tick] + _micron > thePrice)
+                        if (DataSet.TickData[bar][tick] + _micron > thePrice)
                         {
                             // The order is reached
                             current = thePrice;
@@ -321,7 +321,7 @@ namespace Forex_Strategy_Builder
                             isScanningResult = true;
                             break;
                         }
-                        if (TickData[bar][tick] - _micron < low)
+                        if (DataSet.TickData[bar][tick] - _micron < low)
                         {
                             // Bottom is reached
                             current = low;
@@ -335,11 +335,11 @@ namespace Forex_Strategy_Builder
                 else if (!_session[bar].IsTopReached && isTopReachable)
                 {
                     // The order or the Top
-                    int tickCount = TickData[bar].Length;
+                    int tickCount = DataSet.TickData[bar].Length;
                     for (int tick = reachedTick; tick < tickCount; tick++)
                     {
                         reachedTick = tick;
-                        if (TickData[bar][tick] + _micron > high)
+                        if (DataSet.TickData[bar][tick] + _micron > high)
                         {
                             // The Top is reached
                             current = high;
@@ -348,7 +348,7 @@ namespace Forex_Strategy_Builder
                             isScanningResult = true;
                             break;
                         }
-                        if (TickData[bar][tick] - _micron < thePrice)
+                        if (DataSet.TickData[bar][tick] - _micron < thePrice)
                         {
                             // The order is reached
                             current = thePrice;
@@ -361,13 +361,13 @@ namespace Forex_Strategy_Builder
                 else
                 {
                     // Execute the order
-                    double priceOld = TickData[bar][reachedTick];
-                    int tickCount = TickData[bar].Length;
+                    double priceOld = DataSet.TickData[bar][reachedTick];
+                    int tickCount = DataSet.TickData[bar].Length;
                     for (int tick = reachedTick; tick < tickCount; tick++)
                     {
                         reachedTick = tick;
-                        if (priceOld - _micron < thePrice && TickData[bar][tick] + _micron > thePrice ||
-                            priceOld + _micron > thePrice && TickData[bar][tick] - _micron < thePrice)
+                        if (priceOld - _micron < thePrice && DataSet.TickData[bar][tick] + _micron > thePrice ||
+                            priceOld + _micron > thePrice && DataSet.TickData[bar][tick] - _micron < thePrice)
                         {
                             // Order reached
                             current = thePrice;
@@ -384,11 +384,11 @@ namespace Forex_Strategy_Builder
                 if (!isClosingAmbiguity)
                 {
                     // Execute the the first reached order
-                    int tickCount = TickData[bar].Length;
+                    int tickCount = DataSet.TickData[bar].Length;
                     for (int tick = reachedTick; tick < tickCount; tick++)
                     {
                         reachedTick = tick;
-                        if (TickData[bar][tick] + _micron > priceHigher)
+                        if (DataSet.TickData[bar][tick] + _micron > priceHigher)
                         {
                             // Upper order is reached
                             current = priceHigher;
@@ -396,7 +396,7 @@ namespace Forex_Strategy_Builder
                             isScanningResult = true;
                             break;
                         }
-                        if (TickData[bar][tick] - _micron < priceLower)
+                        if (DataSet.TickData[bar][tick] - _micron < priceLower)
                         {
                             // Lower order is reached
                             current = priceLower;
@@ -425,11 +425,11 @@ namespace Forex_Strategy_Builder
                     bool executeOrder = false;
                     if (isHigherPrice)
                     {
-                        int tickCount = TickData[bar].Length;
+                        int tickCount = DataSet.TickData[bar].Length;
                         for (int tick = reachedTick; tick < tickCount; tick++)
                         {
                             reachedTick = tick;
-                            if (TickData[bar][tick] + _micron > thePrice)
+                            if (DataSet.TickData[bar][tick] + _micron > thePrice)
                             {
                                 // The order is reached
                                 executeOrder = true;
@@ -440,11 +440,11 @@ namespace Forex_Strategy_Builder
                     else if (isLowerPrice)
                     {
                         // The priceLower or Exit the bar
-                        int tickCount = TickData[bar].Length;
+                        int tickCount = DataSet.TickData[bar].Length;
                         for (int tick = reachedTick; tick < tickCount; tick++)
                         {
                             reachedTick = tick;
-                            if (TickData[bar][tick] - _micron < thePrice)
+                            if (DataSet.TickData[bar][tick] - _micron < thePrice)
                             {
                                 // The order is reached
                                 executeOrder = true;
@@ -477,7 +477,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Intrabar Scanning
         /// </summary>
-        private static bool IntrabarScanning(int bar, BacktestEval eval, ref double current,
+        private bool IntrabarScanning(int bar, BacktestEval eval, ref double current,
                                              ref int reachedIntrabar, ref int tradedIntrabar,
                                              bool isTopReachable, bool isBottomReachable,
                                              bool isHigherPrice, bool isLowerPrice,
@@ -485,9 +485,9 @@ namespace Forex_Strategy_Builder
                                              Order orderHigher, Order orderLower,
                                              bool isClosingAmbiguity)
         {
-            double high = High[bar];
-            double low = Low[bar];
-            double close = Close[bar];
+            double high = DataSet.High[bar];
+            double low = DataSet.Low[bar];
+            double close = DataSet.Close[bar];
             bool isScanningResult = false;
 
             if (eval == BacktestEval.None)
@@ -497,18 +497,18 @@ namespace Forex_Strategy_Builder
                 {
                     // Neither the top nor the bottom was reached
                     bool goUpward = false;
-                    for (int intraBar = reachedIntrabar; intraBar < IntraBarBars[bar]; intraBar++)
+                    for (int intraBar = reachedIntrabar; intraBar < DataSet.IntraBarBars[bar]; intraBar++)
                     {
                         reachedIntrabar = intraBar;
 
-                        if (IntraBarData[bar][intraBar].High + _micron > high)
+                        if (DataSet.IntraBarData[bar][intraBar].High + _micron > high)
                         {
                             // Top found
                             goUpward = true;
                             isScanningResult = true;
                         }
 
-                        if (IntraBarData[bar][intraBar].Low - _micron < low)
+                        if (DataSet.IntraBarData[bar][intraBar].Low - _micron < low)
                         {
                             // Bottom found
                             if (isScanningResult)
@@ -545,11 +545,11 @@ namespace Forex_Strategy_Builder
                 else if (!_session[bar].IsTopReached)
                 {
                     // Whether hit the Top
-                    for (int intraBar = reachedIntrabar; intraBar < IntraBarBars[bar]; intraBar++)
+                    for (int intraBar = reachedIntrabar; intraBar < DataSet.IntraBarBars[bar]; intraBar++)
                     {
                         reachedIntrabar = intraBar;
 
-                        if (IntraBarData[bar][intraBar].High + _micron > high)
+                        if (DataSet.IntraBarData[bar][intraBar].High + _micron > high)
                         {
                             // Top found
                             current = high;
@@ -563,11 +563,11 @@ namespace Forex_Strategy_Builder
                 else if (!_session[bar].IsBottomReached)
                 {
                     // Whether hit the Bottom
-                    for (int intraBar = reachedIntrabar; intraBar < IntraBarBars[bar]; intraBar++)
+                    for (int intraBar = reachedIntrabar; intraBar < DataSet.IntraBarBars[bar]; intraBar++)
                     {
                         reachedIntrabar = intraBar;
 
-                        if (IntraBarData[bar][intraBar].Low - _micron < low)
+                        if (DataSet.IntraBarData[bar][intraBar].Low - _micron < low)
                         {
                             // Bottom found
                             current = low;
@@ -600,18 +600,18 @@ namespace Forex_Strategy_Builder
                 {
                     // The order or the bottom
                     bool goUpward = false;
-                    for (int intraBar = reachedIntrabar; intraBar < IntraBarBars[bar]; intraBar++)
+                    for (int intraBar = reachedIntrabar; intraBar < DataSet.IntraBarBars[bar]; intraBar++)
                     {
                         reachedIntrabar = intraBar;
 
-                        if (IntraBarData[bar][intraBar].High + _micron > thePrice)
+                        if (DataSet.IntraBarData[bar][intraBar].High + _micron > thePrice)
                         {
                             // The order is reached
                             goUpward = true;
                             isScanningResult = true;
                         }
 
-                        if (IntraBarData[bar][intraBar].Low - _micron < low)
+                        if (DataSet.IntraBarData[bar][intraBar].Low - _micron < low)
                         {
                             // Bottom is reached
                             if (isScanningResult)
@@ -653,18 +653,18 @@ namespace Forex_Strategy_Builder
                 {
                     // The order or the Top
                     bool goUpward = false;
-                    for (int intraBar = reachedIntrabar; intraBar < IntraBarBars[bar]; intraBar++)
+                    for (int intraBar = reachedIntrabar; intraBar < DataSet.IntraBarBars[bar]; intraBar++)
                     {
                         reachedIntrabar = intraBar;
 
-                        if (IntraBarData[bar][intraBar].High + _micron > high)
+                        if (DataSet.IntraBarData[bar][intraBar].High + _micron > high)
                         {
                             // The Top is reached
                             goUpward = true;
                             isScanningResult = true;
                         }
 
-                        if (IntraBarData[bar][intraBar].Low - _micron < thePrice)
+                        if (DataSet.IntraBarData[bar][intraBar].Low - _micron < thePrice)
                         {
                             // The order is reached
                             if (isScanningResult)
@@ -707,12 +707,12 @@ namespace Forex_Strategy_Builder
                 else
                 {
                     // Execute the order
-                    for (int intraBar = reachedIntrabar; intraBar < IntraBarBars[bar]; intraBar++)
+                    for (int intraBar = reachedIntrabar; intraBar < DataSet.IntraBarBars[bar]; intraBar++)
                     {
                         reachedIntrabar = intraBar;
 
-                        if (IntraBarData[bar][intraBar].High + _micron > thePrice &&
-                            IntraBarData[bar][intraBar].Low - _micron < thePrice)
+                        if (DataSet.IntraBarData[bar][intraBar].High + _micron > thePrice &&
+                            DataSet.IntraBarData[bar][intraBar].Low - _micron < thePrice)
                         {
                             // Order reached
                             if (tradedIntrabar == reachedIntrabar)
@@ -735,18 +735,18 @@ namespace Forex_Strategy_Builder
                 {
                     // Execute the the first reached order
                     bool executeUpper = false;
-                    for (int intraBar = reachedIntrabar; intraBar < IntraBarBars[bar]; intraBar++)
+                    for (int intraBar = reachedIntrabar; intraBar < DataSet.IntraBarBars[bar]; intraBar++)
                     {
                         reachedIntrabar = intraBar;
 
-                        if (IntraBarData[bar][intraBar].High + _micron > priceHigher)
+                        if (DataSet.IntraBarData[bar][intraBar].High + _micron > priceHigher)
                         {
                             // Upper order is reached
                             executeUpper = true;
                             isScanningResult = true;
                         }
 
-                        if (IntraBarData[bar][intraBar].Low - _micron < priceLower)
+                        if (DataSet.IntraBarData[bar][intraBar].Low - _micron < priceLower)
                         {
                             // Lower order is reached
                             if (isScanningResult)
@@ -806,11 +806,11 @@ namespace Forex_Strategy_Builder
                     bool executeOrder = false;
                     if (isHigherPrice)
                     {
-                        for (int intraBar = reachedIntrabar; intraBar < IntraBarBars[bar]; intraBar++)
+                        for (int intraBar = reachedIntrabar; intraBar < DataSet.IntraBarBars[bar]; intraBar++)
                         {
                             reachedIntrabar = intraBar;
 
-                            if (IntraBarData[bar][intraBar].High + _micron > thePrice)
+                            if (DataSet.IntraBarData[bar][intraBar].High + _micron > thePrice)
                             {
                                 // The order is reached
                                 executeOrder = true;
@@ -821,11 +821,11 @@ namespace Forex_Strategy_Builder
                     else if (isLowerPrice)
                     {
                         // The priceLower or Exit the bar
-                        for (int b = reachedIntrabar; b < IntraBarBars[bar]; b++)
+                        for (int b = reachedIntrabar; b < DataSet.IntraBarBars[bar]; b++)
                         {
                             reachedIntrabar = b;
 
-                            if (IntraBarData[bar][b].Low - _micron < thePrice)
+                            if (DataSet.IntraBarData[bar][b].Low - _micron < thePrice)
                             {
                                 // The order is reached
                                 executeOrder = true;
@@ -863,16 +863,16 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Random Execution Method
         /// </summary>
-        private static void RandomMethod(int bar, BacktestEval eval, ref double current,
+        private void RandomMethod(int bar, BacktestEval eval, ref double current,
                                          bool isTopReachable, bool isBottomReachable,
                                          bool isHigherPrice, bool isLowerPrice,
                                          double priceHigher, double priceLower,
                                          Order orderHigher, Order orderLower,
                                          bool isClosingAmbiguity)
         {
-            double high = High[bar];
-            double low = Low[bar];
-            double close = Close[bar];
+            double high = DataSet.High[bar];
+            double low = DataSet.Low[bar];
+            double close = DataSet.Close[bar];
             var random = new Random();
 
             if (eval == BacktestEval.None)
@@ -881,8 +881,8 @@ namespace Forex_Strategy_Builder
                 if (!_session[bar].IsTopReached && !_session[bar].IsBottomReached)
                 {
                     // Neither the top nor the bottom was reached
-                    var upRange = (int) Math.Round((high - current)/InstrProperties.Point);
-                    var downRange = (int) Math.Round((current - low)/InstrProperties.Point);
+                    var upRange = (int) Math.Round((high - current)/DataSet.InstrProperties.Point);
+                    var downRange = (int) Math.Round((current - low)/DataSet.InstrProperties.Point);
                     upRange = upRange < 0 ? 0 : upRange;
                     downRange = downRange < 0 ? 0 : downRange;
                     if (downRange + downRange == 0)
@@ -947,8 +947,8 @@ namespace Forex_Strategy_Builder
                 if (!_session[bar].IsBottomReached && isBottomReachable)
                 {
                     // The order or the bottom
-                    var iUpRange = (int) Math.Round((thePrice - current)/InstrProperties.Point);
-                    var iDnRange = (int) Math.Round((current - low)/InstrProperties.Point);
+                    var iUpRange = (int) Math.Round((thePrice - current)/DataSet.InstrProperties.Point);
+                    var iDnRange = (int) Math.Round((current - low)/DataSet.InstrProperties.Point);
                     iUpRange = iUpRange < 0 ? 0 : iUpRange;
                     iDnRange = iDnRange < 0 ? 0 : iDnRange;
                     if (iDnRange + iDnRange == 0)
@@ -981,8 +981,8 @@ namespace Forex_Strategy_Builder
                 else if (!_session[bar].IsTopReached && isTopReachable)
                 {
                     // The order or the Top
-                    var upRange = (int) Math.Round((high - current)/InstrProperties.Point);
-                    var downRange = (int) Math.Round((current - thePrice)/InstrProperties.Point);
+                    var upRange = (int) Math.Round((high - current)/DataSet.InstrProperties.Point);
+                    var downRange = (int) Math.Round((current - thePrice)/DataSet.InstrProperties.Point);
                     upRange = upRange < 0 ? 0 : upRange;
                     downRange = downRange < 0 ? 0 : downRange;
                     if (downRange + downRange == 0)
@@ -1025,8 +1025,8 @@ namespace Forex_Strategy_Builder
                 if (!isClosingAmbiguity)
                 {
                     // Execute the randomly chosen order
-                    var upRange = (int) Math.Round((priceHigher - current)/InstrProperties.Point);
-                    var downRange = (int) Math.Round((current - priceLower)/InstrProperties.Point);
+                    var upRange = (int) Math.Round((priceHigher - current)/DataSet.InstrProperties.Point);
+                    var downRange = (int) Math.Round((current - priceLower)/DataSet.InstrProperties.Point);
                     upRange = upRange < 0 ? 0 : upRange;
                     downRange = downRange < 0 ? 0 : downRange;
                     if (downRange + downRange == 0)
@@ -1062,8 +1062,8 @@ namespace Forex_Strategy_Builder
                     // Execute or exit the bar
                     if (isHigherPrice)
                     {
-                        var upRange = (int) Math.Round((priceHigher - current)/InstrProperties.Point);
-                        var downRange = (int) Math.Round((close - current)/InstrProperties.Point);
+                        var upRange = (int) Math.Round((priceHigher - current)/DataSet.InstrProperties.Point);
+                        var downRange = (int) Math.Round((close - current)/DataSet.InstrProperties.Point);
                         upRange = upRange < 0 ? 0 : upRange;
                         downRange = downRange < 0 ? 0 : downRange;
                         if (downRange + downRange == 0)
@@ -1090,8 +1090,8 @@ namespace Forex_Strategy_Builder
                     else if (isLowerPrice)
                     {
                         // The priceLower or Exit the bar
-                        var upRange = (int) Math.Round((current - close)/InstrProperties.Point);
-                        var downRange = (int) Math.Round((current - priceLower)/InstrProperties.Point);
+                        var upRange = (int) Math.Round((current - close)/DataSet.InstrProperties.Point);
+                        var downRange = (int) Math.Round((current - priceLower)/DataSet.InstrProperties.Point);
                         upRange = upRange < 0 ? 0 : upRange;
                         downRange = downRange < 0 ? 0 : downRange;
                         if (downRange + downRange == 0)
@@ -1122,17 +1122,17 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Nearest order first Method
         /// </summary>
-        private static void NearestMethod(int bar, BacktestEval eval, ref double current,
+        private void NearestMethod(int bar, BacktestEval eval, ref double current,
                                           bool isTopReachable, bool isBottomReachable,
                                           bool isHigherPrice, bool isLowerPrice,
                                           double priceHigher, double priceLower,
                                           Order orderHigher, Order orderLower,
                                           bool isClosingAmbiguity)
         {
-            double open = Open[bar];
-            double high = High[bar];
-            double low = Low[bar];
-            double close = Close[bar];
+            double open = DataSet.Open[bar];
+            double high = DataSet.High[bar];
+            double low = DataSet.Low[bar];
+            double close = DataSet.Close[bar];
 
             if (eval == BacktestEval.None)
             {
@@ -1298,17 +1298,17 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Shortest route inside the bar Method
         /// </summary>
-        private static void ShortestMethod(int bar, BacktestEval eval, ref double current,
+        private void ShortestMethod(int bar, BacktestEval eval, ref double current,
                                            bool isTopReachable, bool isBottomReachable,
                                            bool isHigherPrice, bool isLowerPrice,
                                            double priceHigher, double priceLower,
                                            Order orderHigher, Order orderLower,
                                            bool isClosingAmbiguity)
         {
-            double open = Open[bar];
-            double high = High[bar];
-            double low = Low[bar];
-            double close = Close[bar];
+            double open = DataSet.Open[bar];
+            double high = DataSet.High[bar];
+            double low = DataSet.Low[bar];
+            double close = DataSet.Close[bar];
 
             bool isGoUpward;
             if (!_session[bar].IsTopReached && !_session[bar].IsBottomReached)
@@ -1436,17 +1436,17 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Optimistic / Pessimistic Method
         /// </summary>
-        private static void OptimisticPessimisticMethod(int bar, BacktestEval eval, ref double current,
+        private void OptimisticPessimisticMethod(int bar, BacktestEval eval, ref double current,
                                                         bool isTopReachable, bool isBottomReachable,
                                                         bool isHigherPrice, bool isLowerPrice,
                                                         double priceHigher, double priceLower,
                                                         Order orderHigher, Order orderLower,
                                                         bool isClosingAmbiguity)
         {
-            double open = Open[bar];
-            double high = High[bar];
-            double low = Low[bar];
-            double close = Close[bar];
+            double open = DataSet.Open[bar];
+            double high = DataSet.High[bar];
+            double low = DataSet.Low[bar];
+            double close = DataSet.Close[bar];
 
             bool isOptimistic = InterpolationMethod == InterpolationMethod.Optimistic;
 

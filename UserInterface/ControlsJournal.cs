@@ -211,7 +211,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowBarExplorer()
         {
-            var barExplorer = new BarExplorer(SelectedBarNumber);
+            var barExplorer = new BarExplorer(Backtester, SelectedBarNumber);
             barExplorer.ShowDialog();
         }
 

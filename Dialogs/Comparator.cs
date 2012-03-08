@@ -11,6 +11,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Media;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -154,6 +155,8 @@ namespace Forex_Strategy_Builder
 
             Configs.TradeUntilMarginCall = false;
         }
+
+        private Backtester Backtester { get; set; }
 
         private Panel PnlOptions { get; set; }
         private CheckBox[] AchboxMethods { get; set; }
@@ -364,13 +367,13 @@ namespace Forex_Strategy_Builder
                 return -1;
             }
 
-            _afBalance = new float[Data.Bars - Data.FirstBar];
-            _afMethods = new float[_countMethods,Data.Bars - Data.FirstBar];
+            _afBalance = new float[Data.DataSet.Bars - Backtester.Strategy.FirstBar];
+            _afMethods = new float[_countMethods,Data.DataSet.Bars - Backtester.Strategy.FirstBar];
             if (_isRandom)
             {
-                _afRandoms = new float[randomLines,Data.Bars - Data.FirstBar];
-                _afMinRandom = new float[Data.Bars - Data.FirstBar];
-                _afMaxRandom = new float[Data.Bars - Data.FirstBar];
+                _afRandoms = new float[randomLines,Data.DataSet.Bars - Backtester.Strategy.FirstBar];
+                _afMinRandom = new float[Data.DataSet.Bars - Backtester.Strategy.FirstBar];
+                _afMaxRandom = new float[Data.DataSet.Bars - Backtester.Strategy.FirstBar];
             }
 
             // Progress parameters
@@ -394,14 +397,14 @@ namespace Forex_Strategy_Builder
                         if (worker.CancellationPending) return -1;
 
                         Backtester.InterpolationMethod = method;
-                        Backtester.Calculate();
+                        //Backtester.Calculate();
 
                         if (Configs.AccountInMoney)
-                            for (int iBar = 0; iBar < Data.Bars - Data.FirstBar; iBar++)
-                                _afRandoms[r, iBar] = (float) Backtester.MoneyBalance(iBar + Data.FirstBar);
+                            for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
+                                _afRandoms[r, iBar] = (float) Backtester.MoneyBalance(iBar + Backtester.Strategy.FirstBar);
                         else
-                            for (int iBar = 0; iBar < Data.Bars - Data.FirstBar; iBar++)
-                                _afRandoms[r, iBar] = Backtester.Balance(iBar + Data.FirstBar);
+                            for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
+                                _afRandoms[r, iBar] = Backtester.Balance(iBar + Backtester.Strategy.FirstBar);
 
 
                         // Report progress as a percentage of the total task.
@@ -415,7 +418,7 @@ namespace Forex_Strategy_Builder
                         }
                     }
 
-                    for (int iBar = 0; iBar < Data.Bars - Data.FirstBar; iBar++)
+                    for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
                     {
                         float randomSum = 0;
                         float minRandom = float.MaxValue;
@@ -447,14 +450,14 @@ namespace Forex_Strategy_Builder
                 else
                 {
                     Backtester.InterpolationMethod = method;
-                    Backtester.Calculate();
+                    //Backtester.Calculate();
 
                     if (Configs.AccountInMoney)
-                        for (int iBar = 0; iBar < Data.Bars - Data.FirstBar; iBar++)
-                            _afMethods[m, iBar] = (float) Backtester.MoneyBalance(iBar + Data.FirstBar);
+                        for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
+                            _afMethods[m, iBar] = (float) Backtester.MoneyBalance(iBar + Backtester.Strategy.FirstBar);
                     else
-                        for (int iBar = 0; iBar < Data.Bars - Data.FirstBar; iBar++)
-                            _afMethods[m, iBar] = Backtester.Balance(iBar + Data.FirstBar);
+                        for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
+                            _afMethods[m, iBar] = Backtester.Balance(iBar + Backtester.Strategy.FirstBar);
 
                     // Report progress as a percentage of the total task.
                     computedCycles++;
@@ -469,7 +472,7 @@ namespace Forex_Strategy_Builder
             }
 
             // Calculates the average balance, Min and Max
-            for (int bar = 0; bar < Data.Bars - Data.FirstBar; bar++)
+            for (int bar = 0; bar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; bar++)
             {
                 float sum = 0;
                 for (int m = 0; m < _countMethods; m++)
@@ -514,15 +517,15 @@ namespace Forex_Strategy_Builder
             var rectfCaption = new RectangleF(0, 0, pnl.ClientSize.Width, fCaptionHeight);
             var stringFormatCaption = new StringFormat
                                           {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center};
-            Data.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
             g.DrawString(str, Font, new SolidBrush(LayoutColors.ColorCaptionText), rectfCaption, stringFormatCaption);
 
             // Paint the panel background
             var rectClient = new RectangleF(border, fCaptionHeight, pnl.ClientSize.Width - 2*border,
                                             pnl.Height - fCaptionHeight - border);
-            Data.GradientPaint(g, rectClient, LayoutColors.ColorControlBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectClient, LayoutColors.ColorControlBack, LayoutColors.DepthControl);
 
-            var penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
+            var penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
                                     border);
             g.DrawLine(penBorder, 1, fCaptionHeight, 1, pnl.ClientSize.Height);
             g.DrawLine(penBorder, pnl.ClientSize.Width - border + 1, fCaptionHeight, pnl.ClientSize.Width - border + 1,
@@ -606,15 +609,15 @@ namespace Forex_Strategy_Builder
             var rectfCaption = new RectangleF(0, 0, pnl.ClientSize.Width, fCaptionHeight);
             var stringFormatCaption = new StringFormat
                                           {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center};
-            Data.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
             g.DrawString(str, Font, new SolidBrush(LayoutColors.ColorCaptionText), rectfCaption, stringFormatCaption);
 
             // Paint the panel background
             var rectClient = new RectangleF(border, fCaptionHeight, pnl.ClientSize.Width - 2*border,
                                             pnl.Height - fCaptionHeight - border);
-            Data.GradientPaint(g, rectClient, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectClient, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
 
-            var penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
+            var penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
                                     border);
             g.DrawLine(penBorder, 1, fCaptionHeight, 1, pnl.ClientSize.Height);
             g.DrawLine(penBorder, pnl.ClientSize.Width - border + 1, fCaptionHeight, pnl.ClientSize.Width - border + 1,
@@ -634,7 +637,7 @@ namespace Forex_Strategy_Builder
                 return;
             }
 
-            int bars = Data.Bars - Data.FirstBar;
+            int bars = Data.DataSet.Bars - Backtester.Strategy.FirstBar;
             int max = (int) Math.Max(_maximum, _maximumRandom) + 1;
             int min = (int) Math.Min(_minimum, _minimumRandom) - 1;
             min = (int) Math.Floor(min/10f)*10;
@@ -675,12 +678,12 @@ namespace Forex_Strategy_Builder
                 // Draws the random area and Min Max lines
                 var apntMinRandom = new PointF[bars];
                 var apntMaxRandom = new PointF[bars];
-                for (int iBar = 0; iBar < bars; iBar++)
+                for (int bar = 0; bar < bars; bar++)
                 {
-                    apntMinRandom[iBar].X = border + space + iBar*fScaleX;
-                    apntMinRandom[iBar].Y = yBottom - (_afMinRandom[iBar] - min)*scaleY;
-                    apntMaxRandom[iBar].X = border + space + iBar*fScaleX;
-                    apntMaxRandom[iBar].Y = yBottom - (_afMaxRandom[iBar] - min)*scaleY;
+                    apntMinRandom[bar].X = border + space + bar*fScaleX;
+                    apntMinRandom[bar].Y = yBottom - (_afMinRandom[bar] - min)*scaleY;
+                    apntMaxRandom[bar].X = border + space + bar*fScaleX;
+                    apntMaxRandom[bar].Y = yBottom - (_afMaxRandom[bar] - min)*scaleY;
                 }
                 apntMinRandom[0].Y = apntMaxRandom[0].Y;
                 var path = new GraphicsPath();
@@ -699,10 +702,10 @@ namespace Forex_Strategy_Builder
                 if (!AchboxMethods[m].Checked) continue;
 
                 var apntLines = new PointF[bars];
-                for (int iBar = 0; iBar < bars; iBar++)
+                for (int bar = 0; bar < bars; bar++)
                 {
-                    apntLines[iBar].X = border + space + iBar*fScaleX;
-                    apntLines[iBar].Y = yBottom - (_afMethods[m, iBar] - min)*scaleY;
+                    apntLines[bar].X = border + space + bar*fScaleX;
+                    apntLines[bar].Y = yBottom - (_afMethods[m, bar] - min)*scaleY;
                 }
 
                 var pen = new Pen(LayoutColors.ColorSignalRed);
@@ -755,32 +758,67 @@ namespace Forex_Strategy_Builder
 
             // Scanning note
             var fontNote = new Font(Font.FontFamily, Font.Size - 1);
-            if (Configs.Autoscan && !Data.IsIntrabarData)
+            if (Configs.Autoscan && !Data.DataSet.IsIntrabarData)
                 g.DrawString(Language.T("Load intrabar data"), fontNote, Brushes.Red, border + space, fCaptionHeight - 2);
             else if (Backtester.IsScanPerformed)
-                g.DrawString(Language.T("Scanned") + " MQ " + Data.ModellingQuality.ToString("N2") + "%", fontNote,
+                g.DrawString(Language.T("Scanned") + " MQ " + ModelingQuality.ToString("N2") + "%", fontNote,
                              Brushes.LimeGreen, border + space, fCaptionHeight - 2);
 
             // Scanned bars
-            if (Data.IntraBars != null && Data.IsIntrabarData && Backtester.IsScanPerformed)
+            if (Data.DataSet.IntraBars != null && Data.DataSet.IsIntrabarData && Backtester.IsScanPerformed)
             {
                 g.DrawLine(new Pen(LayoutColors.ColorChartFore), border + space - 1, yBottom, border + space - 1,
                            yBottom + 8);
-                DataPeriods dataPeriod = Data.Period;
-                Color color = Data.PeriodColor[Data.Period];
-                int iFromBar = Data.FirstBar;
-                for (int bar = Data.FirstBar; bar < Data.Bars; bar++)
+                DataPeriods dataPeriod = Data.DataSet.Period;
+                Color color = Data.PeriodColor[Data.DataSet.Period];
+                int iFromBar = Backtester.Strategy.FirstBar;
+                for (int bar = Backtester.Strategy.FirstBar; bar < Data.DataSet.Bars; bar++)
                 {
-                    if (Data.IntraBarsPeriods[bar] != dataPeriod || bar == Data.Bars - 1)
+                    if (Data.DataSet.IntraBarsPeriods[bar] != dataPeriod || bar == Data.DataSet.Bars - 1)
                     {
-                        int xStart = (int) ((iFromBar - Data.FirstBar)*fScaleX) + border + space;
-                        int xEnd = (int) ((bar - Data.FirstBar)*fScaleX) + border + space;
+                        int xStart = (int) ((iFromBar - Backtester.Strategy.FirstBar)*fScaleX) + border + space;
+                        int xEnd = (int) ((bar - Backtester.Strategy.FirstBar)*fScaleX) + border + space;
                         iFromBar = bar;
-                        dataPeriod = Data.IntraBarsPeriods[bar];
-                        Data.GradientPaint(g, new RectangleF(xStart, yBottom + 3, xEnd - xStart + 2, 5), color, 60);
-                        color = Data.PeriodColor[Data.IntraBarsPeriods[bar]];
+                        dataPeriod = Data.DataSet.IntraBarsPeriods[bar];
+                        ColorMagic.GradientPaint(g, new RectangleF(xStart, yBottom + 3, xEnd - xStart + 2, 5), color, 60);
+                        color = Data.PeriodColor[Data.DataSet.IntraBarsPeriods[bar]];
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Calculates the Modeling Quality
+        /// </summary>
+        private double ModelingQuality
+        {
+            get
+            {
+                if (!Backtester.IsScanPerformed)
+                    return 0;
+
+                int startGen = 0;
+
+                for (int i = 0; i < Data.DataSet.Bars; i++)
+                    if (Data.DataSet.IntraBarsPeriods[i] < Data.DataSet.Period)
+                    {
+                        startGen = i;
+                        break;
+                    }
+
+                int startGenM1 = Data.DataSet.Bars - 1;
+
+                for (int i = 0; i < Data.DataSet.Bars; i++)
+                    if (Data.DataSet.IntraBarsPeriods[i] == DataPeriods.min1)
+                    {
+                        startGenM1 = i;
+                        break;
+                    }
+
+                double modellingQuality = (0.25 * (startGen - Backtester.Strategy.FirstBar) + 0.5 * (startGenM1 - startGen) +
+                                           0.9 * (Data.DataSet.Bars - startGenM1)) / (Data.DataSet.Bars - Backtester.Strategy.FirstBar) * 100;
+
+                return modellingQuality;
             }
         }
 
@@ -789,7 +827,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
     }
 }

@@ -14,265 +14,264 @@ namespace Forex_Strategy_Builder
     /// </summary>
     public partial class Backtester
     {
-        static double _maxBalance;
-        static double _minBalance;
-        static double _maxDrawdown;
-        static double _maxEquity;
-        static double _minEquity;
-        static double _maxEquityDrawdown;
-        static double _grossProfit;
-        static double _grossLoss;
-        static double _minMoneyBalance;
-        static int[] _balanceDrawdown;
-        static int[] _equityDrawdown;
+        double _maxBalance;
+        double _minBalance;
+        double _maxDrawdown;
+        double _maxEquity;
+        double _minEquity;
+        double _maxEquityDrawdown;
+        double _grossProfit;
+        double _grossLoss;
+        double _minMoneyBalance;
+        int[] _balanceDrawdown;
+        int[] _equityDrawdown;
 
-        static int    _barsInPosition;
-        static int    _totalTrades;
+        int    _barsInPosition;
+        int    _totalTrades;
 
-        static DateTime _maxBalanceDate;
-        static DateTime _minBalanceDate;
-        static DateTime _maxMoneyBalanceDate;
-        static DateTime _minMoneyBalanceDate;
-        static double   _maxMoneyDrawdownPercent;
-        static DateTime _maxDrawdownDate;
-        static DateTime _maxMoneyDrawdownDate;
+        DateTime _maxBalanceDate;
+        DateTime _minBalanceDate;
+        DateTime _maxMoneyBalanceDate;
+        DateTime _minMoneyBalanceDate;
+        double   _maxMoneyDrawdownPercent;
+        DateTime _maxDrawdownDate;
+        DateTime _maxMoneyDrawdownDate;
 
-        static Backtester()
+        public Backtester()
         {
+            AccountStatsFlags = new bool[0];
+            AccountStatsValue = new string[0];
+            AccountStatsParam = new string[0];
             AdditionalStatsValueShort = new string[0];
             AdditionalStatsValueLong = new string[0];
             AdditionalStatsValueTotal = new string[0];
             AdditionalStatsParamName = new string[0];
-            InterpolationMethod = InterpolationMethod.Pessimistic;
-            AccountStatsFlags = new bool[0];
-            AccountStatsValue = new string[0];
-            AccountStatsParam = new string[0];
         }
 
         /// <summary>
         /// Gets the account balance in pips
         /// </summary>
-        public static int NetBalance { get { return Balance(Bars - 1); } }
+        public int NetBalance { get { return Balance(DataSet.Bars - 1); } }
 
         /// <summary>
         /// Gets the max balance in pips
         /// </summary>
-        public static int MaxBalance { get { return (int)Math.Round(_maxBalance); } }
+        public int MaxBalance { get { return (int)Math.Round(_maxBalance); } }
 
         /// <summary>
         /// Gets the min balance in pips
         /// </summary>
-        public static int MinBalance { get { return (int)Math.Round(_minBalance); } }
+        public int MinBalance { get { return (int)Math.Round(_minBalance); } }
 
         /// <summary>
         /// Gets the account balance in currency
         /// </summary>
-        public static double NetMoneyBalance { get { return MoneyBalance(Bars - 1); } }
+        public double NetMoneyBalance { get { return MoneyBalance(DataSet.Bars - 1); } }
 
         /// <summary>
         /// Gets the max balance in currency
         /// </summary>
-        public static double MaxMoneyBalance { get; private set; }
+        public double MaxMoneyBalance { get; private set; }
 
         /// <summary>
         /// Gets the min balance in currency
         /// </summary>
-        public static double MinMoneyBalance { get { return _minMoneyBalance; } }
+        public double MinMoneyBalance { get { return _minMoneyBalance; } }
 
         /// <summary>
         /// Gets the max equity
         /// </summary>
-        public static int MaxEquity { get { return (int)Math.Round(_maxEquity); } }
+        public int MaxEquity { get { return (int)Math.Round(_maxEquity); } }
 
         /// <summary>
         /// Gets the min equity in pips
         /// </summary>
-        public static int MinEquity { get { return (int)Math.Round(_minEquity); } }
+        public int MinEquity { get { return (int)Math.Round(_minEquity); } }
 
         /// <summary>
         /// Gets the max Equity in currency
         /// </summary>
-        public static double MaxMoneyEquity { get; private set; }
+        public double MaxMoneyEquity { get; private set; }
 
         /// <summary>
         /// Gets the min Equity in currency
         /// </summary>
-        public static double MinMoneyEquity { get; private set; }
+        public double MinMoneyEquity { get; private set; }
 
         /// <summary>
         /// Gets the maximum drawdown in the account bill
         /// </summary>
-        public static int MaxDrawdown { get { return (int)Math.Round(_maxDrawdown); } }
+        public int MaxDrawdown { get { return (int)Math.Round(_maxDrawdown); } }
 
         /// <summary>
         /// Gets the maximum equity drawdown in the account bill
         /// </summary>
-        public static int MaxEquityDrawdown { get { return (int)Math.Round(_maxEquityDrawdown); } }
+        public int MaxEquityDrawdown { get { return (int)Math.Round(_maxEquityDrawdown); } }
 
         /// <summary>
         /// Gets the maximum money drawdown
         /// </summary>
-        public static double MaxMoneyDrawdown { get; private set; }
+        public double MaxMoneyDrawdown { get; private set; }
 
         /// <summary>
         /// Gets the maximum money equity drawdown
         /// </summary>
-        public static double MaxMoneyEquityDrawdown { get; private set; }
+        public double MaxMoneyEquityDrawdown { get; private set; }
 
         /// <summary>
         /// The total earned pips
         /// </summary>
-        public static int GrossProfit { get { return (int)Math.Round(_grossProfit); } }
+        public int GrossProfit { get { return (int)Math.Round(_grossProfit); } }
 
         /// <summary>
         /// The total earned money
         /// </summary>
-        public static double GrossMoneyProfit { get; private set; }
+        public double GrossMoneyProfit { get; private set; }
 
         /// <summary>
         /// The total lost pips
         /// </summary>
-        public static int GrossLoss { get { return (int)Math.Round(_grossLoss); } }
+        public int GrossLoss { get { return (int)Math.Round(_grossLoss); } }
 
         /// <summary>
         /// The total lost money
         /// </summary>
-        public static double GrossMoneyLoss { get; private set; }
+        public double GrossMoneyLoss { get; private set; }
 
         /// <summary>
         /// Gets the count of executed orders
         /// </summary>
-        public static int ExecutedOrders { get; private set; }
+        public int ExecutedOrders { get; private set; }
 
         /// <summary>
         /// Gets the count of lots have been traded
         /// </summary>
-        public static double TradedLots { get; private set; }
+        public double TradedLots { get; private set; }
 
         /// <summary>
         /// Gets the time in position in percents
         /// </summary>
-        public static int TimeInPosition { get { return (int)Math.Round(100f * _barsInPosition / (Bars - FirstBar)); } }
+        public int TimeInPosition { get { return (int)Math.Round(100f * _barsInPosition / (DataSet.Bars - Strategy.FirstBar)); } }
 
         /// <summary>
         /// Gets the count of sent orders
         /// </summary>
-        public static int SentOrders { get; private set; }
+        public int SentOrders { get; private set; }
 
         /// <summary>
         /// Gets the Charged Spread
         /// </summary>
-        public static double TotalChargedSpread { get; private set; }
+        public double TotalChargedSpread { get; private set; }
 
         /// <summary>
         /// Gets the Charged Spread in currency
         /// </summary>
-        public static double TotalChargedMoneySpread { get; private set; }
+        public double TotalChargedMoneySpread { get; private set; }
 
         /// <summary>
         /// Gets the Charged RollOver
         /// </summary>
-        public static double TotalChargedRollOver { get; private set; }
+        public double TotalChargedRollOver { get; private set; }
 
         /// <summary>
         /// Gets the Charged RollOver in currency
         /// </summary>
-        public static double TotalChargedMoneyRollOver { get; private set; }
+        public double TotalChargedMoneyRollOver { get; private set; }
 
         /// <summary>
         /// Gets the Charged Slippage
         /// </summary>
-        public static double TotalChargedSlippage { get; private set; }
+        public double TotalChargedSlippage { get; private set; }
 
         /// <summary>
         /// Gets the Charged Slippage in currency
         /// </summary>
-        public static double TotalChargedMoneySlippage { get; private set; }
+        public double TotalChargedMoneySlippage { get; private set; }
 
         /// <summary>
         /// Gets the Charged Commission
         /// </summary>
-        public static double TotalChargedCommission { get; private set; }
+        public double TotalChargedCommission { get; private set; }
 
         /// <summary>
         /// Gets the Charged Commission in currency
         /// </summary>
-        public static double TotalChargedMoneyCommission { get; private set; }
+        public double TotalChargedMoneyCommission { get; private set; }
 
         /// <summary>
         /// Winning Trades
         /// </summary>
-        public static int WinningTrades { get; private set; }
+        public int WinningTrades { get; private set; }
 
         /// <summary>
         /// Losing Trades
         /// </summary>
-        public static int LosingTrades { get; private set; }
+        public int LosingTrades { get; private set; }
 
         /// <summary>
         /// Win / Loss ratio
         /// </summary>
-        public static double WinLossRatio { get; private set; }
+        public double WinLossRatio { get; private set; }
 
         /// <summary>
         /// Money Equity Percent Drawdown
         /// </summary>
-        public static double MoneyEquityPercentDrawdown { get; private set; }
+        public double MoneyEquityPercentDrawdown { get; private set; }
 
         /// <summary>
         /// Equity Percent Drawdown
         /// </summary>
-        public static double EquityPercentDrawdown { get; private set; }
+        public double EquityPercentDrawdown { get; private set; }
 
         /// <summary>
         /// Returns the ambiguous calculated bars
         /// </summary>
-        public static int AmbiguousBars { get; private set; }
+        public int AmbiguousBars { get; private set; }
 
         /// <summary>
         /// Was the intrabar scanning performed
         /// </summary>
-        public static bool IsScanPerformed { get; private set; }
+        public bool IsScanPerformed { get; private set; }
 
         /// <summary>
         /// Margin Call Bar
         /// </summary>
-        public static int MarginCallBar { get; private set; }
+        public int MarginCallBar { get; private set; }
 
         /// <summary>
         /// Gets the number of days tested.
         /// </summary>
-        public static int TestedDays { get; private set; }
+        public int TestedDays { get; private set; }
 
         /// <summary>
         /// Gets the profit per tested day.
         /// </summary>
-        public static int ProfitPerDay { get { return TestedDays > 0 ? Balance(Bars - 1) / TestedDays : 0; } }
+        public int ProfitPerDay { get { return TestedDays > 0 ? Balance(DataSet.Bars - 1) / TestedDays : 0; } }
 
         /// <summary>
         /// Gets the profit per tested day in currency.
         /// </summary>
-        public static double MoneyProfitPerDay { get { return TestedDays > 0 ? (MoneyBalance(Bars - 1) - Configs.InitialAccount) / TestedDays : 0; } }
+        public double MoneyProfitPerDay { get { return TestedDays > 0 ? (MoneyBalance(DataSet.Bars - 1) - Configs.InitialAccount) / TestedDays : 0; } }
 
         /// <summary>
         /// Gets the account stats parameters
         /// </summary>
-        public static string[] AccountStatsParam { get; private set; }
+        public string[] AccountStatsParam { get; private set; }
 
         /// <summary>
         /// Gets the account stats values
         /// </summary>
-        public static string[] AccountStatsValue { get; private set; }
+        public string[] AccountStatsValue { get; private set; }
 
         /// <summary>
         /// Gets the account stats flags
         /// </summary>
-        public static bool[] AccountStatsFlags { get; private set; }
+        public bool[] AccountStatsFlags { get; private set; }
 
         /// <summary>
         /// Returns the Balance Drawdown in pips
         /// </summary>
-        public static int BalanceDrawdown(int bar)
+        public int BalanceDrawdown(int bar)
         {
             return _balanceDrawdown[bar];
         }
@@ -280,7 +279,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the Equity Drawdown in pips
         /// </summary>
-        public static int EquityDrawdown(int bar)
+        public int EquityDrawdown(int bar)
         {
             return _equityDrawdown[bar];
         }
@@ -288,23 +287,23 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the Balance Drawdown in currency
         /// </summary>
-        public static double MoneyBalanceDrawdown(int bar)
+        public double MoneyBalanceDrawdown(int bar)
         {
-            return _balanceDrawdown[bar] * InstrProperties.Point * InstrProperties.LotSize / AccountExchangeRate(Close[bar]);
+            return _balanceDrawdown[bar] * DataSet.InstrProperties.Point * DataSet.InstrProperties.LotSize / AccountExchangeRate(DataSet.Close[bar]);
         }
 
         /// <summary>
         /// Returns the Equity Drawdown in currency.
         /// </summary>
-        public static double MoneyEquityDrawdown(int bar)
+        public double MoneyEquityDrawdown(int bar)
         {
-            return _equityDrawdown[bar] * InstrProperties.Point * InstrProperties.LotSize / AccountExchangeRate(Close[bar]);
+            return _equityDrawdown[bar] * DataSet.InstrProperties.Point * DataSet.InstrProperties.LotSize / AccountExchangeRate(DataSet.Close[bar]);
         }
 
         /// <summary>
         /// Calculates the account statistics.
         /// </summary>
-        public static void CalculateAccountStats()
+        public void CalculateAccountStats()
         {
             _maxBalance = 0;
             _minBalance = 0;
@@ -334,15 +333,15 @@ namespace Forex_Strategy_Builder
             TotalChargedMoneyCommission = 0;
             TotalChargedMoneySlippage   = 0;
             AmbiguousBars     = 0;
-            _balanceDrawdown  = new int[Bars];
-            _equityDrawdown   = new int[Bars];
+            _balanceDrawdown  = new int[DataSet.Bars];
+            _equityDrawdown   = new int[DataSet.Bars];
 
-            _maxBalanceDate       = Time[0];
-            _minBalanceDate       = Time[0];
-            _maxMoneyBalanceDate  = Time[0];
-            _minMoneyBalanceDate  = Time[0];
-            _maxDrawdownDate      = Time[0];
-            _maxMoneyDrawdownDate = Time[0];
+            _maxBalanceDate       = DataSet.Time[0];
+            _minBalanceDate       = DataSet.Time[0];
+            _maxMoneyBalanceDate  = DataSet.Time[0];
+            _minMoneyBalanceDate  = DataSet.Time[0];
+            _maxDrawdownDate      = DataSet.Time[0];
+            _maxMoneyDrawdownDate = DataSet.Time[0];
 
             EquityPercentDrawdown      = 100;
             _maxMoneyDrawdownPercent    = 0;
@@ -354,19 +353,19 @@ namespace Forex_Strategy_Builder
             _totalTrades   = 0;
             TestedDays    = 0;
 
-            for (int bar = FirstBar; bar < Bars; bar++)
+            for (int bar = Strategy.FirstBar; bar < DataSet.Bars; bar++)
             {
                 // Balance
                 double balance = _session[bar].Summary.Balance;
                 if (balance > _maxBalance)
                 {
                     _maxBalance = balance;
-                    _maxBalanceDate = Time[bar];
+                    _maxBalanceDate = DataSet.Time[bar];
                 }
                 if (balance < _minBalance)
                 {
                     _minBalance = balance;
-                    _minBalanceDate = Time[bar];
+                    _minBalanceDate = DataSet.Time[bar];
                 }
 
                 // Money Balance
@@ -374,12 +373,12 @@ namespace Forex_Strategy_Builder
                 if (moneyBalance > MaxMoneyBalance)
                 {
                     MaxMoneyBalance = moneyBalance;
-                    _maxMoneyBalanceDate = Time[bar];
+                    _maxMoneyBalanceDate = DataSet.Time[bar];
                 }
                 if (moneyBalance < _minMoneyBalance)
                 {
                     _minMoneyBalance = moneyBalance;
-                    _minMoneyBalanceDate = Time[bar];
+                    _minMoneyBalanceDate = DataSet.Time[bar];
                 }
 
                 // Equity
@@ -396,7 +395,7 @@ namespace Forex_Strategy_Builder
                 if (_maxBalance - balance > _maxDrawdown)
                 {
                     _maxDrawdown = _maxBalance - balance;
-                    _maxDrawdownDate = Time[bar];
+                    _maxDrawdownDate = DataSet.Time[bar];
                 }
 
                 // Maximum Equity Drawdown
@@ -414,7 +413,7 @@ namespace Forex_Strategy_Builder
                 {
                     MaxMoneyDrawdown        = MaxMoneyBalance - MoneyBalance(bar);
                     _maxMoneyDrawdownPercent = 100 * (MaxMoneyDrawdown / MaxMoneyBalance);
-                    _maxMoneyDrawdownDate    = Time[bar];
+                    _maxMoneyDrawdownDate    = DataSet.Time[bar];
                 }
 
                 // Maximum Money Equity Drawdown
@@ -431,7 +430,7 @@ namespace Forex_Strategy_Builder
                 _balanceDrawdown[bar] = (int)Math.Round((_maxBalance - balance));
                 _equityDrawdown[bar]  = (int)Math.Round((_maxEquity  - equity));
 
-                // Bars in position
+                // DS.Bars in position
                 if (_session[bar].Positions > 0)
                     _barsInPosition++;
 
@@ -492,7 +491,7 @@ namespace Forex_Strategy_Builder
                 }
             }
 
-            TestedDays = (Time[Bars - 1] - Time[FirstBar]).Days;
+            TestedDays = (DataSet.Time[DataSet.Bars - 1] - DataSet.Time[Strategy.FirstBar]).Days;
             if (TestedDays < 1)
                 TestedDays = 1;
 
@@ -515,7 +514,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Generate the Account Statistics in currency.
         /// </summary>
-        static void GenerateAccountStatsInMoney()
+        void GenerateAccountStatsInMoney()
         {
             AccountStatsParam = new[]
             {
@@ -556,7 +555,7 @@ namespace Forex_Strategy_Builder
             AccountStatsValue[1]  = InterpolationMethodShortToString();
             AccountStatsValue[2]  = AmbiguousBars.ToString(CultureInfo.InvariantCulture);
             AccountStatsValue[3]  = MoneyProfitPerDay.ToString("F2") + unit;
-            AccountStatsValue[4]  = (Bars - FirstBar).ToString(CultureInfo.InvariantCulture);
+            AccountStatsValue[4]  = (DataSet.Bars - Strategy.FirstBar).ToString(CultureInfo.InvariantCulture);
             AccountStatsValue[5]  = Configs.InitialAccount.ToString("F2") + unit;
             AccountStatsValue[6]  = NetMoneyBalance.ToString("F2")  + unit;
             AccountStatsValue[7]  = MinMoneyBalance.ToString("F2")  + unit;
@@ -580,14 +579,14 @@ namespace Forex_Strategy_Builder
             AccountStatsValue[25] = (TotalChargedMoneySpread + TotalChargedMoneyRollOver + TotalChargedMoneyCommission + TotalChargedMoneySlippage).ToString("F2") + unit;
             AccountStatsValue[26] = (NetMoneyBalance + TotalChargedMoneySpread + TotalChargedMoneyRollOver + TotalChargedMoneyCommission + TotalChargedMoneySlippage).ToString("F2") + unit;
 
-            if (InstrProperties.PriceIn == Configs.AccountCurrency)
+            if (DataSet.InstrProperties.PriceIn == Configs.AccountCurrency)
                 AccountStatsValue[27] = Language.T("Not used");
-            else if (InstrProperties.InstrType == InstrumetType.Forex && Symbol.StartsWith(Configs.AccountCurrency))
+            else if (DataSet.InstrProperties.InstrType == InstrumetType.Forex && DataSet.Symbol.StartsWith(Configs.AccountCurrency))
                 AccountStatsValue[27] = Language.T("Deal price");
             else if (Configs.AccountCurrency == "USD")
-                AccountStatsValue[27] = InstrProperties.RateToUSD.ToString("F4");
+                AccountStatsValue[27] = DataSet.InstrProperties.RateToUSD.ToString("F4");
             else if (Configs.AccountCurrency == "EUR")
-                AccountStatsValue[27] = InstrProperties.RateToEUR.ToString("F4");
+                AccountStatsValue[27] = DataSet.InstrProperties.RateToEUR.ToString("F4");
 
             AccountStatsFlags = new bool[28];
             AccountStatsFlags[0] = AmbiguousBars > 0 && !IsScanPerformed;
@@ -600,7 +599,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Generate the Account Statistics in pips.
         /// </summary>
-        static void GenerateAccountStats()
+        void GenerateAccountStats()
         {
             AccountStatsParam = new[]
             {
@@ -638,7 +637,7 @@ namespace Forex_Strategy_Builder
             AccountStatsValue[1]  = InterpolationMethodShortToString();
             AccountStatsValue[2]  = AmbiguousBars.ToString(CultureInfo.InvariantCulture);
             AccountStatsValue[3]  = ProfitPerDay + unit;
-            AccountStatsValue[4]  = (Bars - FirstBar).ToString(CultureInfo.InvariantCulture);
+            AccountStatsValue[4]  = (DataSet.Bars - Strategy.FirstBar).ToString(CultureInfo.InvariantCulture);
             AccountStatsValue[5]  = NetBalance  + unit;
             AccountStatsValue[6]  = MinBalance  + unit;
             AccountStatsValue[7]  = MaxBalance  + unit;
@@ -667,184 +666,6 @@ namespace Forex_Strategy_Builder
             AccountStatsFlags[2] = AmbiguousBars > 0;
             AccountStatsFlags[5] = NetBalance < 0;
             AccountStatsFlags[8] = MaxDrawdown > 500;
-        }
-
-        /// <summary>
-        /// Calculates the required margin.
-        /// </summary>
-        public static double RequiredMargin(double lots, int bar)
-        {
-            double amount = lots * InstrProperties.LotSize;
-            double exchangeRate = Close[bar] / AccountExchangeRate(Close[bar]);
-            double requiredMargin = amount * exchangeRate / Configs.Leverage;
-
-            return requiredMargin;
-        }
-
-        /// <summary>
-        /// Calculates the trading size in normalized lots.
-        /// </summary>
-        public static double TradingSize(double size, int bar)
-        {
-            if (Strategy.UseAccountPercentEntry)
-            {
-                double maxMargin = _session[bar].Summary.MoneyEquity * size / 100.0;
-                double exchangeRate = Close[bar] / AccountExchangeRate(Close[bar]);
-                size = maxMargin * Configs.Leverage / (exchangeRate * InstrProperties.LotSize);
-            }
-
-            return NormalizeEntryLots(size);
-        }
-
-        /// <summary>
-        /// Normalizes an entry order's size.
-        /// </summary>
-        static double NormalizeEntryLots(double lots)
-        {
-            const double minlot = 0.01;
-            double maxlot  = Strategy.MaxOpenLots;
-            const double lotstep = 0.01;
-
-            if (lots <= 0)
-                return (0);
-
-            var steps = (int)Math.Round((lots - minlot) / lotstep);
-            lots = minlot + steps * lotstep;
-
-            if (lots <= minlot)
-                return (minlot);
-
-            if (lots >= maxlot)
-                return (maxlot);
-
-            return lots;
-        }
-
-        /// <summary>
-        /// Account Exchange Rate.
-        /// </summary>
-        public static double AccountExchangeRate(double price)
-        {
-            double exchangeRate = 0;
-
-            if (InstrProperties.PriceIn == Configs.AccountCurrency)
-                exchangeRate = 1;
-            else if (InstrProperties.InstrType == InstrumetType.Forex && Symbol.StartsWith(Configs.AccountCurrency))
-                exchangeRate = price;
-            else if (Configs.AccountCurrency == "USD")
-                exchangeRate = InstrProperties.RateToUSD;
-            else if (Configs.AccountCurrency == "EUR")
-                exchangeRate = InstrProperties.RateToEUR;
-
-            return exchangeRate;
-        }
-
-        /// <summary>
-        /// Calculates the commission in pips.
-        /// </summary>
-        public static double Commission(double lots, double price, bool isPosClosing)
-        {
-            double commission = 0;
-
-            if (InstrProperties.Commission < 0.00001)
-                return 0;
-
-            if (InstrProperties.CommissionTime == CommissionTime.open && isPosClosing)
-                return 0; // Commission is not applied to the position closing
-
-            if (InstrProperties.CommissionType == CommissionType.pips)
-                commission = InstrProperties.Commission;
-
-            else if (InstrProperties.CommissionType == CommissionType.percents)
-            {
-                commission = (price / InstrProperties.Point) * (InstrProperties.Commission / 100);
-                return commission;
-            }
-
-            else if (InstrProperties.CommissionType == CommissionType.money)
-                commission = InstrProperties.Commission / (InstrProperties.Point * InstrProperties.LotSize);
-
-            if (InstrProperties.CommissionScope == CommissionScope.lot)
-                commission *= lots; // Commission per lot
-
-            return commission;
-        }
-
-        /// <summary>
-        /// Calculates the commission in currency.
-        /// </summary>
-        public static double CommissionInMoney(double lots, double price, bool isPosClosing)
-        {
-            double commission = 0;
-
-            if (InstrProperties.Commission < 0.00001)
-                return 0;
-
-            if (InstrProperties.CommissionTime == CommissionTime.open && isPosClosing)
-                return 0; // Commission is not applied to the position closing
-
-            if (InstrProperties.CommissionType == CommissionType.pips)
-                commission = InstrProperties.Commission * InstrProperties.Point * InstrProperties.LotSize / AccountExchangeRate(price);
-
-            else if (InstrProperties.CommissionType == CommissionType.percents)
-            {
-                commission = lots * InstrProperties.LotSize * price * (InstrProperties.Commission / 100) / AccountExchangeRate(price);
-                return commission;
-            }
-
-            else if (InstrProperties.CommissionType == CommissionType.money)
-                commission = InstrProperties.Commission / AccountExchangeRate(price);
-
-            if (InstrProperties.CommissionScope == CommissionScope.lot)
-                commission *= lots; // Commission per lot
-
-            return commission;
-        }
-
-        /// <summary>
-        /// Calculates the rollover fee in currency.
-        /// </summary>
-        public static double RolloverInMoney(PosDirection posDir, double lots, int daysRollover, double price)
-        {
-            double point   = InstrProperties.Point;
-            int    lotSize = InstrProperties.LotSize;
-            double swapLongPips  = 0; // Swap long in pips
-            double swapShortPips = 0; // Swap short in pips
-            if (InstrProperties.SwapType == CommissionType.pips)
-            {
-                swapLongPips  = InstrProperties.SwapLong;
-                swapShortPips = InstrProperties.SwapShort;
-            }
-            else if (InstrProperties.SwapType == CommissionType.percents)
-            {
-                swapLongPips  = (price / point) * (0.01 * InstrProperties.SwapLong / 365);
-                swapShortPips = (price / point) * (0.01 * InstrProperties.SwapShort / 365);
-            }
-            else if (InstrProperties.SwapType == CommissionType.money)
-            {
-                swapLongPips  = InstrProperties.SwapLong  / (point * lotSize);
-                swapShortPips = InstrProperties.SwapShort / (point * lotSize);
-            }
-
-            double rollover = lots * lotSize * (posDir == PosDirection.Long ? swapLongPips : -swapShortPips) * point * daysRollover / AccountExchangeRate(price);
-
-            return rollover;
-        }
-
-        /// <summary>
-        /// Converts pips to money.
-        /// </summary>
-        public static double PipsToMoney(double pips, int bar)
-        {
-            return pips * InstrProperties.Point * InstrProperties.LotSize / AccountExchangeRate(Close[bar]);
-        }
-
-        /// <summary>
-        /// Converts money to pips.
-        /// </summary>
-        public static double MoneyToPips(double money, int bar)
-        {
-            return money * AccountExchangeRate(Close[bar]) / (InstrProperties.Point * InstrProperties.LotSize);
         }
     }
 }

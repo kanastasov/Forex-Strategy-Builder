@@ -250,46 +250,5 @@ namespace Forex_Strategy_Builder
             StatusLabelChartInfo = string.Empty;
         }
 
-        private void ShowFullIndicatorChart()
-        {
-            if (!Data.IsData || !Data.IsResult) return;
-            var chart = new Chart
-            {
-                BarPixels = Configs.IndicatorChartZoom,
-                ShowInfoPanel = Configs.IndicatorChartInfoPanel,
-                ShowDynInfo = Configs.IndicatorChartDynamicInfo,
-                ShowGrid = Configs.IndicatorChartGrid,
-                ShowCross = Configs.IndicatorChartCross,
-                ShowVolume = Configs.IndicatorChartVolume,
-                ShowPositionLots = Configs.IndicatorChartLots,
-                ShowOrders = Configs.IndicatorChartEntryExitPoints,
-                ShowPositionPrice = Configs.IndicatorChartCorrectedPositionPrice,
-                ShowBalanceEquity = Configs.IndicatorChartBalanceEquityChart,
-                ShowFloatingPL = Configs.IndicatorChartFloatingPLChart,
-                ShowIndicators = Configs.IndicatorChartIndicators,
-                ShowAmbiguousBars = Configs.IndicatorChartAmbiguousMark,
-                TrueCharts = Configs.IndicatorChartTrueCharts,
-                ShowProtections = Configs.IndicatorChartProtections
-            };
-
-
-            chart.ShowDialog();
-
-            Configs.IndicatorChartZoom = chart.BarPixels;
-            Configs.IndicatorChartInfoPanel = chart.ShowInfoPanel;
-            Configs.IndicatorChartDynamicInfo = chart.ShowDynInfo;
-            Configs.IndicatorChartGrid = chart.ShowGrid;
-            Configs.IndicatorChartCross = chart.ShowCross;
-            Configs.IndicatorChartVolume = chart.ShowVolume;
-            Configs.IndicatorChartLots = chart.ShowPositionLots;
-            Configs.IndicatorChartEntryExitPoints = chart.ShowOrders;
-            Configs.IndicatorChartCorrectedPositionPrice = chart.ShowPositionPrice;
-            Configs.IndicatorChartBalanceEquityChart = chart.ShowBalanceEquity;
-            Configs.IndicatorChartFloatingPLChart = chart.ShowFloatingPL;
-            Configs.IndicatorChartIndicators = chart.ShowIndicators;
-            Configs.IndicatorChartAmbiguousMark = chart.ShowAmbiguousBars;
-            Configs.IndicatorChartTrueCharts = chart.TrueCharts;
-            Configs.IndicatorChartProtections = chart.ShowProtections;
-        }
     }
 }

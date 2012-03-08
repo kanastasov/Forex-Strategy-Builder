@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder.Dialogs.Analyzer
 {
@@ -66,7 +67,7 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
             _brushFore = new SolidBrush(LayoutColors.ColorChartFore);
             _penGrid = new Pen(LayoutColors.ColorChartGrid)
                            {DashStyle = DashStyle.Dash, DashPattern = new float[] {4, 2}};
-            _penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
+            _penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
                                  Border);
 
             _devSteps = table.CountDeviationSteps;
@@ -146,7 +147,7 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
             Graphics g = e.Graphics;
 
             // Caption bar.
-            Data.GradientPaint(g, _rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, _rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
             g.DrawString(_chartTitle, Font, new SolidBrush(LayoutColors.ColorCaptionText), _rectfCaption,
                          _stringFormatCaption);
 
@@ -159,7 +160,7 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
             // Paints the background by gradient.
             var rectField = new RectangleF(Border, _captionHeight, ClientSize.Width - 2*Border,
                                            ClientSize.Height - _captionHeight - Border);
-            Data.GradientPaint(g, rectField, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectField, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
 
             if (Table == null || _parameters == 0)
                 return;

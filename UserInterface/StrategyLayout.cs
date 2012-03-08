@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.CustomControls;
 using Forex_Strategy_Builder.Properties;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -26,17 +27,28 @@ namespace Forex_Strategy_Builder
         private int _slots;
         private Strategy _strategy;
 
+        public StrategyLayout()
+        {
+            _strategy = Strategy.GenerateNew();
+            InitializeStrategyLayout();
+        }
+
         /// <summary>
         /// Initializes the strategy field
         /// </summary>
         public StrategyLayout(Strategy strategy)
         {
+            _strategy = strategy;
+            InitializeStrategyLayout();
+        }
+
+        private void InitializeStrategyLayout()
+        {
+            _slots = _strategy.Slots;
             SlotPropertiesTipText = Language.T("Averaging, Trading size, Protection.");
             SlotToolTipText = Language.T("Long position logic.");
             ShowRemoveSlotButtons = true;
             ShowAddSlotButtons = true;
-            _strategy = strategy;
-            _slots = strategy.Slots;
             SlotMinMidMax = SlotSizeMinMidMax.mid;
             FlowLayoutStrategy = new FlowLayoutPanel();
             VScrollBarStrategy = new VScrollBar();
@@ -60,7 +72,7 @@ namespace Forex_Strategy_Builder
                 var toolTip = new ToolTip();
                 ButtonAddOpenFilter = new Button
                                           {
-                                              Tag = strategy.OpenSlot,
+                                              Tag = _strategy.OpenSlot,
                                               Text = Language.T("Add an Opening Logic Condition"),
                                               Margin = new Padding(30, 0, 0, Space),
                                               UseVisualStyleBackColor = true
@@ -69,7 +81,7 @@ namespace Forex_Strategy_Builder
 
                 ButtonAddCloseFilter = new Button
                                            {
-                                               Tag = strategy.CloseSlot,
+                                               Tag = _strategy.CloseSlot,
                                                Text = Language.T("Add a Closing Logic Condition"),
                                                Margin = new Padding(30, 0, 0, Space),
                                                UseVisualStyleBackColor = true
@@ -77,11 +89,11 @@ namespace Forex_Strategy_Builder
                 toolTip.SetToolTip(ButtonAddCloseFilter, Language.T("Add a new exit logic slot to the strategy."));
 
                 BtnClosingFilterHelp = new Button
-                                            {
-                                                Image = Resources.info,
-                                                Margin = new Padding(2, 2, 0, Space),
-                                                TabStop = false
-                                            };
+                                           {
+                                               Image = Resources.info,
+                                               Margin = new Padding(2, 2, 0, Space),
+                                               TabStop = false
+                                           };
                 BtnClosingFilterHelp.Click += BtnClosingFilterHelpClick;
                 BtnClosingFilterHelp.UseVisualStyleBackColor = true;
             }
@@ -444,7 +456,7 @@ namespace Forex_Strategy_Builder
                     break;
             }
 
-            var penBorder = new Pen(Data.GetGradientColor(colorCaptionBack, -LayoutColors.DepthCaption), Border);
+            var penBorder = new Pen(ColorMagic.GetGradientColor(colorCaptionBack, -LayoutColors.DepthCaption), Border);
 
             var fontCaptionText = new Font(Font.FontFamily, 9);
             float captionHeight = Math.Max(fontCaptionText.Height, 18);
@@ -459,7 +471,7 @@ namespace Forex_Strategy_Builder
                                           };
 
             var rectfCaption = new RectangleF(0, 0, captionWidth, captionHeight);
-            Data.GradientPaint(g, rectfCaption, colorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, colorCaptionBack, LayoutColors.DepthCaption);
 
             if (ShowRemoveSlotButtons && slot != _strategy.OpenSlot && slot != _strategy.CloseSlot)
             {
@@ -482,7 +494,7 @@ namespace Forex_Strategy_Builder
             // Paints the panel
             var rectfPanel = new RectangleF(Border, captionHeight, pnl.Width - 2*Border,
                                             pnl.Height - captionHeight - Border);
-            Data.GradientPaint(g, rectfPanel, colorBackground, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectfPanel, colorBackground, LayoutColors.DepthControl);
 
             int vPosition = (int) captionHeight + 3;
 
@@ -728,11 +740,11 @@ namespace Forex_Strategy_Builder
                                           };
 
             var rectfCaption = new RectangleF(0, 0, captionWidth, captionHeight);
-            Data.GradientPaint(g, rectfCaption, colorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, colorCaptionBack, LayoutColors.DepthCaption);
             g.DrawString(stringCaptionText, fontCaptionText, brushCaptionText, rectfCaption, stringFormatCaption);
 
             // Border
-            var penBorder = new Pen(Data.GetGradientColor(colorCaptionBack, -LayoutColors.DepthCaption), Border);
+            var penBorder = new Pen(ColorMagic.GetGradientColor(colorCaptionBack, -LayoutColors.DepthCaption), Border);
             g.DrawLine(penBorder, 1, captionHeight, 1, pnl.Height);
             g.DrawLine(penBorder, pnl.Width - Border + 1, captionHeight, pnl.Width - Border + 1, pnl.Height);
             g.DrawLine(penBorder, 0, pnl.Height - Border + 1, pnl.Width, pnl.Height - Border + 1);
@@ -740,7 +752,7 @@ namespace Forex_Strategy_Builder
             // Paint the panel's background
             var rectfPanel = new RectangleF(Border, captionHeight, pnl.Width - 2*Border,
                                             pnl.Height - captionHeight - Border);
-            Data.GradientPaint(g, rectfPanel, colorBackground, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectfPanel, colorBackground, LayoutColors.DepthControl);
 
             int vPosition = (int) captionHeight + 2;
 
@@ -764,11 +776,11 @@ namespace Forex_Strategy_Builder
             var penDash = new Pen(colorDash);
 
             string strPermaSL = _strategy.UsePermanentSL
-                                    ? (Data.Strategy.PermanentSLType == PermanentProtectionType.Absolute ? "(Abs) " : "") +
+                                    ? (_strategy.PermanentSLType == PermanentProtectionType.Absolute ? "(Abs) " : "") +
                                       _strategy.PermanentSL.ToString(CultureInfo.InvariantCulture)
                                     : Language.T("None");
             string strPermaTP = _strategy.UsePermanentTP
-                                    ? (Data.Strategy.PermanentTPType == PermanentProtectionType.Absolute ? "(Abs) " : "") +
+                                    ? (_strategy.PermanentTPType == PermanentProtectionType.Absolute ? "(Abs) " : "") +
                                       _strategy.PermanentTP.ToString(CultureInfo.InvariantCulture)
                                     : Language.T("None");
             string strBreakEven = _strategy.UseBreakEven

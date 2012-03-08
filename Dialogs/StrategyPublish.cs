@@ -8,6 +8,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -16,7 +17,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Make a form
         /// </summary>
-        public StrategyPublish()
+        public StrategyPublish(string description)
         {
             PnlBBCodeBase = new FancyPanel();
             PnlInfoBase = new FancyPanel();
@@ -50,7 +51,7 @@ namespace Forex_Strategy_Builder
             TxboxBBCode.AcceptsTab = true;
             TxboxBBCode.ScrollBars = ScrollBars.Vertical;
             TxboxBBCode.KeyDown += TxboxBBCode_KeyDown;
-            TxboxBBCode.Text = Data.Strategy.GenerateBBCode();
+            TxboxBBCode.Text = description;
 
             // LblInformation
             LblInformation.Parent = PnlInfoBase;
@@ -132,7 +133,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
 
         /// <summary>

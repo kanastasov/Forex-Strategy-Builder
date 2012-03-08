@@ -48,7 +48,6 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         private ToolStrip TsStrategy { get; set; }
         private Button BtnReset { get; set; }
 
-
         private CheckBox ChbAmbiguousBars { get; set; }
         private CheckBox ChbEquityPercent { get; set; }
         private CheckBox ChbHideFSB { get; set; }
@@ -93,18 +92,26 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         private bool _isReset;
         private double _buttonWidthMultiplier = 1; // It's used in OnResize().
         private readonly Random _random = new Random();
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public Generator()
+        public Generator(Backtester backtester)
         {
+            _backtester = new Backtester {Strategy = backtester.Strategy.Clone(), DataSet = Data.DataSet};
+            _backtester.Calculate();
+            _backtester.CalculateAccountStats();
+            SetStrategyIndicators();
+            StrategyOriginalDescription = _backtester.Strategy.Description;
+
             GeneratedDescription = string.Empty;
-            _strategyBest = Data.Strategy.Clone();
-            _bestBalance = _isOOS ? Backtester.Balance(_barOOS) : Backtester.NetBalance;
+            _strategyBest = _backtester.Strategy.Clone();
+            _bestBalance = _isOOS ? _backtester.Balance(_barOOS) : _backtester.NetBalance;
             _isGenerating = false;
             _isStartegyChanged = false;
             _indicatorBlackList = new List<string>();
+            _barOOS = _backtester.DataSet.Bars - 1;
 
             ColorText = LayoutColors.ColorControlText;
 
@@ -137,8 +144,8 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             FormBorderStyle = FormBorderStyle.FixedDialog;
             BackColor = LayoutColors.ColorFormBack;
             AcceptButton = BtnGenerate;
-            Text = Language.T("Strategy Generator") + " - " + Data.Symbol + " " + Data.PeriodString + ", " +
-                   Data.Bars + " " + Language.T("bars");
+            Text = Language.T("Strategy Generator") + " - " + _backtester.DataSet.Symbol + " " + Data.PeriodString + ", " +
+                   _backtester.DataSet.Bars + " " + Language.T("bars");
             FormClosing += GeneratorFormClosing;
 
             // Tool Strip Strategy
@@ -175,7 +182,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             BalanceChart.Click += AccountAutputClick;
             BalanceChart.DoubleClick += AccountAutputClick;
             _toolTip.SetToolTip(BalanceChart, Language.T("Show account statistics."));
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(_backtester);
 
             // Info Panel Account Statistics
             InfpnlAccountStatistics.Parent = this;
@@ -207,12 +214,14 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             BtnAccept.Enabled = false;
             BtnAccept.DialogResult = DialogResult.OK;
             BtnAccept.UseVisualStyleBackColor = true;
+            BtnAccept.Click += BtnAcceptOnClick;
 
             //Button Cancel
             BtnCancel.Parent = this;
             BtnCancel.Text = Language.T("Cancel");
             BtnCancel.DialogResult = DialogResult.Cancel;
             BtnCancel.UseVisualStyleBackColor = true;
+            BtnCancel.Click += BtnCancelOnClick;
 
             // BackgroundWorker
             BgWorker = new BackgroundWorker {WorkerReportsProgress = true, WorkerSupportsCancellation = true};
@@ -232,6 +241,9 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
 
             ChbHideFSB.CheckedChanged += HideFSBClick;
         }
+
+        public string StrategyOriginalDescription { get; private set; }
+        public Strategy Strategy { get { return _backtester.Strategy; } }
 
         public Form ParrentForm { private get; set; }
 
@@ -1027,6 +1039,16 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             IndicatorsField.Location = new Point(2, (int) PnlIndicators.CaptionHeight);
         }
 
+        private void BtnAcceptOnClick(object sender, EventArgs eventArgs)
+        {
+            Close();
+        }
+
+        private void BtnCancelOnClick(object sender, EventArgs eventArgs)
+        {
+            Close();
+        }
+
         /// <summary>
         /// Check whether the strategy have been changed
         /// </summary>
@@ -1070,7 +1092,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             if (!_isReset)
                 IndicatorsField.SetConfigFile();
 
-            Data.Strategy = ClearStrategySlotsStatus(Data.Strategy);
+            _backtester.Strategy = ClearStrategySlotsStatus(_backtester.Strategy);
             ParrentForm.Visible = true;
         }
 
@@ -1085,7 +1107,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             }
             else
             {
-                BalanceChart.SetChartData();
+                BalanceChart.SetChartData(_backtester);
                 BalanceChart.InitChart();
                 BalanceChart.Invalidate();
             }
@@ -1103,9 +1125,9 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             else
             {
                 InfpnlAccountStatistics.Update(
-                    Backtester.AccountStatsParam,
-                    Backtester.AccountStatsValue,
-                    Backtester.AccountStatsFlags,
+                    _backtester.AccountStatsParam,
+                    _backtester.AccountStatsValue,
+                    _backtester.AccountStatsFlags,
                     Language.T("Account Statistics"));
             }
         }
@@ -1190,15 +1212,15 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             string customIndicators = "";
             int customIndCount = 0;
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
-                string indName = Data.Strategy.Slot[slot].IndicatorName;
-                Indicator indicator = IndicatorStore.ConstructIndicator(indName, Data.Strategy.Slot[slot].SlotType);
+                string indName = _backtester.Strategy.Slot[slot].IndicatorName;
+                Indicator indicator = IndicatorStore.ConstructIndicator(indName, _backtester.Strategy.Slot[slot].SlotType);
                 if (indicator.CustomIndicator)
                 {
                     customIndCount++;
                     _indicatorBlackList.Add(indName);
-                    customIndicators += "<li>" + Data.Strategy.Slot[slot].IndicatorName + "</li>" + Environment.NewLine;
+                    customIndicators += "<li>" + _backtester.Strategy.Slot[slot].IndicatorName + "</li>" + Environment.NewLine;
                 }
             }
 
@@ -1256,7 +1278,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
 
             if (_isOOS)
             {
-                BalanceChart.SetChartData();
+                BalanceChart.SetChartData(_backtester);
                 BalanceChart.InitChart();
                 BalanceChart.Invalidate();
             }
@@ -1272,7 +1294,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             BalanceChart.IsOOS = _isOOS;
             BalanceChart.OOSBar = _barOOS;
 
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
         }
@@ -1283,7 +1305,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         private void SetOOS()
         {
             _isOOS = ChbOutOfSample.Checked;
-            _barOOS = Data.Bars - Data.Bars*(int) NUDOutOfSample.Value/100 - 1;
+            _barOOS = _backtester.DataSet.Bars - _backtester.DataSet.Bars*(int) NUDOutOfSample.Value/100 - 1;
             _targetBalanceRatio = 1 + (int) NUDOutOfSample.Value/100.0F;
         }
 
@@ -1314,10 +1336,10 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                                         ": " + NUDOutOfSample.Value.ToString(CultureInfo.InvariantCulture) + "%";
                 GeneratedDescription += Environment.NewLine + Language.T("Balance") + ": " +
                                         (Configs.AccountInMoney
-                                             ? Backtester.MoneyBalance(_barOOS).ToString("F2") + " " + Configs.AccountCurrency
-                                             : Backtester.Balance(_barOOS).ToString(CultureInfo.InvariantCulture) + " " + Language.T("pips"));
-                GeneratedDescription += " (" + Data.Time[_barOOS].ToShortDateString() + " " +
-                                        Data.Time[_barOOS].ToShortTimeString() + "  " + Language.T("Bar") + ": " +
+                                             ? _backtester.MoneyBalance(_barOOS).ToString("F2") + " " + Configs.AccountCurrency
+                                             : _backtester.Balance(_barOOS).ToString(CultureInfo.InvariantCulture) + " " + Language.T("pips"));
+                GeneratedDescription += " (" + _backtester.DataSet.Time[_barOOS].ToShortDateString() + " " +
+                                        _backtester.DataSet.Time[_barOOS].ToShortTimeString() + "  " + Language.T("Bar") + ": " +
                                         _barOOS.ToString(CultureInfo.InvariantCulture) + ")";
             }
 
@@ -1418,9 +1440,9 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         private void ShowOverview(object sender, EventArgs e)
         {
             if (GeneratedDescription != string.Empty)
-                Data.Strategy.Description = GeneratedDescription;
+                _backtester.Strategy.Description = GeneratedDescription;
 
-            var so = new Browser(Language.T("Strategy Overview"), Data.Strategy.GenerateHTMLOverview());
+            var so = new Browser(Language.T("Strategy Overview"), OverviewFormatReport.GenerateHTMLOverview(_backtester, IsStrDescriptionRelevant()));
             so.Show();
         }
 
@@ -1547,10 +1569,10 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         private void BtnStrategyDescriptionClick(object sender, EventArgs e)
         {
             if (GeneratedDescription != string.Empty)
-                Data.Strategy.Description = GeneratedDescription;
-            var si = new StrategyDescription();
+                _backtester.Strategy.Description = GeneratedDescription;
+            var si = new StrategyDescription(_backtester);
             si.ShowDialog();
-            GeneratedDescription = Data.Strategy.Description;
+            GeneratedDescription = _backtester.Strategy.Description;
         }
 
         /// <summary>
@@ -1559,13 +1581,13 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         private void SetStrategyDescriptionButton()
         {
             if (GeneratedDescription != string.Empty)
-                Data.Strategy.Description = GeneratedDescription;
+                _backtester.Strategy.Description = GeneratedDescription;
 
-            if (Data.Strategy.Description == "")
+            if (_backtester.Strategy.Description == "")
                 TsbtStrategyInfo.Image = Resources.str_info_noinfo;
             else
             {
-                TsbtStrategyInfo.Image = Data.IsStrDescriptionRelevant() ? Resources.str_info_infook : Resources.str_info_warning;
+                TsbtStrategyInfo.Image = IsStrDescriptionRelevant() ? Resources.str_info_infook : Resources.str_info_warning;
             }
         }
 
@@ -1583,34 +1605,6 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         }
 
         /// <summary>
-        /// Saves the Generator History
-        /// </summary>
-        private void AddStrategyToGeneratorHistory(string description)
-        {
-            Strategy strategy = ClearStrategySlotsStatus(_strategyBest);
-            Data.GeneratorHistory.Add(strategy);
-            Data.GeneratorHistory[Data.GeneratorHistory.Count - 1].Description = description;
-
-            if (Data.GeneratorHistory.Count >= 110)
-                Data.GeneratorHistory.RemoveRange(0, 10);
-
-            Data.GenHistoryIndex = Data.GeneratorHistory.Count - 1;
-        }
-
-        /// <summary>
-        /// Updates the last strategy in Generator History
-        /// </summary>
-        private void UpdateStrategyInGeneratorHistory(string description)
-        {
-            if (Data.GeneratorHistory.Count == 0)
-                return;
-
-            Strategy strategy = ClearStrategySlotsStatus(_strategyBest);
-            Data.GeneratorHistory[Data.GeneratorHistory.Count - 1] = strategy;
-            Data.GeneratorHistory[Data.GeneratorHistory.Count - 1].Description = description;
-        }
-
-        /// <summary>
         /// Adds a strategy to Top 10 list.
         /// </summary>
         private void Top10AddStrategy()
@@ -1622,16 +1616,16 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             else
             {
                 var top10Slot = new Top10Slot {Width = 290, Height = 65};
-                top10Slot.InitSlot();
+                top10Slot.InitSlot(_backtester);
                 top10Slot.Click += Top10SlotClick;
                 top10Slot.DoubleClick += Top10SlotClick;
                 var top10StrategyInfo = new Top10StrategyInfo
                                             {
                                                 Balance = Configs.AccountInMoney
-                                                              ? (int) Math.Round(Backtester.NetMoneyBalance)
-                                                              : Backtester.NetBalance,
+                                                              ? (int) Math.Round(_backtester.NetMoneyBalance)
+                                                              : _backtester.NetBalance,
                                                 Top10Slot = top10Slot,
-                                                TheStrategy = Data.Strategy.Clone()
+                                                TheStrategy = _backtester.Strategy.Clone()
                                             };
                 Top10Field.AddStrategyInfo(top10StrategyInfo);
             }
@@ -1655,7 +1649,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             top10Slot.IsSelected = true;
             top10Slot.Invalidate();
 
-            Data.Strategy = Top10Field.GetStrategy(top10Slot.Balance);
+            _backtester.Strategy = Top10Field.GetStrategy(top10Slot.Balance);
             _bestBalance = 0;
             CalculateTheResult(true);
         }

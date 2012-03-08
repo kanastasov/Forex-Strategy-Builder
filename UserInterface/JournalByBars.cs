@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
 using Forex_Strategy_Builder.Properties;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -186,7 +187,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public void SetUpJournal()
         {
-            _bars = Data.Bars;
+            _bars = Data.DataSet.Bars;
 
             if (_bars == 0)
             {
@@ -244,13 +245,13 @@ namespace Forex_Strategy_Builder
                 bool inMoney = Configs.AccountInMoney;
 
                 _journalData[row, col++] = (bar + 1).ToString(CultureInfo.InvariantCulture);
-                _journalData[row, col++] = Data.Time[bar].ToString(Data.DF);
-                _journalData[row, col++] = Data.Time[bar].ToString("HH:mm");
-                _journalData[row, col++] = Data.Open[bar].ToString(Data.FF);
-                _journalData[row, col++] = Data.High[bar].ToString(Data.FF);
-                _journalData[row, col++] = Data.Low[bar].ToString(Data.FF);
-                _journalData[row, col++] = Data.Close[bar].ToString(Data.FF);
-                _journalData[row, col++] = Data.Volume[bar].ToString(CultureInfo.InvariantCulture);
+                _journalData[row, col++] = Data.DataSet.Time[bar].ToString(Data.DF);
+                _journalData[row, col++] = Data.DataSet.Time[bar].ToString("HH:mm");
+                _journalData[row, col++] = Data.DataSet.Open[bar].ToString(Data.FF);
+                _journalData[row, col++] = Data.DataSet.High[bar].ToString(Data.FF);
+                _journalData[row, col++] = Data.DataSet.Low[bar].ToString(Data.FF);
+                _journalData[row, col++] = Data.DataSet.Close[bar].ToString(Data.FF);
+                _journalData[row, col++] = Data.DataSet.Volume[bar].ToString(CultureInfo.InvariantCulture);
                 _journalData[row, col++] = isPos ? Language.T(StatsBuffer.SummaryTrans(bar).ToString()) : "";
                 _journalData[row, col++] = isPos ? Language.T(StatsBuffer.SummaryDir(bar).ToString()) : "";
                 _journalData[row, col++] = isPos ? GetPositionAmmountString(bar) : "";
@@ -370,7 +371,7 @@ namespace Forex_Strategy_Builder
 
             // Caption background
             var rectfCaption = new RectangleF(0, 0, ClientSize.Width, 2*_rowHeight);
-            Data.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
 
             var font = new Font(Font.FontFamily, 9);
             Color colorBack = LayoutColors.ColorControlBack;
@@ -382,7 +383,7 @@ namespace Forex_Strategy_Builder
             var brushWarningBack = new SolidBrush(LayoutColors.ColorWarningRowBack);
             var brushWarningText = new SolidBrush(LayoutColors.ColorWarningRowText);
             var penLines = new Pen(LayoutColors.ColorJournalLines);
-            var penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
+            var penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
                                     Border);
 
             // Print the journal caption
@@ -472,7 +473,7 @@ namespace Forex_Strategy_Builder
                 {
                     var rectfSeparator = new RectangleF(_xScaled[i] + iHScrll, (float) (_rowHeight/2.0), 1,
                                                         (float) (3*_rowHeight/2.0));
-                    Data.GradientPaint(g, rectfSeparator, LayoutColors.ColorCaptionBack, -2*LayoutColors.DepthCaption);
+                    ColorMagic.GradientPaint(g, rectfSeparator, LayoutColors.ColorCaptionBack, -2*LayoutColors.DepthCaption);
                 }
                 g.DrawLine(penLines, _xScaled[i] + iHScrll, 2*_rowHeight, _xScaled[i] + iHScrll, ClientSize.Height);
             }

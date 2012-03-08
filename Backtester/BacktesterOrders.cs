@@ -16,7 +16,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets a new order Buy Market.
         /// </summary>
-        static void OrdBuyMarket(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
+        void OrdBuyMarket(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
         {
             int sessionOrder = _session[bar].Orders;
             Order order = _session[bar].Order[sessionOrder] = new Order();
@@ -29,7 +29,7 @@ namespace Forex_Strategy_Builder
             order.OrdIF     = orderIf;
             order.OrdPos    = toPos;
             order.OrdLots   = lots;
-            order.OrdPrice  = Math.Round(price, InstrProperties.Digits);
+            order.OrdPrice  = Math.Round(price, DataSet.InstrProperties.Digits);
             order.OrdPrice2 = 0;
             order.OrdSender = sender;
             order.OrdOrigin = origin;
@@ -44,7 +44,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets a new order Buy Stop.
         /// </summary>
-        static void OrdBuyStop(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
+        void OrdBuyStop(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
         {
             int sessionOrder = _session[bar].Orders;
             Order order = _session[bar].Order[sessionOrder] = new Order();
@@ -57,7 +57,7 @@ namespace Forex_Strategy_Builder
             order.OrdIF     = orderIf;
             order.OrdPos    = toPos;
             order.OrdLots   = lots;
-            order.OrdPrice  = Math.Round(price, InstrProperties.Digits);
+            order.OrdPrice  = Math.Round(price, DataSet.InstrProperties.Digits);
             order.OrdPrice2 = 0;
             order.OrdSender = sender;
             order.OrdOrigin = origin;
@@ -72,7 +72,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets a new order Buy Limit.
         /// </summary>
-        static void OrdBuyLimit(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
+        void OrdBuyLimit(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
         {
             int sessionOrder = _session[bar].Orders;
             Order order = _session[bar].Order[sessionOrder] = new Order();
@@ -85,7 +85,7 @@ namespace Forex_Strategy_Builder
             order.OrdIF     = orderIf;
             order.OrdPos    = toPos;
             order.OrdLots   = lots;
-            order.OrdPrice  = Math.Round(price, InstrProperties.Digits);
+            order.OrdPrice  = Math.Round(price, DataSet.InstrProperties.Digits);
             order.OrdPrice2 = 0;
             order.OrdSender = sender;
             order.OrdOrigin = origin;
@@ -100,7 +100,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets a new order Buy Stop Limit.
         /// </summary>
-        static void OrdBuyStopLimit(int bar, int orderIf, int toPos, double lots, double price1, double price2, OrderSender sender, OrderOrigin origin, string note)
+        void OrdBuyStopLimit(int bar, int orderIf, int toPos, double lots, double price1, double price2, OrderSender sender, OrderOrigin origin, string note)
         {
             int sessionOrder = _session[bar].Orders;
             Order order = _session[bar].Order[sessionOrder] = new Order();
@@ -113,8 +113,8 @@ namespace Forex_Strategy_Builder
             order.OrdIF     = orderIf;
             order.OrdPos    = toPos;
             order.OrdLots   = lots;
-            order.OrdPrice  = Math.Round(price1, InstrProperties.Digits);
-            order.OrdPrice2 = Math.Round(price2, InstrProperties.Digits);
+            order.OrdPrice  = Math.Round(price1, DataSet.InstrProperties.Digits);
+            order.OrdPrice2 = Math.Round(price2, DataSet.InstrProperties.Digits);
             order.OrdSender = sender;
             order.OrdOrigin = origin;
             order.OrdNote   = note;
@@ -128,7 +128,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets a new order Sell Market.
         /// </summary>
-        static void OrdSellMarket(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
+        void OrdSellMarket(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
         {
             int sessionOrder = _session[bar].Orders;
             Order order = _session[bar].Order[sessionOrder] = new Order();
@@ -141,7 +141,7 @@ namespace Forex_Strategy_Builder
             order.OrdIF     = orderIf;
             order.OrdPos    = toPos;
             order.OrdLots   = lots;
-            order.OrdPrice  = Math.Round(price, InstrProperties.Digits);
+            order.OrdPrice  = Math.Round(price, DataSet.InstrProperties.Digits);
             order.OrdPrice2 = 0;
             order.OrdSender = sender;
             order.OrdOrigin = origin;
@@ -156,7 +156,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets a new order Sell Stop.
         /// </summary>
-        static void OrdSellStop(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
+        void OrdSellStop(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
         {
             int sessionOrder = _session[bar].Orders;
             Order order = _session[bar].Order[sessionOrder] = new Order();
@@ -169,7 +169,7 @@ namespace Forex_Strategy_Builder
             order.OrdIF     = orderIf;
             order.OrdPos    = toPos;
             order.OrdLots   = lots;
-            order.OrdPrice  = Math.Round(price, InstrProperties.Digits);
+            order.OrdPrice  = Math.Round(price, DataSet.InstrProperties.Digits);
             order.OrdPrice2 = 0;
             order.OrdSender = sender;
             order.OrdOrigin = origin;
@@ -184,7 +184,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets a new order Sell Limit.
         /// </summary>
-        static void OrdSellLimit(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
+        void OrdSellLimit(int bar, int orderIf, int toPos, double lots, double price, OrderSender sender, OrderOrigin origin, string note)
         {
             int sessionOrder = _session[bar].Orders;
             Order order = _session[bar].Order[sessionOrder] = new Order();
@@ -197,7 +197,7 @@ namespace Forex_Strategy_Builder
             order.OrdIF     = orderIf;
             order.OrdPos    = toPos;
             order.OrdLots   = lots;
-            order.OrdPrice  = Math.Round(price, InstrProperties.Digits);
+            order.OrdPrice  = Math.Round(price, DataSet.InstrProperties.Digits);
             order.OrdPrice2 = 0;
             order.OrdSender = sender;
             order.OrdOrigin = origin;
@@ -212,7 +212,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets a new order Sell Stop Limit.
         /// </summary>
-        static void OrdSellStopLimit(int bar, int orderIf, int toPos, double lots, double price1, double price2, OrderSender sender, OrderOrigin origin, string note)
+        void OrdSellStopLimit(int bar, int orderIf, int toPos, double lots, double price1, double price2, OrderSender sender, OrderOrigin origin, string note)
         {
             int sessionOrder = _session[bar].Orders;
             Order order = _session[bar].Order[sessionOrder] = new Order();
@@ -225,8 +225,8 @@ namespace Forex_Strategy_Builder
             order.OrdIF     = orderIf;
             order.OrdPos    = toPos;
             order.OrdLots   = lots;
-            order.OrdPrice  = Math.Round(price1, InstrProperties.Digits);
-            order.OrdPrice2 = Math.Round(price2, InstrProperties.Digits);
+            order.OrdPrice  = Math.Round(price1, DataSet.InstrProperties.Digits);
+            order.OrdPrice2 = Math.Round(price2, DataSet.InstrProperties.Digits);
             order.OrdSender = sender;
             order.OrdOrigin = origin;
             order.OrdNote   = note;

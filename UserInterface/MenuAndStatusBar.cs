@@ -243,7 +243,7 @@ namespace Forex_Strategy_Builder
                                            ShortcutKeys = Keys.F2,
                                            Image = Resources.bar_chart
                                        };
-            miShowPriceChart.Click += ShowPriceChartOnClick;
+            miShowPriceChart.Click += ShowFullIndicatorChart;
             miView.DropDownItems.Add(miShowPriceChart);
 
             var miShowAccountChart = new ToolStripMenuItem
@@ -253,7 +253,7 @@ namespace Forex_Strategy_Builder
                                              Image = Resources.balance_chart,
                                              ShortcutKeys = Keys.F3
                                          };
-            miShowAccountChart.Click += ShowAccountChartOnClick;
+            miShowAccountChart.Click += ShowFullBalanceChart;
             miView.DropDownItems.Add(miShowAccountChart);
 
             miView.DropDownItems.Add(new ToolStripSeparator());
@@ -1364,10 +1364,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         ///   Opens the strategy overview window
         /// </summary>
-        private void MenuStrategyOverviewOnClick(object sender, EventArgs e)
+        protected virtual void MenuStrategyOverviewOnClick(object sender, EventArgs e)
         {
-            var so = new Browser(Language.T("Strategy Overview"), Data.Strategy.GenerateHTMLOverview());
-            so.Show();
         }
 
         /// <summary>
@@ -1458,129 +1456,38 @@ namespace Forex_Strategy_Builder
             Process.Start(item.Tag.ToString());
         }
 
-        /// <summary>
-        ///   Show the full Price Chart
-        /// </summary>
-        private void ShowPriceChartOnClick(object sender, EventArgs e)
+        private void ShowFullIndicatorChart(object sender, EventArgs e)
         {
-            if (!Data.IsData || !Data.IsResult) return;
-            var chart = new Chart
-                            {
-                                BarPixels = Configs.IndicatorChartZoom,
-                                ShowInfoPanel = Configs.IndicatorChartInfoPanel,
-                                ShowDynInfo = Configs.IndicatorChartDynamicInfo,
-                                ShowGrid = Configs.IndicatorChartGrid,
-                                ShowCross = Configs.IndicatorChartCross,
-                                ShowVolume = Configs.IndicatorChartVolume,
-                                ShowPositionLots = Configs.IndicatorChartLots,
-                                ShowOrders = Configs.IndicatorChartEntryExitPoints,
-                                ShowPositionPrice = Configs.IndicatorChartCorrectedPositionPrice,
-                                ShowBalanceEquity = Configs.IndicatorChartBalanceEquityChart,
-                                ShowFloatingPL = Configs.IndicatorChartFloatingPLChart,
-                                ShowIndicators = Configs.IndicatorChartIndicators,
-                                ShowAmbiguousBars = Configs.IndicatorChartAmbiguousMark,
-                                TrueCharts = Configs.IndicatorChartTrueCharts
-                            };
-
-
-            chart.ShowDialog();
-
-            Configs.IndicatorChartZoom = chart.BarPixels;
-            Configs.IndicatorChartInfoPanel = chart.ShowInfoPanel;
-            Configs.IndicatorChartDynamicInfo = chart.ShowDynInfo;
-            Configs.IndicatorChartGrid = chart.ShowGrid;
-            Configs.IndicatorChartCross = chart.ShowCross;
-            Configs.IndicatorChartVolume = chart.ShowVolume;
-            Configs.IndicatorChartLots = chart.ShowPositionLots;
-            Configs.IndicatorChartEntryExitPoints = chart.ShowOrders;
-            Configs.IndicatorChartCorrectedPositionPrice = chart.ShowPositionPrice;
-            Configs.IndicatorChartBalanceEquityChart = chart.ShowBalanceEquity;
-            Configs.IndicatorChartFloatingPLChart = chart.ShowFloatingPL;
-            Configs.IndicatorChartIndicators = chart.ShowIndicators;
-            Configs.IndicatorChartAmbiguousMark = chart.ShowAmbiguousBars;
-            Configs.IndicatorChartTrueCharts = chart.TrueCharts;
+            ShowFullIndicatorChart();
         }
 
         /// <summary>
-        ///   Show the full Account Chart
+        ///  Show the full Account Chart
         /// </summary>
-        private void ShowAccountChartOnClick(object sender, EventArgs e)
+        private void ShowFullBalanceChart(object sender, EventArgs e)
         {
-            if (!Data.IsData || !Data.IsResult) return;
-            var chart = new Chart
-                            {
-                                BarPixels = Configs.BalanceChartZoom,
-                                ShowInfoPanel = Configs.BalanceChartInfoPanel,
-                                ShowDynInfo = Configs.BalanceChartDynamicInfo,
-                                ShowGrid = Configs.BalanceChartGrid,
-                                ShowCross = Configs.BalanceChartCross,
-                                ShowVolume = Configs.BalanceChartVolume,
-                                ShowPositionLots = Configs.BalanceChartLots,
-                                ShowOrders = Configs.BalanceChartEntryExitPoints,
-                                ShowPositionPrice = Configs.BalanceChartCorrectedPositionPrice,
-                                ShowBalanceEquity = Configs.BalanceChartBalanceEquityChart,
-                                ShowFloatingPL = Configs.BalanceChartFloatingPLChart,
-                                ShowIndicators = Configs.BalanceChartIndicators,
-                                ShowAmbiguousBars = Configs.BalanceChartAmbiguousMark,
-                                TrueCharts = Configs.BalanceChartTrueCharts
-                            };
+            ShowFullBalanceChart();
+        }
 
+        /// <summary>
+        /// Show the full Price Chart
+        /// </summary>
+        protected virtual void ShowFullIndicatorChart()
+        {
+        }
 
-            chart.ShowDialog();
-
-            Configs.BalanceChartZoom = chart.BarPixels;
-            Configs.BalanceChartInfoPanel = chart.ShowInfoPanel;
-            Configs.BalanceChartDynamicInfo = chart.ShowDynInfo;
-            Configs.BalanceChartGrid = chart.ShowGrid;
-            Configs.BalanceChartCross = chart.ShowCross;
-            Configs.BalanceChartVolume = chart.ShowVolume;
-            Configs.BalanceChartLots = chart.ShowPositionLots;
-            Configs.BalanceChartEntryExitPoints = chart.ShowOrders;
-            Configs.BalanceChartCorrectedPositionPrice = chart.ShowPositionPrice;
-            Configs.BalanceChartBalanceEquityChart = chart.ShowBalanceEquity;
-            Configs.BalanceChartFloatingPLChart = chart.ShowFloatingPL;
-            Configs.BalanceChartIndicators = chart.ShowIndicators;
-            Configs.BalanceChartAmbiguousMark = chart.ShowAmbiguousBars;
-            Configs.BalanceChartTrueCharts = chart.TrueCharts;
+        /// <summary>
+        /// Show the full Account Chart
+        /// </summary>
+        protected virtual void ShowFullBalanceChart()
+        {
         }
 
         /// <summary>
         ///   Export menu
         /// </summary>
-        private void ExportOnClick(object sender, EventArgs e)
+        protected virtual void ExportOnClick(object sender, EventArgs e)
         {
-            var mi = (ToolStripMenuItem) sender;
-            string name = mi.Name;
-
-            var exporter = new Exporter();
-
-            switch (name)
-            {
-                case "dataOnly":
-                    exporter.ExportDataOnly();
-                    break;
-                case "CSVData":
-                    exporter.ExportCSVData();
-                    break;
-                case "indicators":
-                    exporter.ExportIndicators();
-                    break;
-                case "summary":
-                    exporter.ExportBarSummary();
-                    break;
-                case "positions":
-                    exporter.ExportPositions(true);
-                    break;
-                case "positionsNoTransfer":
-                    exporter.ExportPositions(false);
-                    break;
-                case "positionInMoney":
-                    exporter.ExportPositionsInMoney(true);
-                    break;
-                case "positionInMoneyNoTransfer":
-                    exporter.ExportPositionsInMoney(false);
-                    break;
-            }
         }
 
         /// <summary>

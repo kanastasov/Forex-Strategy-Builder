@@ -8,6 +8,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -71,7 +72,7 @@ namespace Forex_Strategy_Builder
             _brushParams = new SolidBrush(LayoutColors.ColorControlText);
             _brushData = new SolidBrush(LayoutColors.ColorControlText);
 
-            _penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
+            _penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
         }
 
         /// <summary>
@@ -168,7 +169,7 @@ namespace Forex_Strategy_Builder
             Graphics g = e.Graphics;
 
             // Caption
-            Data.GradientPaint(g, _rectfCaption, _colorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, _rectfCaption, _colorCaptionBack, LayoutColors.DepthCaption);
             g.DrawString(_caption, _fontCaption, _brushCaption, _rectfCaption, _stringFormatCaption);
 
             for (int i = 0; i*_rowHeight + _captionHeight < _height; i++)

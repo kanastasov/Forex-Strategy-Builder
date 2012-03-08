@@ -14,7 +14,7 @@ namespace Forex_Strategy_Builder
     /// <summary>
     /// Strategy Class.
     /// </summary>
-    public partial class Strategy
+    public class Strategy
     {
         /// <summary>
         /// Sets a new strategy.
@@ -227,6 +227,14 @@ namespace Forex_Strategy_Builder
         public int FirstBar { get; private set; }
 
         /// <summary>
+        /// Gets the current strategy full path.
+        /// </summary>
+        public string StrategyPath
+        {
+            get { return Path.Combine(Data.StrategyDir, StrategyName); }
+        }
+
+        /// <summary>
         /// Creates a strategy
         /// </summary>
         private void CreateStrategy(int openFilters, int closeFilters)
@@ -245,36 +253,38 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Generates a new strategy.
         /// </summary>
-        public static void GenerateNew()
+        public static Strategy GenerateNew()
         {
-            Data.Strategy = new Strategy(0, 0);
+            var strategy = new Strategy(0, 0);
 
-            int openSlotNum = Data.Strategy.OpenSlot;
-            int closeSlotNum = Data.Strategy.CloseSlot;
+            int openSlotNum = strategy.OpenSlot;
+            int closeSlotNum = strategy.CloseSlot;
 
-            Data.Strategy.StrategyName = "New";
+            strategy.StrategyName = "New";
 
             var barOpening = new Bar_Opening(SlotTypes.Open);
             barOpening.Calculate(SlotTypes.Open);
-            Data.Strategy.Slot[openSlotNum].IndParam = barOpening.IndParam;
-            Data.Strategy.Slot[openSlotNum].IndicatorName = barOpening.IndicatorName;
-            Data.Strategy.Slot[openSlotNum].Component = barOpening.Component;
-            Data.Strategy.Slot[openSlotNum].SeparatedChart = barOpening.SeparatedChart;
-            Data.Strategy.Slot[openSlotNum].SpecValue = barOpening.SpecialValues;
-            Data.Strategy.Slot[openSlotNum].MaxValue = barOpening.SeparatedChartMaxValue;
-            Data.Strategy.Slot[openSlotNum].MinValue = barOpening.SeparatedChartMinValue;
-            Data.Strategy.Slot[openSlotNum].IsDefined = true;
+            strategy.Slot[openSlotNum].IndParam = barOpening.IndParam;
+            strategy.Slot[openSlotNum].IndicatorName = barOpening.IndicatorName;
+            strategy.Slot[openSlotNum].Component = barOpening.Component;
+            strategy.Slot[openSlotNum].SeparatedChart = barOpening.SeparatedChart;
+            strategy.Slot[openSlotNum].SpecValue = barOpening.SpecialValues;
+            strategy.Slot[openSlotNum].MaxValue = barOpening.SeparatedChartMaxValue;
+            strategy.Slot[openSlotNum].MinValue = barOpening.SeparatedChartMinValue;
+            strategy.Slot[openSlotNum].IsDefined = true;
 
             var barClosing = new Bar_Closing(SlotTypes.Close);
             barClosing.Calculate(SlotTypes.Close);
-            Data.Strategy.Slot[closeSlotNum].IndParam = barClosing.IndParam;
-            Data.Strategy.Slot[closeSlotNum].IndicatorName = barClosing.IndicatorName;
-            Data.Strategy.Slot[closeSlotNum].Component = barClosing.Component;
-            Data.Strategy.Slot[closeSlotNum].SeparatedChart = barClosing.SeparatedChart;
-            Data.Strategy.Slot[closeSlotNum].SpecValue = barClosing.SpecialValues;
-            Data.Strategy.Slot[closeSlotNum].MaxValue = barClosing.SeparatedChartMaxValue;
-            Data.Strategy.Slot[closeSlotNum].MinValue = barClosing.SeparatedChartMinValue;
-            Data.Strategy.Slot[closeSlotNum].IsDefined = true;
+            strategy.Slot[closeSlotNum].IndParam = barClosing.IndParam;
+            strategy.Slot[closeSlotNum].IndicatorName = barClosing.IndicatorName;
+            strategy.Slot[closeSlotNum].Component = barClosing.Component;
+            strategy.Slot[closeSlotNum].SeparatedChart = barClosing.SeparatedChart;
+            strategy.Slot[closeSlotNum].SpecValue = barClosing.SpecialValues;
+            strategy.Slot[closeSlotNum].MaxValue = barClosing.SeparatedChartMaxValue;
+            strategy.Slot[closeSlotNum].MinValue = barClosing.SeparatedChartMinValue;
+            strategy.Slot[closeSlotNum].IsDefined = true;
+
+            return strategy;
         }
 
         /// <summary>
@@ -485,7 +495,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the strategy First Bar. It depends on the indicators periods.
         /// </summary>
-        public int SetFirstBar()
+        public void SetFirstBar()
         {
             // Searches the indicators' components to determine the first bar.
             FirstBar = 0;
@@ -493,8 +503,6 @@ namespace Forex_Strategy_Builder
                 foreach (IndicatorComp comp in slot.Component)
                     if (comp.FirstBar > FirstBar)
                         FirstBar = comp.FirstBar;
-
-            return FirstBar;
         }
 
         /// <summary>
@@ -516,15 +524,14 @@ namespace Forex_Strategy_Builder
             {
                 for (int slot = 0; slot < Slots; slot++)
                 {
-                    string sIndicatorName = Data.Strategy.Slot[slot].IndicatorName;
-                    SlotTypes slotType = Data.Strategy.Slot[slot].SlotType;
+                    string sIndicatorName = Slot[slot].IndicatorName;
+                    SlotTypes slotType = Slot[slot].SlotType;
                     Indicator indicator = IndicatorStore.ConstructIndicator(sIndicatorName, slotType);
 
-                    indicator.IndParam = Data.Strategy.Slot[slot].IndParam;
+                    indicator.IndParam = Slot[slot].IndParam;
 
                     indicator.Calculate(slotType);
 
-                    // Set the Data.Strategy
                     Slot[slot].IndicatorName = indicator.IndicatorName;
                     Slot[slot].IndParam = indicator.IndParam;
                     Slot[slot].Component = indicator.Component;
@@ -549,64 +556,41 @@ namespace Forex_Strategy_Builder
 
             for (int param = 0; param < Slot[slot].IndParam.CheckParam.Length; param++)
             {
-                if (Slot[slot].IndParam.CheckParam[param].Caption == "Use previous bar value")
+                if (Slot[slot].IndParam.CheckParam[param].Caption != "Use previous bar value") continue;
+                bool isOrigChecked = Slot[slot].IndParam.CheckParam[param].Checked;
+                bool isChecked = true;
+
+                // Open slot
+                switch (Slot[slot].SlotType)
                 {
-                    bool isOrigChecked = Slot[slot].IndParam.CheckParam[param].Checked;
-                    bool isChecked = true;
+                    case SlotTypes.OpenFilter:
+                        isChecked = EntryExecutionTime != ExecutionTime.AtBarClosing;
+                        break;
+                    case SlotTypes.CloseFilter:
+                        isChecked = ExitExecutionTime != ExecutionTime.AtBarClosing;
+                        break;
+                }
 
-                    // Open slot
-                    switch (Slot[slot].SlotType)
+                if (isChecked)
+                {
+                    for (int iPar = 0; iPar < Slot[slot].IndParam.ListParam.Length; iPar++)
                     {
-                        case SlotTypes.OpenFilter:
-                            isChecked = EntryExecutionTime != ExecutionTime.AtBarClosing;
-                            break;
-                        case SlotTypes.CloseFilter:
-                            isChecked = ExitExecutionTime != ExecutionTime.AtBarClosing;
-                            break;
-                    }
-
-                    if (isChecked)
-                    {
-                        for (int iPar = 0; iPar < Slot[slot].IndParam.ListParam.Length; iPar++)
+                        if (Slot[slot].IndParam.ListParam[iPar].Caption == "Base price" &&
+                            Slot[slot].IndParam.ListParam[iPar].Text == "Open")
                         {
-                            if (Slot[slot].IndParam.ListParam[iPar].Caption == "Base price" &&
-                                Slot[slot].IndParam.ListParam[iPar].Text == "Open")
-                            {
-                                isChecked = false;
-                            }
+                            isChecked = false;
                         }
                     }
+                }
 
-                    if (isChecked != isOrigChecked)
-                    {
-                        isChanged = true;
-                        Slot[slot].IndParam.CheckParam[param].Checked = isChecked;
-                    }
+                if (isChecked != isOrigChecked)
+                {
+                    isChanged = true;
+                    Slot[slot].IndParam.CheckParam[param].Checked = isChecked;
                 }
             }
 
             return isChanged;
-        }
-
-        /// <summary>
-        /// Prepare the checkbox.
-        /// </summary>
-        /// <returns>IsChecked</returns>
-        public bool PrepareUsePrevBarValueCheckBox(SlotTypes slotType)
-        {
-            bool isChecked = true;
-            switch (slotType)
-            {
-                case SlotTypes.OpenFilter:
-                    if (Data.Strategy.Slot[Data.Strategy.OpenSlot].IndParam.ExecutionTime == ExecutionTime.AtBarClosing)
-                        isChecked = false;
-                    break;
-                case SlotTypes.CloseFilter:
-                    if (Data.Strategy.Slot[Data.Strategy.CloseSlot].IndParam.ExecutionTime == ExecutionTime.AtBarClosing)
-                        isChecked = false;
-                    break;
-            }
-            return isChecked;
         }
 
         /// <summary>
@@ -616,7 +600,7 @@ namespace Forex_Strategy_Builder
         {
             StrategyName = Path.GetFileNameWithoutExtension(fileName);
             Symbol = Data.Symbol;
-            DataPeriod = Data.Period;
+            DataPeriod = Data.DataSet.Period;
 
             XmlDocument xmlDocStrategy = StrategyXML.CreateStrategyXmlDoc(this);
 
@@ -633,7 +617,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Loads the strategy from a file in XML format.
         /// </summary>
-        public static bool Load(string filename)
+        public static Strategy Load(string filename)
         {
             var xmlDocStrategy = new XmlDocument();
 
@@ -645,13 +629,13 @@ namespace Forex_Strategy_Builder
             {
                 MessageBox.Show(e.Message, Language.T("Strategy Loading"));
 
-                return false;
+                return null;
             }
 
             var strategyXML = new StrategyXML();
-            Data.Strategy = strategyXML.ParseXmlStrategy(xmlDocStrategy);
+            var strategy = strategyXML.ParseXmlStrategy(xmlDocStrategy);
 
-            return true;
+            return strategy;
         }
 
         /// <summary>
@@ -694,5 +678,43 @@ namespace Forex_Strategy_Builder
 
             return tempStrategy;
         }
+
+        /// <summary>
+        /// Represents the strategy in a readable form.
+        /// </summary>
+        public override string ToString()
+        {
+            string nl = Environment.NewLine;
+            string str = String.Empty;
+            str += "Strategy Name - " + StrategyName + nl;
+            str += "Symbol - " + Symbol + nl;
+            str += "Period - " + DataPeriod + nl;
+            str += "Same dir signal - " + SameSignalAction + nl;
+            str += "Opposite dir signal - " + OppSignalAction + nl;
+            str += "Use account % entry - " + UseAccountPercentEntry + nl;
+            str += "Max open lots - " + MaxOpenLots + nl;
+            str += "Entry lots - " + EntryLots + nl;
+            str += "Adding lots - " + AddingLots + nl;
+            str += "Reducing lots - " + ReducingLots + nl;
+            str += "Use Martingale MM - " + UseMartingale + nl;
+            str += "Martingale multiplier - " + MartingaleMultiplier + nl;
+            str += "Use Permanent S/L - " + UsePermanentSL + nl;
+            str += "Permanent S/L - " + PermanentSLType + " " + PermanentSL + nl;
+            str += "Use Permanent T/P - " + UsePermanentTP + nl;
+            str += "Permanent T/P - " + PermanentTPType + " " + PermanentTP + nl;
+            str += "Use Break Even - " + UseBreakEven + nl;
+            str += "Break Even - " + BreakEven + nl + nl;
+            str += "Description:" + nl + Description + nl + nl;
+
+            for (int slot = 0; slot < Slots; slot++)
+            {
+                str += Slot[slot].SlotType + nl;
+                str += Slot[slot].IndicatorName + nl;
+                str += Slot[slot].IndParam + nl + nl;
+            }
+
+            return str;
+        }
+
     }
 }

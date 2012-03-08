@@ -10,6 +10,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -81,37 +82,37 @@ namespace Forex_Strategy_Builder
 
         public SmallBalanceChart()
         {
-            OOSBar = Data.Bars - 1;
+            OOSBar = Data.DataSet.Bars - 1;
             _data = new SmallBalanceChartData();
         }
 
         /// <summary>
         /// Sets chart's back testing data.
         /// </summary>
-        public void SetChartData()
+        public void SetChartData(Backtester backtester)
         {
-            _isNotPaint = !Data.IsData || !Data.IsResult || Data.Bars <= Data.FirstBar;
+            _isNotPaint = !Data.IsData || !Data.IsResult || Data.DataSet.Bars <= backtester.Strategy.FirstBar;
 
             if (_isNotPaint) return;
 
-            _showPriceLine = Configs.ShowPriceChartOnAccountChart && Backtester.ExecutedOrders > 0;
-            _isScanPerformed = Backtester.IsScanPerformed;
+            _showPriceLine = Configs.ShowPriceChartOnAccountChart && backtester.ExecutedOrders > 0;
+            _isScanPerformed = backtester.IsScanPerformed;
 
-            _data.FirstBar = Data.FirstBar;
-            _data.Bars = Data.Bars;
-            _chartBars = Data.Bars - Data.FirstBar;
+            _data.FirstBar = backtester.Strategy.FirstBar;
+            _data.Bars = Data.DataSet.Bars;
+            _chartBars = Data.DataSet.Bars - backtester.Strategy.FirstBar;
 
-            int maxBalance = Configs.AccountInMoney ? (int) Backtester.MaxMoneyBalance : Backtester.MaxBalance;
-            int minBalance = Configs.AccountInMoney ? (int) Backtester.MinMoneyBalance : Backtester.MinBalance;
-            int maxEquity = Configs.AccountInMoney ? (int) Backtester.MaxMoneyEquity : Backtester.MaxEquity;
-            int minEquity = Configs.AccountInMoney ? (int) Backtester.MinMoneyEquity : Backtester.MinEquity;
+            int maxBalance = Configs.AccountInMoney ? (int) backtester.MaxMoneyBalance : backtester.MaxBalance;
+            int minBalance = Configs.AccountInMoney ? (int) backtester.MinMoneyBalance : backtester.MinBalance;
+            int maxEquity = Configs.AccountInMoney ? (int) backtester.MaxMoneyEquity : backtester.MaxEquity;
+            int minEquity = Configs.AccountInMoney ? (int) backtester.MinMoneyEquity : backtester.MinEquity;
 
             if (Configs.AdditionalStatistics)
             {
-                int maxLongBalance = Configs.AccountInMoney ? (int) Backtester.MaxLongMoneyBalance : Backtester.MaxLongBalance;
-                int minLongBalance = Configs.AccountInMoney ? (int) Backtester.MinLongMoneyBalance : Backtester.MinLongBalance;
-                int maxShortBalance = Configs.AccountInMoney ? (int) Backtester.MaxShortMoneyBalance : Backtester.MaxShortBalance;
-                int minShortBalance = Configs.AccountInMoney ? (int) Backtester.MinShortMoneyBalance : Backtester.MinShortBalance;
+                int maxLongBalance = Configs.AccountInMoney ? (int) backtester.MaxLongMoneyBalance : backtester.MaxLongBalance;
+                int minLongBalance = Configs.AccountInMoney ? (int) backtester.MinLongMoneyBalance : backtester.MinLongBalance;
+                int maxShortBalance = Configs.AccountInMoney ? (int) backtester.MaxShortMoneyBalance : backtester.MaxShortBalance;
+                int minShortBalance = Configs.AccountInMoney ? (int) backtester.MinShortMoneyBalance : backtester.MinShortBalance;
                 int maxLongShortBalance = Math.Max(maxLongBalance, maxShortBalance);
                 int minLongShortBalance = Math.Min(minLongBalance, minShortBalance);
 
@@ -126,13 +127,13 @@ namespace Forex_Strategy_Builder
 
             _data.Minimum = (int) (Math.Floor(_data.Minimum/10f)*10);
 
-            _data.DataMaxPrice = Data.MaxPrice;
-            _data.DataMinPrice = Data.MinPrice;
+            _data.DataMaxPrice = Data.DataStats.MaxPrice;
+            _data.DataMinPrice = Data.DataStats.MinPrice;
 
             if (_showPriceLine)
             {
                 _data.ClosePrice = new double[_data.Bars];
-                Data.Close.CopyTo(_data.ClosePrice, 0);
+                Data.DataSet.Close.CopyTo(_data.ClosePrice, 0);
             }
 
             if (Configs.AccountInMoney)
@@ -165,39 +166,39 @@ namespace Forex_Strategy_Builder
             {
                 if (Configs.AccountInMoney)
                 {
-                    _data.MoneyBalance[bar] = Backtester.MoneyBalance(bar);
-                    _data.MoneyEquity[bar] = Backtester.MoneyEquity(bar);
+                    _data.MoneyBalance[bar] = backtester.MoneyBalance(bar);
+                    _data.MoneyEquity[bar] = backtester.MoneyEquity(bar);
                 }
                 else
                 {
-                    _data.Balance[bar] = Backtester.Balance(bar);
-                    _data.Equity[bar] = Backtester.Equity(bar);
+                    _data.Balance[bar] = backtester.Balance(bar);
+                    _data.Equity[bar] = backtester.Equity(bar);
                 }
 
                 if (Configs.AdditionalStatistics)
                 {
                     if (Configs.AccountInMoney)
                     {
-                        _data.LongMoneyBalance[bar] = Backtester.LongMoneyBalance(bar);
-                        _data.ShortMoneyBalance[bar] = Backtester.ShortMoneyBalance(bar);
+                        _data.LongMoneyBalance[bar] = backtester.LongMoneyBalance(bar);
+                        _data.ShortMoneyBalance[bar] = backtester.ShortMoneyBalance(bar);
                     }
                     else
                     {
-                        _data.LongBalance[bar] = Backtester.LongBalance(bar);
-                        _data.ShortBalance[bar] = Backtester.ShortBalance(bar);
+                        _data.LongBalance[bar] = backtester.LongBalance(bar);
+                        _data.ShortBalance[bar] = backtester.ShortBalance(bar);
                     }
                 }
             }
 
-            _data.MarginCallBar = Backtester.MarginCallBar;
+            _data.MarginCallBar = backtester.MarginCallBar;
 
             if (IsOOS && OOSBar > _data.FirstBar)
             {
-                _data.NetBalance = (float) (Configs.AccountInMoney ? Backtester.MoneyBalance(OOSBar) : Backtester.Balance(OOSBar));
-                _data.DataTimeBarOOS = Data.Time[OOSBar];
+                _data.NetBalance = (float) (Configs.AccountInMoney ? backtester.MoneyBalance(OOSBar) : backtester.Balance(OOSBar));
+                _data.DataTimeBarOOS = Data.DataSet.Time[OOSBar];
             }
             else
-                _data.NetBalance = (float)(Configs.AccountInMoney ? Backtester.NetMoneyBalance : Backtester.NetBalance);
+                _data.NetBalance = (float)(Configs.AccountInMoney ? backtester.NetMoneyBalance : backtester.NetBalance);
         }
 
         /// <summary>
@@ -219,7 +220,7 @@ namespace Forex_Strategy_Builder
                                       };
             _brushFore = new SolidBrush(LayoutColors.ColorChartFore);
             _penGrid = new Pen(LayoutColors.ColorChartGrid) {DashStyle = DashStyle.Dash, DashPattern = new float[] {4, 2}};
-            _penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
+            _penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
 
             if (_isNotPaint) return;
 
@@ -309,7 +310,7 @@ namespace Forex_Strategy_Builder
             _yBalance = _yBottom - (_data.NetBalance - _data.Minimum) * _yScale;
 
             _isHideScanningLine = false;
-            _data.ModellingQuolity = " MQ " + Data.ModellingQuality.ToString("N2") + "%";
+            _data.ModellingQuolity = " MQ " + ModelingQuality.ToString("N2") + "%";
 
             ButtonsColorBack = LayoutColors.ColorCaptionBack;
             ButtonColorFore = LayoutColors.ColorCaptionText;
@@ -325,7 +326,7 @@ namespace Forex_Strategy_Builder
             Graphics g = e.Graphics;
 
             // Caption bar
-            Data.GradientPaint(g, _rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, _rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
             g.DrawString(_chartTitle, Font, new SolidBrush(LayoutColors.ColorCaptionText), _rectfCaption, _stringFormatCaption);
 
             // Border
@@ -335,7 +336,7 @@ namespace Forex_Strategy_Builder
 
             // Paints the background by gradient
             var rectChartField = new RectangleF(Border, _captionHeight, ClientSize.Width - 2*Border, ClientSize.Height - _captionHeight - Border);
-            Data.GradientPaint(g, rectChartField, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectChartField, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
 
             if (_isNotPaint) return;
 
@@ -408,50 +409,50 @@ namespace Forex_Strategy_Builder
 
             // Scanning note
             var fontNote = new Font(Font.FontFamily, Font.Size - 1);
-            if (Data.Period != DataPeriods.min1 && Configs.Autoscan && !Data.IsIntrabarData)
+            if (Data.DataSet.Period != DataPeriods.min1 && Configs.Autoscan && !Data.DataSet.IsIntrabarData)
                 g.DrawString(Language.T("Load intrabar data"), fontNote, Brushes.Red, _xLeft, _captionHeight - 2);
-            else if (Data.Period != DataPeriods.min1 && _isScanPerformed)
+            else if (Data.DataSet.Period != DataPeriods.min1 && _isScanPerformed)
                 g.DrawString(Language.T("Scanned") + _data.ModellingQuolity, fontNote, Brushes.LimeGreen, _xLeft, _captionHeight - 2);
 
             // Scanned bars
             if (_isScanPerformed && !_isHideScanningLine &&
-                (Data.IntraBars != null && Data.IsIntrabarData || 
-                 Data.Period == DataPeriods.min1 && Data.IsTickData && Configs.UseTickData))
+                (Data.DataSet.IntraBars != null && Data.DataSet.IsIntrabarData ||
+                 Data.DataSet.Period == DataPeriods.min1 && Data.DataSet.IsTickData && Configs.UseTickData))
             {
-                DataPeriods dataPeriod = Data.Period;
-                Color color = Data.PeriodColor[Data.Period];
+                DataPeriods dataPeriod = Data.DataSet.Period;
+                Color color = Data.PeriodColor[Data.DataSet.Period];
                 int fromBar = _data.FirstBar;
                 for (int bar = _data.FirstBar; bar < _data.Bars; bar++)
                 {
-                    if (Data.IntraBarsPeriods[bar] == dataPeriod && bar != _data.Bars - 1) continue;
+                    if (Data.DataSet.IntraBarsPeriods[bar] == dataPeriod && bar != _data.Bars - 1) continue;
                     int xStart = (int) ((fromBar - _data.FirstBar)*_xScale) + _xLeft;
                     int xEnd = (int) ((bar - _data.FirstBar)*_xScale) + _xLeft;
                     fromBar = bar;
-                    dataPeriod = Data.IntraBarsPeriods[bar];
-                    Data.GradientPaint(g, new RectangleF(xStart, _yBottom + 4, xEnd - xStart + 2, 5), color, 60);
-                    color = Data.PeriodColor[Data.IntraBarsPeriods[bar]];
+                    dataPeriod = Data.DataSet.IntraBarsPeriods[bar];
+                    ColorMagic.GradientPaint(g, new RectangleF(xStart, _yBottom + 4, xEnd - xStart + 2, 5), color, 60);
+                    color = Data.PeriodColor[Data.DataSet.IntraBarsPeriods[bar]];
                 }
 
                 // Tick Data
-                if (Data.IsTickData && Configs.UseTickData)
+                if (Data.DataSet.IsTickData && Configs.UseTickData)
                 {
                     int firstBarWithTicks = -1;
                     int lastBarWithTicks = -1;
                     for (int b = 0; b < _data.Bars; b++)
                     {
-                        if (firstBarWithTicks == -1 && Data.TickData[b] != null)
+                        if (firstBarWithTicks == -1 && Data.DataSet.TickData[b] != null)
                             firstBarWithTicks = b;
-                        if (Data.TickData[b] != null)
+                        if (Data.DataSet.TickData[b] != null)
                             lastBarWithTicks = b;
                     }
                     int xStart = (int) ((firstBarWithTicks - _data.FirstBar)*_xScale) + _xLeft;
                     int xEnd = (int) ((lastBarWithTicks - _data.FirstBar)*_xScale) + _xLeft;
-                    Data.GradientPaint(g, new RectangleF(xStart, _yBottom + 4, xEnd - xStart + 2, 5), color, 60);
+                    ColorMagic.GradientPaint(g, new RectangleF(xStart, _yBottom + 4, xEnd - xStart + 2, 5), color, 60);
 
                     var rectf = new RectangleF(xStart, _yBottom + 4, xEnd - xStart + 2, 5);
-                    Data.GradientPaint(g, rectf, Data.PeriodColor[DataPeriods.min1], 60);
+                    ColorMagic.GradientPaint(g, rectf, Data.PeriodColor[DataPeriods.min1], 60);
                     rectf = new RectangleF(xStart, _yBottom + 6, xEnd - xStart + 2, 1);
-                    Data.GradientPaint(g, rectf, Data.PeriodColor[DataPeriods.day], 60);
+                    ColorMagic.GradientPaint(g, rectf, Data.PeriodColor[DataPeriods.day], 60);
                 }
 
                 // Vertical coordinate axes
@@ -492,8 +493,8 @@ namespace Forex_Strategy_Builder
 
             if (Configs.AccountInMoney)
                 CurrentBarInfo = String.Format("{0} {1} {2}: {3} {4} {5}: {6} {7}",
-                                                 Data.Time[bar].ToString(Data.DF),
-                                                 Data.Time[bar].ToString("HH:mm"),
+                                                 Data.DataSet.Time[bar].ToString(Data.DF),
+                                                 Data.DataSet.Time[bar].ToString("HH:mm"),
                                                  Language.T("Balance"),
                                                  _data.MoneyBalance[bar].ToString("F2"),
                                                  Configs.AccountCurrency,
@@ -502,8 +503,8 @@ namespace Forex_Strategy_Builder
                                                  Configs.AccountCurrency);
             else
                 CurrentBarInfo = String.Format("{0} {1} {2}: {3} {4} {5}: {6} {7}",
-                                                 Data.Time[bar].ToString(Data.DF),
-                                                 Data.Time[bar].ToString("HH:mm"),
+                                                 Data.DataSet.Time[bar].ToString(Data.DF),
+                                                 Data.DataSet.Time[bar].ToString("HH:mm"),
                                                  Language.T("Balance"),
                                                  _data.Balance[bar],
                                                  Language.T("pips"),
@@ -533,7 +534,7 @@ namespace Forex_Strategy_Builder
             if (Configs.ShowPriceChartOnAccountChart)
                 CurrentBarInfo += String.Format(" {0}: {1}",
                                                   Language.T("Price close"),
-                                                  Data.Close[bar]);
+                                                  Data.DataSet.Close[bar]);
         }
 
         /// <summary>
@@ -545,5 +546,41 @@ namespace Forex_Strategy_Builder
             InitChart();
             Invalidate();
         }
+
+        /// <summary>
+        /// Calculates the Modeling Quality
+        /// </summary>
+        private double ModelingQuality
+        {
+            get
+            {
+                if (!_isScanPerformed)
+                    return 0;
+
+                int startGen = 0;
+
+                for (int i = 0; i < Data.DataSet.Bars; i++)
+                    if (Data.DataSet.IntraBarsPeriods[i] < Data.DataSet.Period)
+                    {
+                        startGen = i;
+                        break;
+                    }
+
+                int startGenM1 = Data.DataSet.Bars - 1;
+
+                for (int i = 0; i < Data.DataSet.Bars; i++)
+                    if (Data.DataSet.IntraBarsPeriods[i] == DataPeriods.min1)
+                    {
+                        startGenM1 = i;
+                        break;
+                    }
+
+                double modellingQuality = (0.25 * (startGen - _data.FirstBar) + 0.5 * (startGenM1 - startGen) +
+                                           0.9 * (Data.DataSet.Bars - startGenM1)) / (Data.DataSet.Bars - _data.FirstBar) * 100;
+
+                return modellingQuality;
+            }
+        }
+
     }
 }

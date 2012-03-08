@@ -7,6 +7,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -52,8 +53,11 @@ namespace Forex_Strategy_Builder
         private int _leftPanelsWidth;
         private int _rightPanelsWidth;
 
-        public StrategyProperties()
+        private readonly Backtester _backtester;
+
+        public StrategyProperties(Backtester backtester)
         {
+            _backtester = backtester;
             PnlAveraging = new FancyPanel(Language.T("Handling of Additional Entry Signals"), LayoutColors.ColorSlotCaptionBackAveraging);
             PnlAmounts = new FancyPanel(Language.T("Trading Size"), LayoutColors.ColorSlotCaptionBackAveraging);
             PnlProtection = new FancyPanel(Language.T("Permanent Protection"), LayoutColors.ColorSlotCaptionBackAveraging);
@@ -109,7 +113,7 @@ namespace Forex_Strategy_Builder
             PnlAmounts.Parent = this;
             PnlProtection.Parent = this;
             BalanceChart.Parent = this;
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(_backtester);
         
             var toolTip = new ToolTip();
 
@@ -312,7 +316,7 @@ namespace Forex_Strategy_Builder
             NUDPermaSL.Minimum = 5;
             NUDPermaSL.Maximum = 5000;
             NUDPermaSL.Increment = 1;
-            NUDPermaSL.Value = Data.InstrProperties.IsFiveDigits ? 1000 : 100;
+            NUDPermaSL.Value = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             NUDPermaSL.TextAlign = HorizontalAlignment.Center;
             NUDPermaSL.EndInit();
 
@@ -342,7 +346,7 @@ namespace Forex_Strategy_Builder
             NUDPermaTP.Minimum = 5;
             NUDPermaTP.Maximum = 5000;
             NUDPermaTP.Increment = 1;
-            NUDPermaTP.Value = Data.InstrProperties.IsFiveDigits ? 1000 : 100;
+            NUDPermaTP.Value = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             NUDPermaTP.TextAlign = HorizontalAlignment.Center;
             NUDPermaTP.EndInit();
 
@@ -363,7 +367,7 @@ namespace Forex_Strategy_Builder
             NUDBreakEven.Minimum = 5;
             NUDBreakEven.Maximum = 5000;
             NUDBreakEven.Increment = 1;
-            NUDBreakEven.Value = Data.InstrProperties.IsFiveDigits ? 1000 : 100;
+            NUDBreakEven.Value = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             NUDBreakEven.TextAlign = HorizontalAlignment.Center;
             NUDBreakEven.EndInit();
 
@@ -557,32 +561,32 @@ namespace Forex_Strategy_Builder
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
 
         private void BtnDefaultClick(object sender, EventArgs e)
         {
-            Data.Strategy.SameSignalAction = SameDirSignalAction.Nothing;
+            _backtester.Strategy.SameSignalAction = SameDirSignalAction.Nothing;
 
-            Data.Strategy.OppSignalAction = Data.Strategy.Slot[Data.Strategy.CloseSlot].IndicatorName == "Close and Reverse" 
+            _backtester.Strategy.OppSignalAction = _backtester.Strategy.Slot[_backtester.Strategy.CloseSlot].IndicatorName == "Close and Reverse" 
                 ? OppositeDirSignalAction.Reverse 
                 : OppositeDirSignalAction.Nothing;
 
-            Data.Strategy.UsePermanentSL = false;
-            Data.Strategy.PermanentSL = Data.InstrProperties.IsFiveDigits ? 1000 : 100;
-            Data.Strategy.PermanentSLType = PermanentProtectionType.Relative;
-            Data.Strategy.UsePermanentTP = false;
-            Data.Strategy.PermanentTP = Data.InstrProperties.IsFiveDigits ? 1000 : 100;
-            Data.Strategy.PermanentTPType = PermanentProtectionType.Relative;
-            Data.Strategy.UseBreakEven = false;
-            Data.Strategy.BreakEven = Data.InstrProperties.IsFiveDigits ? 1000 : 100;
-            Data.Strategy.UseAccountPercentEntry = false;
-            Data.Strategy.MaxOpenLots = 20;
-            Data.Strategy.EntryLots = 1;
-            Data.Strategy.AddingLots = 1;
-            Data.Strategy.ReducingLots = 1;
-            Data.Strategy.UseMartingale = false;
-            Data.Strategy.MartingaleMultiplier = 2;
+            _backtester.Strategy.UsePermanentSL = false;
+            _backtester.Strategy.PermanentSL = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            _backtester.Strategy.PermanentSLType = PermanentProtectionType.Relative;
+            _backtester.Strategy.UsePermanentTP = false;
+            _backtester.Strategy.PermanentTP = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            _backtester.Strategy.PermanentTPType = PermanentProtectionType.Relative;
+            _backtester.Strategy.UseBreakEven = false;
+            _backtester.Strategy.BreakEven = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            _backtester.Strategy.UseAccountPercentEntry = false;
+            _backtester.Strategy.MaxOpenLots = 20;
+            _backtester.Strategy.EntryLots = 1;
+            _backtester.Strategy.AddingLots = 1;
+            _backtester.Strategy.ReducingLots = 1;
+            _backtester.Strategy.UseMartingale = false;
+            _backtester.Strategy.MartingaleMultiplier = 2;
 
             SetParams();
             CalculateStrategy();
@@ -601,23 +605,23 @@ namespace Forex_Strategy_Builder
             if (!RbVariableUnits.Checked)
                 NUDEntryLots.Value = Math.Min(NUDEntryLots.Value, NUDMaxOpenLots.Value);
 
-            Data.Strategy.SameSignalAction = (SameDirSignalAction) CbxSameDirAction.SelectedIndex;
-            Data.Strategy.OppSignalAction = (OppositeDirSignalAction) CbxOppDirAction.SelectedIndex;
-            Data.Strategy.UseAccountPercentEntry = RbVariableUnits.Checked;
-            Data.Strategy.MaxOpenLots = (double) NUDMaxOpenLots.Value;
-            Data.Strategy.EntryLots = (double) NUDEntryLots.Value;
-            Data.Strategy.AddingLots = (double) NUDAddingLots.Value;
-            Data.Strategy.ReducingLots = (double) NUDReducingLots.Value;
-            Data.Strategy.UsePermanentSL = ChbPermaSL.Checked;
-            Data.Strategy.UsePermanentTP = ChbPermaTP.Checked;
-            Data.Strategy.UseBreakEven = ChbBreakEven.Checked;
-            Data.Strategy.PermanentSLType = (PermanentProtectionType) CbxPermaSLType.SelectedIndex;
-            Data.Strategy.PermanentTPType = (PermanentProtectionType) CbxPermaTPType.SelectedIndex;
-            Data.Strategy.PermanentSL = (int) NUDPermaSL.Value;
-            Data.Strategy.PermanentTP = (int) NUDPermaTP.Value;
-            Data.Strategy.BreakEven = (int) NUDBreakEven.Value;
-            Data.Strategy.UseMartingale = CbxUseMartingale.Checked;
-            Data.Strategy.MartingaleMultiplier = (double) NUDMartingaleMultiplier.Value;
+            _backtester.Strategy.SameSignalAction = (SameDirSignalAction) CbxSameDirAction.SelectedIndex;
+            _backtester.Strategy.OppSignalAction = (OppositeDirSignalAction) CbxOppDirAction.SelectedIndex;
+            _backtester.Strategy.UseAccountPercentEntry = RbVariableUnits.Checked;
+            _backtester.Strategy.MaxOpenLots = (double) NUDMaxOpenLots.Value;
+            _backtester.Strategy.EntryLots = (double) NUDEntryLots.Value;
+            _backtester.Strategy.AddingLots = (double) NUDAddingLots.Value;
+            _backtester.Strategy.ReducingLots = (double) NUDReducingLots.Value;
+            _backtester.Strategy.UsePermanentSL = ChbPermaSL.Checked;
+            _backtester.Strategy.UsePermanentTP = ChbPermaTP.Checked;
+            _backtester.Strategy.UseBreakEven = ChbBreakEven.Checked;
+            _backtester.Strategy.PermanentSLType = (PermanentProtectionType) CbxPermaSLType.SelectedIndex;
+            _backtester.Strategy.PermanentTPType = (PermanentProtectionType) CbxPermaTPType.SelectedIndex;
+            _backtester.Strategy.PermanentSL = (int) NUDPermaSL.Value;
+            _backtester.Strategy.PermanentTP = (int) NUDPermaTP.Value;
+            _backtester.Strategy.BreakEven = (int) NUDBreakEven.Value;
+            _backtester.Strategy.UseMartingale = CbxUseMartingale.Checked;
+            _backtester.Strategy.MartingaleMultiplier = (double) NUDMartingaleMultiplier.Value;
 
             SetLabelPercent();
             CalculateStrategy();
@@ -628,42 +632,42 @@ namespace Forex_Strategy_Builder
         {
             RemoveParamEventHandlers();
 
-            CbxSameDirAction.SelectedIndex = (int) Data.Strategy.SameSignalAction;
-            CbxOppDirAction.SelectedIndex = (int) Data.Strategy.OppSignalAction;
-            CbxOppDirAction.Enabled = Data.Strategy.Slot[Data.Strategy.CloseSlot].IndicatorName != "Close and Reverse";
+            CbxSameDirAction.SelectedIndex = (int) _backtester.Strategy.SameSignalAction;
+            CbxOppDirAction.SelectedIndex = (int) _backtester.Strategy.OppSignalAction;
+            CbxOppDirAction.Enabled = _backtester.Strategy.Slot[_backtester.Strategy.CloseSlot].IndicatorName != "Close and Reverse";
 
-            RbConstantUnits.Checked = !Data.Strategy.UseAccountPercentEntry;
-            RbVariableUnits.Checked = Data.Strategy.UseAccountPercentEntry;
+            RbConstantUnits.Checked = !_backtester.Strategy.UseAccountPercentEntry;
+            RbVariableUnits.Checked = _backtester.Strategy.UseAccountPercentEntry;
 
-            NUDMaxOpenLots.Value = (decimal) Data.Strategy.MaxOpenLots;
+            NUDMaxOpenLots.Value = (decimal) _backtester.Strategy.MaxOpenLots;
 
             if (!RbVariableUnits.Checked)
-                NUDEntryLots.Value = (decimal) Math.Min(Data.Strategy.EntryLots, Data.Strategy.MaxOpenLots);
+                NUDEntryLots.Value = (decimal) Math.Min(_backtester.Strategy.EntryLots, _backtester.Strategy.MaxOpenLots);
             else
-                NUDEntryLots.Value = (decimal) Data.Strategy.EntryLots;
+                NUDEntryLots.Value = (decimal) _backtester.Strategy.EntryLots;
 
-            NUDAddingLots.Value = (decimal) Data.Strategy.AddingLots;
-            NUDReducingLots.Value = (decimal) Data.Strategy.ReducingLots;
+            NUDAddingLots.Value = (decimal) _backtester.Strategy.AddingLots;
+            NUDReducingLots.Value = (decimal) _backtester.Strategy.ReducingLots;
 
-            CbxUseMartingale.Checked = Data.Strategy.UseMartingale;
-            NUDMartingaleMultiplier.Value = (decimal) Data.Strategy.MartingaleMultiplier;
+            CbxUseMartingale.Checked = _backtester.Strategy.UseMartingale;
+            NUDMartingaleMultiplier.Value = (decimal) _backtester.Strategy.MartingaleMultiplier;
             NUDMartingaleMultiplier.Enabled = CbxUseMartingale.Checked;
 
-            ChbPermaSL.Checked = Data.Strategy.UsePermanentSL;
-            NUDPermaSL.Value = Data.Strategy.PermanentSL;
-            NUDPermaSL.Enabled = Data.Strategy.UsePermanentSL;
-            CbxPermaSLType.Enabled = Data.Strategy.UsePermanentSL;
-            CbxPermaSLType.SelectedIndex = (int) Data.Strategy.PermanentSLType;
+            ChbPermaSL.Checked = _backtester.Strategy.UsePermanentSL;
+            NUDPermaSL.Value = _backtester.Strategy.PermanentSL;
+            NUDPermaSL.Enabled = _backtester.Strategy.UsePermanentSL;
+            CbxPermaSLType.Enabled = _backtester.Strategy.UsePermanentSL;
+            CbxPermaSLType.SelectedIndex = (int) _backtester.Strategy.PermanentSLType;
 
-            ChbPermaTP.Checked = Data.Strategy.UsePermanentTP;
-            NUDPermaTP.Value = Data.Strategy.PermanentTP;
-            NUDPermaTP.Enabled = Data.Strategy.UsePermanentTP;
-            CbxPermaTPType.Enabled = Data.Strategy.UsePermanentTP;
-            CbxPermaTPType.SelectedIndex = (int) Data.Strategy.PermanentTPType;
+            ChbPermaTP.Checked = _backtester.Strategy.UsePermanentTP;
+            NUDPermaTP.Value = _backtester.Strategy.PermanentTP;
+            NUDPermaTP.Enabled = _backtester.Strategy.UsePermanentTP;
+            CbxPermaTPType.Enabled = _backtester.Strategy.UsePermanentTP;
+            CbxPermaTPType.SelectedIndex = (int) _backtester.Strategy.PermanentTPType;
 
-            ChbBreakEven.Checked = Data.Strategy.UseBreakEven;
-            NUDBreakEven.Value = Data.Strategy.BreakEven;
-            NUDBreakEven.Enabled = Data.Strategy.UseBreakEven;
+            ChbBreakEven.Checked = _backtester.Strategy.UseBreakEven;
+            NUDBreakEven.Value = _backtester.Strategy.BreakEven;
+            NUDBreakEven.Enabled = _backtester.Strategy.UseBreakEven;
 
             SetParamEventHandlers();
             SetLabelPercent();
@@ -715,7 +719,7 @@ namespace Forex_Strategy_Builder
 
         private void SetLabelPercent()
         {
-            string text = Data.Strategy.UseAccountPercentEntry ? "%" : "";
+            string text = _backtester.Strategy.UseAccountPercentEntry ? "%" : "";
             LblPercent1.Text = text;
             LblPercent2.Text = text;
             LblPercent3.Text = text;
@@ -723,13 +727,13 @@ namespace Forex_Strategy_Builder
 
         private void CalculateStrategy()
         {
-            Backtester.Calculate();
-            Backtester.CalculateAccountStats();
+            _backtester.Calculate(_backtester.Strategy, Data.DataSet);
+            _backtester.CalculateAccountStats();
         }
 
         private void UpdateChart()
         {
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
         }

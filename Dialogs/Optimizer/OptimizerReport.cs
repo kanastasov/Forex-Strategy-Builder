@@ -37,17 +37,17 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                 "Win / Loss Ratio" + "," +
                 "Equity Percent Drawdown" + ",");
 
-            if (Data.Strategy.UsePermanentSL)
+            if (Backtester.Strategy.UsePermanentSL)
                 _sbReport.Append("Permanent SL" + ",");
-            if (Data.Strategy.UsePermanentTP)
+            if (Backtester.Strategy.UsePermanentTP)
                 _sbReport.Append("Permanent TP" + ",");
-            if (Data.Strategy.UseBreakEven)
+            if (Backtester.Strategy.UseBreakEven)
                 _sbReport.Append("Break Even" + ",");
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < Backtester.Strategy.Slots; slot++)
                 for (int numParam = 0; numParam < 6; numParam++)
-                    if (Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled)
-                        _sbReport.Append(Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Caption + ",");
+                    if (Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled)
+                        _sbReport.Append(Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Caption + ",");
 
             _sbReport.AppendLine();
         }
@@ -71,17 +71,17 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                 Backtester.WinLossRatio.ToString("F2") + "," +
                 Backtester.MoneyEquityPercentDrawdown.ToString("F2") + ",");
 
-            if (Data.Strategy.UsePermanentSL)
-                _sbReport.Append(Data.Strategy.PermanentSL + ",");
-            if (Data.Strategy.UsePermanentTP)
-                _sbReport.Append(Data.Strategy.PermanentTP + ",");
-            if (Data.Strategy.UseBreakEven)
-                _sbReport.Append(Data.Strategy.BreakEven + ",");
+            if (Backtester.Strategy.UsePermanentSL)
+                _sbReport.Append(Backtester.Strategy.PermanentSL + ",");
+            if (Backtester.Strategy.UsePermanentTP)
+                _sbReport.Append(Backtester.Strategy.PermanentTP + ",");
+            if (Backtester.Strategy.UseBreakEven)
+                _sbReport.Append(Backtester.Strategy.BreakEven + ",");
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < Backtester.Strategy.Slots; slot++)
                 for (int numParam = 0; numParam < 6; numParam++)
-                    if (Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled)
-                        _sbReport.Append(Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Value + ",");
+                    if (Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled)
+                        _sbReport.Append(Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Value + ",");
 
             _sbReport.AppendLine();
         }
@@ -92,7 +92,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private void SaveReport()
         {
             string pathReport;
-            string partilaPath = Data.StrategyPath.Replace(".xml", "");
+            string partilaPath = Backtester.Strategy.StrategyPath.Replace(".xml", "");
             int reportIndex = 0;
             do
             {

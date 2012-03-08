@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -158,7 +159,7 @@ namespace Forex_Strategy_Builder
                 _journalData[row, 2] = Language.T(StatsBuffer.PosDir(SelectedBar, pos).ToString());
                 _journalData[row, 3] = Configs.AccountInMoney
                                  ? (StatsBuffer.PosDir(SelectedBar, pos) == PosDirection.Short ? "-" : "") +
-                                    (StatsBuffer.PosLots(SelectedBar, pos)*Data.InstrProperties.LotSize)
+                                    (StatsBuffer.PosLots(SelectedBar, pos)*Data.DataSet.InstrProperties.LotSize)
                                  : StatsBuffer.PosLots(SelectedBar, pos).ToString(CultureInfo.InvariantCulture);
                 _journalData[row, 4] = (StatsBuffer.PosOrdNumb(SelectedBar, pos) + 1).ToString(CultureInfo.InvariantCulture);
                 _journalData[row, 5] = StatsBuffer.PosOrdPrice(SelectedBar, pos).ToString(Data.FF);
@@ -293,14 +294,14 @@ namespace Forex_Strategy_Builder
 
             // Caption background
             var rectfCaption = new RectangleF(0, 0, ClientSize.Width, 2*_rowHeight);
-            Data.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
 
             var colorBack = LayoutColors.ColorControlBack;
             var brushCaptionText = new SolidBrush(LayoutColors.ColorCaptionText);
             var brushEvenRowBack = new SolidBrush(LayoutColors.ColorEvenRowBack);
             var brushRowText = new SolidBrush(LayoutColors.ColorControlText);
             var penLines = new Pen(LayoutColors.ColorJournalLines);
-            var penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
+            var penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
             var font = new Font(Font.FontFamily, 9);
 
             // Print the journal caption

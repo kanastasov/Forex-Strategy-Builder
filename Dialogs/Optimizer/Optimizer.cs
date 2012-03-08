@@ -22,7 +22,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private readonly Random _rand = new Random();
         private readonly ToolTip _toolTip = new ToolTip();
         private int[] _aiChecked; // An array of the checked parameters
-        private int _barOOS = Data.Bars - 1;
+        private int _barOOS = Data.DataSet.Bars - 1;
         private int _checkedParams; // Count of the checked parameters
         private Color _colorText;
         private int _computedCycles; // Currently completed cycles

@@ -7,6 +7,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder.Dialogs
 {
@@ -15,7 +16,7 @@ namespace Forex_Strategy_Builder.Dialogs
         /// <summary>
         /// Constructor
         /// </summary>
-        public SeparateBalanceChart()
+        public SeparateBalanceChart(Backtester backtester)
         {
             Text = Language.T("Balance / Equity Chart");
             Icon = Data.Icon;
@@ -34,7 +35,7 @@ namespace Forex_Strategy_Builder.Dialogs
             BalanceChart = new SmallBalanceChart {Parent = this, ShowDynamicInfo = true};
             BalanceChart.MouseMove += BalanceChartMouseMove;
             BalanceChart.MouseLeave += BalanceChartMouseLeave;
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(backtester);
             BalanceChart.InitChart();
 
             // Label Dynamic Info
@@ -87,7 +88,7 @@ namespace Forex_Strategy_Builder.Dialogs
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
 
         /// <summary>

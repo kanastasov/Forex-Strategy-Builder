@@ -11,6 +11,8 @@ namespace Forex_Strategy_Builder
     /// </summary>
     public partial class Controls : MenuAndStatusBar
     {
+        protected Backtester Backtester;
+        
         /// <summary>
         /// The default constructor.
         /// </summary>

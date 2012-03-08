@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
 using Forex_Strategy_Builder.Properties;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -88,7 +89,7 @@ namespace Forex_Strategy_Builder
             // crummy way to get number of trades for init array
             // TBD -- find better property
             int ctr = 0;
-            for (int bar = 0; bar < Data.Bars; bar++)
+            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
             {
                 for (int pos = 0; pos < StatsBuffer.Positions(bar); pos++)
                 {
@@ -102,7 +103,7 @@ namespace Forex_Strategy_Builder
 
             _tradeResults = new int[ctr];
             ctr = 0;
-            for (int bar = 0; bar < Data.Bars; bar++)
+            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
             {
                 for (int pos = 0; pos < StatsBuffer.Positions(bar); pos++)
                 {
@@ -169,7 +170,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public void SetChartData()
         {
-            _isNotPaint = !Data.IsData || !Data.IsResult || Data.Bars <= StatsBuffer.FirstBar;
+            _isNotPaint = !Data.IsData || !Data.IsResult || Data.DataSet.Bars <= StatsBuffer.FirstBar;
 
             if (_isNotPaint) return;
 
@@ -220,7 +221,7 @@ namespace Forex_Strategy_Builder
 
             _brushFore = new SolidBrush(LayoutColors.ColorChartFore);
             _penGrid = new Pen(LayoutColors.ColorChartGrid) {DashStyle = DashStyle.Dash, DashPattern = new float[] {4, 2}};
-            _penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
+            _penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
 
             if (_isNotPaint) return;
 
@@ -280,7 +281,7 @@ namespace Forex_Strategy_Builder
             Graphics g = e.Graphics;
 
             // Caption bar
-            Data.GradientPaint(g, _rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, _rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
             g.DrawString(_strChartTitle, Font, new SolidBrush(LayoutColors.ColorCaptionText), _rectfCaption, _sfCaption);
 
             // Border
@@ -290,7 +291,7 @@ namespace Forex_Strategy_Builder
 
             // Paints the background by gradient
             var rectField = new RectangleF(Border, _captionHeight, ClientSize.Width - 2*Border, ClientSize.Height - _captionHeight - Border);
-            Data.GradientPaint(g, rectField, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectField, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
 
             if (_isNotPaint) return;
 
@@ -487,8 +488,8 @@ namespace Forex_Strategy_Builder
             // protect against null if no trades in strategy
             if (_tradeResults.Length > 0)
             {
-                var exporter = new Exporter();
-                exporter.ExportHistogramData(GetHistogramDataString());
+                //var exporter = new Exporter(Backtester);
+                //exporter.ExportHistogramData(GetHistogramDataString());
             }
             else
             {

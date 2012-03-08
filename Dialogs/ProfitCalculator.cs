@@ -8,6 +8,7 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -19,6 +20,7 @@ namespace Forex_Strategy_Builder
         private readonly Color _colorText;
 
         private string _symbol;
+        private Backtester Backtester { get; set; }
 
         /// <summary>
         /// Constructor
@@ -57,7 +59,7 @@ namespace Forex_Strategy_Builder
             // Input Names
             var asInputNames = new[]
                                    {
-                                       Data.InstrProperties.Symbol,
+                                       Data.DataSet.InstrProperties.Symbol,
                                        Language.T("Direction"),
                                        Language.T("Number of lots"),
                                        Language.T("Entry price"),
@@ -97,7 +99,7 @@ namespace Forex_Strategy_Builder
             NUDLots.Maximum = 100;
             NUDLots.Increment = 0.01M;
             NUDLots.DecimalPlaces = 2;
-            NUDLots.Value = (decimal) Data.Strategy.EntryLots;
+            NUDLots.Value = (decimal)Backtester.Strategy.EntryLots;
             NUDLots.EndInit();
 
             // NumericUpDown Entry Price
@@ -260,7 +262,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void TimerTick(object sender, EventArgs e)
         {
-            if (_symbol == Data.InstrProperties.Symbol) return;
+            if (_symbol == Data.DataSet.InstrProperties.Symbol) return;
             InitParams();
             InitParams();
         }
@@ -270,27 +272,27 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void InitParams()
         {
-            _symbol = Data.InstrProperties.Symbol;
+            _symbol = Data.DataSet.InstrProperties.Symbol;
 
             AlblInputNames[0].Text = _symbol;
-            LblLotSize.Text = Data.InstrProperties.LotSize.ToString(CultureInfo.InvariantCulture);
+            LblLotSize.Text = Data.DataSet.InstrProperties.LotSize.ToString(CultureInfo.InvariantCulture);
 
             // NumericUpDown Entry Price
             NUDEntryPrice.BeginInit();
-            NUDEntryPrice.DecimalPlaces = Data.InstrProperties.Digits;
-            NUDEntryPrice.Minimum = (decimal) (Data.MinPrice*0.7);
-            NUDEntryPrice.Maximum = (decimal) (Data.MaxPrice*1.3);
-            NUDEntryPrice.Increment = (decimal) Data.InstrProperties.Point;
-            NUDEntryPrice.Value = (decimal) Data.Close[Data.Bars - 1];
+            NUDEntryPrice.DecimalPlaces = Data.DataSet.InstrProperties.Digits;
+            NUDEntryPrice.Minimum = (decimal)(Data.DataStats.MinPrice * 0.7);
+            NUDEntryPrice.Maximum = (decimal)(Data.DataStats.MaxPrice * 1.3);
+            NUDEntryPrice.Increment = (decimal) Data.DataSet.InstrProperties.Point;
+            NUDEntryPrice.Value = (decimal)Data.DataSet.Close[Data.DataSet.Bars - 1];
             NUDEntryPrice.EndInit();
 
             // NumericUpDown Exit Price
             NUDExitPrice.BeginInit();
-            NUDExitPrice.DecimalPlaces = Data.InstrProperties.Digits;
-            NUDExitPrice.Minimum = (decimal) (Data.MinPrice*0.7);
-            NUDExitPrice.Maximum = (decimal) (Data.MaxPrice*1.3);
-            NUDExitPrice.Increment = (decimal) Data.InstrProperties.Point;
-            NUDExitPrice.Value = (decimal) (Data.Close[Data.Bars - 1] + 100*Data.InstrProperties.Point);
+            NUDExitPrice.DecimalPlaces = Data.DataSet.InstrProperties.Digits;
+            NUDExitPrice.Minimum = (decimal)(Data.DataStats.MinPrice * 0.7);
+            NUDExitPrice.Maximum = (decimal)(Data.DataStats.MaxPrice * 1.3);
+            NUDExitPrice.Increment = (decimal) Data.DataSet.InstrProperties.Point;
+            NUDExitPrice.Value = (decimal)(Data.DataSet.Close[Data.DataSet.Bars - 1] + 100 * Data.DataSet.InstrProperties.Point);
             NUDExitPrice.EndInit();
 
             Calculate();
@@ -311,12 +313,12 @@ namespace Forex_Strategy_Builder
         {
             bool isLong = (CbxDirection.SelectedIndex == 0);
             PosDirection posDir = isLong ? PosDirection.Long : PosDirection.Short;
-            int lotSize = Data.InstrProperties.LotSize;
+            int lotSize = Data.DataSet.InstrProperties.LotSize;
             var lots = (double) NUDLots.Value;
             var entryPrice = (double) NUDEntryPrice.Value;
             var exitPrice = (double) NUDExitPrice.Value;
             var daysRollover = (int) NUDDays.Value;
-            double point = Data.InstrProperties.Point;
+            double point = Data.DataSet.InstrProperties.Point;
             string unit = " " + Configs.AccountCurrency;
             double entryValue = lots*lotSize*entryPrice;
             double exitValue = lots*lotSize*exitPrice;
@@ -332,7 +334,7 @@ namespace Forex_Strategy_Builder
             AlblOutputValues[1].Text = grossProfit.ToString("F2") + unit;
 
             // Spread
-            double spread = Data.InstrProperties.Spread*point*lots*lotSize/Backtester.AccountExchangeRate(exitPrice);
+            double spread = Data.DataSet.InstrProperties.Spread*point*lots*lotSize/Backtester.AccountExchangeRate(exitPrice);
             AlblOutputValues[2].Text = spread.ToString("F2") + unit;
 
             // Entry Commission
@@ -348,7 +350,7 @@ namespace Forex_Strategy_Builder
             AlblOutputValues[5].Text = rollover.ToString("F2") + unit;
 
             // Slippage
-            double slippage = Data.InstrProperties.Slippage*point*lots*lotSize/Backtester.AccountExchangeRate(exitPrice);
+            double slippage = Data.DataSet.InstrProperties.Slippage*point*lots*lotSize/Backtester.AccountExchangeRate(exitPrice);
             AlblOutputValues[6].Text = slippage.ToString("F2") + unit;
 
             // Net Profit
@@ -361,7 +363,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
     }
 }

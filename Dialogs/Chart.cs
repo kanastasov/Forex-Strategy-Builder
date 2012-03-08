@@ -10,6 +10,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Properties;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -102,10 +103,12 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The default constructor.
         /// </summary>
-        public Chart()
+        public Chart(Backtester backtester)
         {
+            _backtester = backtester;
+
             BarPixels = 8;
-            Text = Language.T("Chart") + " " + Data.Symbol + " " + Data.PeriodString + " - " + Data.ProgramName;
+            Text = Language.T("Chart") + " " + _backtester.DataSet.Symbol + " " + Data.PeriodString + " - " + Data.ProgramName;
             Icon = Data.Icon;
             BackColor = LayoutColors.ColorFormBack;
 
@@ -162,18 +165,20 @@ namespace Forex_Strategy_Builder
             _penGrid.DashStyle = DashStyle.Dash;
             _penGrid.DashPattern = new float[] {4, 2};
 
-            _colorBarWhite1 = Data.GetGradientColor(LayoutColors.ColorBarWhite, 30);
-            _colorBarWhite2 = Data.GetGradientColor(LayoutColors.ColorBarWhite, -30);
-            _colorBarBlack1 = Data.GetGradientColor(LayoutColors.ColorBarBlack, 30);
-            _colorBarBlack2 = Data.GetGradientColor(LayoutColors.ColorBarBlack, -30);
+            _colorBarWhite1 = ColorMagic.GetGradientColor(LayoutColors.ColorBarWhite, 30);
+            _colorBarWhite2 = ColorMagic.GetGradientColor(LayoutColors.ColorBarWhite, -30);
+            _colorBarBlack1 = ColorMagic.GetGradientColor(LayoutColors.ColorBarBlack, 30);
+            _colorBarBlack2 = ColorMagic.GetGradientColor(LayoutColors.ColorBarBlack, -30);
 
-            _colorLongTrade1 = Data.GetGradientColor(LayoutColors.ColorTradeLong, 30);
-            _colorLongTrade2 = Data.GetGradientColor(LayoutColors.ColorTradeLong, -30);
-            _colorShortTrade1 = Data.GetGradientColor(LayoutColors.ColorTradeShort, 30);
-            _colorShortTrade2 = Data.GetGradientColor(LayoutColors.ColorTradeShort, -30);
-            _colorClosedTrade1 = Data.GetGradientColor(LayoutColors.ColorTradeClose, 30);
-            _colorClosedTrade2 = Data.GetGradientColor(LayoutColors.ColorTradeClose, -30);
+            _colorLongTrade1 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeLong, 30);
+            _colorLongTrade2 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeLong, -30);
+            _colorShortTrade1 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeShort, 30);
+            _colorShortTrade2 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeShort, -30);
+            _colorClosedTrade1 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeClose, 30);
+            _colorClosedTrade2 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeClose, -30);
         }
+
+        private readonly Backtester _backtester;
 
         private Panel PnlCharts { get; set; }
         private Panel PnlInfo { get; set; }
@@ -363,19 +368,19 @@ namespace Forex_Strategy_Builder
 
             // Indicator panels
             _indPanels = 0;
-            var asIndicatorTexts = new string[Data.Strategy.Slots];
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            var asIndicatorTexts = new string[_backtester.Strategy.Slots];
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
-                Indicator indicator = IndicatorStore.ConstructIndicator(Data.Strategy.Slot[slot].IndicatorName,
-                                                                        Data.Strategy.Slot[slot].SlotType);
-                indicator.IndParam = Data.Strategy.Slot[slot].IndParam;
+                Indicator indicator = IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                                        _backtester.Strategy.Slot[slot].SlotType);
+                indicator.IndParam = _backtester.Strategy.Slot[slot].IndParam;
                 asIndicatorTexts[slot] = indicator.ToString();
-                _indPanels += Data.Strategy.Slot[slot].SeparatedChart ? 1 : 0;
+                _indPanels += _backtester.Strategy.Slot[slot].SeparatedChart ? 1 : 0;
             }
 
             // Repeated indicators
-            _repeatedIndicators = new bool[Data.Strategy.Slots];
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            _repeatedIndicators = new bool[_backtester.Strategy.Slots];
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
                 _repeatedIndicators[slot] = false;
                 for (int i = 0; i < slot; i++)
@@ -398,9 +403,9 @@ namespace Forex_Strategy_Builder
             }
 
             int iIndex = 0;
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
-                if (!Data.Strategy.Slot[slot].SeparatedChart) continue;
+                if (!_backtester.Strategy.Slot[slot].SeparatedChart) continue;
                 PnlInd[iIndex].Tag = slot;
                 iIndex++;
             }
@@ -450,8 +455,8 @@ namespace Forex_Strategy_Builder
                               Parent = PnlCharts,
                               Dock = DockStyle.Bottom,
                               TabStop = true,
-                              Minimum = Data.FirstBar,
-                              Maximum = Data.Bars - 1,
+                              Minimum = _backtester.Strategy.FirstBar,
+                              Maximum = _backtester.DataSet.Bars - 1,
                               SmallChange = 1
                           };
             _scroll.ValueChanged += ScrollValueChanged;
@@ -466,9 +471,9 @@ namespace Forex_Strategy_Builder
         private void SetPriceChartParam()
         {
             _chartBars = _chartWidth/BarPixels;
-            _chartBars = Math.Min(_chartBars, Data.Bars - Data.FirstBar);
-            _firstBar = Math.Max(Data.FirstBar, Data.Bars - _chartBars);
-            _firstBar = Math.Min(_firstBar, Data.Bars - 1);
+            _chartBars = Math.Min(_chartBars, _backtester.DataSet.Bars - _backtester.Strategy.FirstBar);
+            _firstBar = Math.Max(_backtester.Strategy.FirstBar, _backtester.DataSet.Bars - _chartBars);
+            _firstBar = Math.Min(_firstBar, _backtester.DataSet.Bars - 1);
             _lastBar = Math.Max(_firstBar + _chartBars - 1, _firstBar);
 
             _scroll.Value = _firstBar;
@@ -481,18 +486,18 @@ namespace Forex_Strategy_Builder
         private void SetupChartTitle()
         {
             // Chart title
-            _chartTitle = Data.Symbol + "  " + Data.PeriodString + " " + Data.Strategy.StrategyName;
+            _chartTitle = Data.Symbol + "  " + Data.PeriodString + " " + _backtester.Strategy.StrategyName;
 
             if (!ShowIndicators) return;
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
-                if (Data.Strategy.Slot[slot].SeparatedChart) continue;
+                if (_backtester.Strategy.Slot[slot].SeparatedChart) continue;
 
                 bool isChart = false;
-                for (int iComp = 0; iComp < Data.Strategy.Slot[slot].Component.Length; iComp++)
+                for (int iComp = 0; iComp < _backtester.Strategy.Slot[slot].Component.Length; iComp++)
                 {
-                    if (Data.Strategy.Slot[slot].Component[iComp].ChartType != IndChartType.NoChart)
+                    if (_backtester.Strategy.Slot[slot].Component[iComp].ChartType != IndChartType.NoChart)
                     {
                         isChart = true;
                         break;
@@ -500,9 +505,9 @@ namespace Forex_Strategy_Builder
                 }
                 if (isChart)
                 {
-                    Indicator indicator = IndicatorStore.ConstructIndicator(Data.Strategy.Slot[slot].IndicatorName,
-                                                                            Data.Strategy.Slot[slot].SlotType);
-                    indicator.IndParam = Data.Strategy.Slot[slot].IndParam;
+                    Indicator indicator = IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                                            _backtester.Strategy.Slot[slot].SlotType);
+                    indicator.IndParam = _backtester.Strategy.Slot[slot].IndParam;
                     if (!_chartTitle.Contains(indicator.ToString()))
                         _chartTitle += Environment.NewLine + indicator;
                 }
@@ -602,9 +607,9 @@ namespace Forex_Strategy_Builder
             _maxVolume = int.MinValue;
             for (int bar = _firstBar; bar <= _lastBar; bar++)
             {
-                if (Data.High[bar] > _maxPrice) _maxPrice = Data.High[bar];
-                if (Data.Low[bar] < _minPrice) _minPrice = Data.Low[bar];
-                if (Data.Volume[bar] > _maxVolume) _maxVolume = Data.Volume[bar];
+                if (_backtester.DataSet.High[bar] > _maxPrice) _maxPrice = _backtester.DataSet.High[bar];
+                if (_backtester.DataSet.Low[bar] < _minPrice) _minPrice = _backtester.DataSet.Low[bar];
+                if (_backtester.DataSet.Volume[bar] > _maxVolume) _maxVolume = _backtester.DataSet.Volume[bar];
             }
 
             double pricePixel = (_maxPrice - _minPrice)/(_yBottom - _yTop);
@@ -618,20 +623,20 @@ namespace Forex_Strategy_Builder
 
             // Grid
             int countLabels = Math.Max((_yBottom - _yTop)/30, 1);
-            double deltaPoint = (Data.InstrProperties.Digits == 5 || Data.InstrProperties.Digits == 3)
-                                    ? Data.InstrProperties.Point*100
-                                    : Data.InstrProperties.Point*10;
+            double deltaPoint = (_backtester.DataSet.InstrProperties.Digits == 5 || _backtester.DataSet.InstrProperties.Digits == 3)
+                                    ? _backtester.DataSet.InstrProperties.Point*100
+                                    : _backtester.DataSet.InstrProperties.Point*10;
             double deltaLabel =
-                Math.Max(Math.Round((_maxPrice - _minPrice)/countLabels, Data.InstrProperties.Point < 0.001 ? 3 : 1),
+                Math.Max(Math.Round((_maxPrice - _minPrice)/countLabels, _backtester.DataSet.InstrProperties.Point < 0.001 ? 3 : 1),
                          deltaPoint);
-            _minPrice = Math.Round(_minPrice, Data.InstrProperties.Point < 0.001 ? 3 : 1) - deltaPoint;
+            _minPrice = Math.Round(_minPrice, _backtester.DataSet.InstrProperties.Point < 0.001 ? 3 : 1) - deltaPoint;
             countLabels = (int) Math.Ceiling((_maxPrice - _minPrice)/deltaLabel);
             _maxPrice = _minPrice + countLabels*deltaLabel;
             _yScale = (_yBottom - _yTop)/(countLabels*deltaLabel);
             _yVolScale = _maxVolume > 0 ? 40.0f/_maxVolume : 0f; // 40 - the highest volume line
 
             // Price labels
-            for (double label = _minPrice; label <= _maxPrice + Data.InstrProperties.Point; label += deltaLabel)
+            for (double label = _minPrice; label <= _maxPrice + _backtester.DataSet.InstrProperties.Point; label += deltaLabel)
             {
                 var iLabelY = (int) Math.Round(_yBottom - (label - _minPrice)*_yScale);
                 g.DrawString(label.ToString(Data.FF), Font, _brushFore, _xRight, iLabelY - Font.Height/2 - 1);
@@ -648,8 +653,8 @@ namespace Forex_Strategy_Builder
                 int iXVertLine = (iVertLineBar - _firstBar)*BarPixels + _spcLeft + BarPixels/2 - 1;
                 if (ShowGrid)
                     g.DrawLine(_penGrid, iXVertLine, _yTop, iXVertLine, _yBottom + 2);
-                string date = String.Format("{0} {1}", Data.Time[iVertLineBar].ToString(Data.DFS),
-                                            Data.Time[iVertLineBar].ToString("HH:mm"));
+                string date = String.Format("{0} {1}", _backtester.DataSet.Time[iVertLineBar].ToString(Data.DFS),
+                                            _backtester.DataSet.Time[iVertLineBar].ToString("HH:mm"));
                 g.DrawString(date, _font, _brushFore, iXVertLine - _szDate.Width/2, _yBottomText);
             }
 
@@ -660,7 +665,7 @@ namespace Forex_Strategy_Builder
                 crossBar = Math.Max(0, crossBar);
                 crossBar = Math.Min(_chartBars - 1, crossBar);
                 crossBar += _firstBar;
-                crossBar = Math.Min(Data.Bars - 1, crossBar);
+                crossBar = Math.Min(_backtester.DataSet.Bars - 1, crossBar);
 
                 // Vertical positions
                 var point = new Point(_mouseX - _szDateL.Width/2, _yBottomText);
@@ -682,7 +687,7 @@ namespace Forex_Strategy_Builder
                 {
                     g.FillRectangle(_brushLabelBkgrd, rec);
                     g.DrawRectangle(_penCross, rec);
-                    string sDate = Data.Time[crossBar].ToString(Data.DF) + " " + Data.Time[crossBar].ToString("HH:mm");
+                    string sDate = _backtester.DataSet.Time[crossBar].ToString(Data.DF) + " " + _backtester.DataSet.Time[crossBar].ToString("HH:mm");
                     g.DrawString(sDate, _font, _brushLabelFore, point);
                 }
 
@@ -706,23 +711,23 @@ namespace Forex_Strategy_Builder
             for (int bar = _firstBar; bar <= _lastBar; bar++)
             {
                 int x = (bar - _firstBar)*BarPixels + _spcLeft;
-                var yOpen = (int) Math.Round(_yBottom - (Data.Open[bar] - _minPrice)*_yScale);
-                var yHigh = (int) Math.Round(_yBottom - (Data.High[bar] - _minPrice)*_yScale);
-                var yLow = (int) Math.Round(_yBottom - (Data.Low[bar] - _minPrice)*_yScale);
-                var yClose = (int) Math.Round(_yBottom - (Data.Close[bar] - _minPrice)*_yScale);
-                var yVolume = (int) Math.Round(_yBottom - Data.Volume[bar]*_yVolScale);
+                var yOpen = (int)Math.Round(_yBottom - (_backtester.DataSet.Open[bar] - _minPrice) * _yScale);
+                var yHigh = (int)Math.Round(_yBottom - (_backtester.DataSet.High[bar] - _minPrice) * _yScale);
+                var yLow = (int)Math.Round(_yBottom - (_backtester.DataSet.Low[bar] - _minPrice) * _yScale);
+                var yClose = (int)Math.Round(_yBottom - (_backtester.DataSet.Close[bar] - _minPrice) * _yScale);
+                var yVolume = (int)Math.Round(_yBottom - _backtester.DataSet.Volume[bar] * _yVolScale);
 
                 // Draw the volume
                 if (ShowVolume && yVolume != _yBottom)
                     g.DrawLine(_penVolume, x + BarPixels/2 - 1, yVolume, x + BarPixels/2 - 1, _yBottom);
 
                 // Draw position lots
-                if (ShowPositionLots && Backtester.IsPos(bar))
+                if (ShowPositionLots && _backtester.IsPos(bar))
                 {
-                    var iPosHight = (int) Math.Round(Math.Max(Backtester.SummaryLots(bar)*2, 2));
+                    var iPosHight = (int) Math.Round(Math.Max(_backtester.SummaryLots(bar)*2, 2));
                     int iPosY = _yBottom - iPosHight + 1;
 
-                    if (Backtester.SummaryDir(bar) == PosDirection.Long)
+                    if (_backtester.SummaryDir(bar) == PosDirection.Long)
                     {
                         // Long
                         var rect = new Rectangle(x - 1, iPosY, BarPixels + 1, iPosHight);
@@ -730,7 +735,7 @@ namespace Forex_Strategy_Builder
                         rect = new Rectangle(x, iPosY, BarPixels - 1, iPosHight);
                         g.FillRectangle(lgBrush, rect);
                     }
-                    else if (Backtester.SummaryDir(bar) == PosDirection.Short)
+                    else if (_backtester.SummaryDir(bar) == PosDirection.Short)
                     {
                         // Short
                         var rect = new Rectangle(x - 1, iPosY, BarPixels + 1, iPosHight);
@@ -820,29 +825,29 @@ namespace Forex_Strategy_Builder
 
             // Drawing the indicators in the chart
             g.SetClip(new RectangleF(0, _yTop, _xRight, _yBottom - _yTop));
-            for (int slot = 0; slot < Data.Strategy.Slots && ShowIndicators; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots && ShowIndicators; slot++)
             {
-                if (Data.Strategy.Slot[slot].SeparatedChart || _repeatedIndicators[slot]) continue;
+                if (_backtester.Strategy.Slot[slot].SeparatedChart || _repeatedIndicators[slot]) continue;
 
                 int cloudUp = -1; // For Ichimoku and similar
                 int cloudDown = -1; // For Ichimoku and similar
 
                 bool isIndicatorValueAtClose = true;
                 int indicatorValueShift = 1;
-                foreach (ListParam listParam in Data.Strategy.Slot[slot].IndParam.ListParam)
+                foreach (ListParam listParam in _backtester.Strategy.Slot[slot].IndParam.ListParam)
                     if (listParam.Caption == "Base price" && listParam.Text == "Open")
                     {
                         isIndicatorValueAtClose = false;
                         indicatorValueShift = 0;
                     }
 
-                for (int comp = 0; comp < Data.Strategy.Slot[slot].Component.Length; comp++)
+                for (int comp = 0; comp < _backtester.Strategy.Slot[slot].Component.Length; comp++)
                 {
-                    var pen = new Pen(Data.Strategy.Slot[slot].Component[comp].ChartColor);
-                    var penTc = new Pen(Data.Strategy.Slot[slot].Component[comp].ChartColor)
+                    var pen = new Pen(_backtester.Strategy.Slot[slot].Component[comp].ChartColor);
+                    var penTc = new Pen(_backtester.Strategy.Slot[slot].Component[comp].ChartColor)
                                     {DashStyle = DashStyle.Dash, DashPattern = new float[] {2, 1}};
 
-                    if (Data.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.Line)
+                    if (_backtester.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.Line)
                     {
                         // Line
                         if (TrueCharts)
@@ -851,7 +856,7 @@ namespace Forex_Strategy_Builder
                             var point = new Point[_lastBar - _firstBar + 1];
                             for (int bar = _firstBar; bar <= _lastBar; bar++)
                             {
-                                double value = Data.Strategy.Slot[slot].Component[comp].Value[bar];
+                                double value = _backtester.Strategy.Slot[slot].Component[comp].Value[bar];
                                 int x = _spcLeft + (bar - _firstBar)*BarPixels + indicatorValueShift*(BarPixels - 2);
                                 var y = (int) Math.Round(_yBottom - (value - _minPrice)*_yScale);
 
@@ -873,7 +878,7 @@ namespace Forex_Strategy_Builder
                                 if (bar == _firstBar && isIndicatorValueAtClose)
                                 {
                                     // First bar
-                                    double value = Data.Strategy.Slot[slot].Component[comp].Value[bar - 1];
+                                    double value = _backtester.Strategy.Slot[slot].Component[comp].Value[bar - 1];
                                     int x = _spcLeft + (bar - _firstBar)*BarPixels;
                                     var y = (int) Math.Round(_yBottom - (value - _minPrice)*_yScale);
 
@@ -939,7 +944,7 @@ namespace Forex_Strategy_Builder
                             var aPoint = new Point[_lastBar - _firstBar + 1];
                             for (int bar = _firstBar; bar <= _lastBar; bar++)
                             {
-                                double dValue = Data.Strategy.Slot[slot].Component[comp].Value[bar];
+                                double dValue = _backtester.Strategy.Slot[slot].Component[comp].Value[bar];
                                 int x = _spcLeft + (bar - _firstBar)*BarPixels + BarPixels/2 - 1;
                                 var y = (int) Math.Round(_yBottom - (dValue - _minPrice)*_yScale);
 
@@ -951,12 +956,12 @@ namespace Forex_Strategy_Builder
                             g.DrawLines(pen, aPoint);
                         }
                     }
-                    else if (Data.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.Dot)
+                    else if (_backtester.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.Dot)
                     {
                         // Dots
                         for (int bar = _firstBar; bar <= _lastBar; bar++)
                         {
-                            double dValue = Data.Strategy.Slot[slot].Component[comp].Value[bar];
+                            double dValue = _backtester.Strategy.Slot[slot].Component[comp].Value[bar];
                             int x = (bar - _firstBar)*BarPixels + BarPixels/2 - 1 + _spcLeft;
                             var y = (int) Math.Round(_yBottom - (dValue - _minPrice)*_yScale);
                             if (BarPixels == 2)
@@ -968,22 +973,22 @@ namespace Forex_Strategy_Builder
                             }
                         }
                     }
-                    else if (Data.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.Level)
+                    else if (_backtester.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.Level)
                     {
                         // Level
                         for (int bar = _firstBar; bar <= _lastBar; bar++)
                         {
-                            double dValue = Data.Strategy.Slot[slot].Component[comp].Value[bar];
+                            double dValue = _backtester.Strategy.Slot[slot].Component[comp].Value[bar];
                             int x = (bar - _firstBar)*BarPixels + _spcLeft;
                             var y = (int) Math.Round(_yBottom - (dValue - _minPrice)*_yScale);
                             g.DrawLine(pen, x, y, x + BarPixels - 1, y);
                         }
                     }
-                    else if (Data.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.CloudUp)
+                    else if (_backtester.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.CloudUp)
                     {
                         cloudUp = comp;
                     }
-                    else if (Data.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.CloudDown)
+                    else if (_backtester.Strategy.Slot[slot].Component[comp].ChartType == IndChartType.CloudDown)
                     {
                         cloudDown = comp;
                     }
@@ -996,8 +1001,8 @@ namespace Forex_Strategy_Builder
                     var apntDown = new PointF[_lastBar - _firstBar + 1];
                     for (int bar = _firstBar; bar <= _lastBar; bar++)
                     {
-                        double dValueUp = Data.Strategy.Slot[slot].Component[cloudUp].Value[bar];
-                        double dValueDown = Data.Strategy.Slot[slot].Component[cloudDown].Value[bar];
+                        double dValueUp = _backtester.Strategy.Slot[slot].Component[cloudUp].Value[bar];
+                        double dValueDown = _backtester.Strategy.Slot[slot].Component[cloudDown].Value[bar];
                         apntUp[bar - _firstBar].X = (bar - _firstBar)*BarPixels + BarPixels/2 - 1 + _spcLeft;
                         apntUp[bar - _firstBar].Y = (int) Math.Round(_yBottom - (dValueUp - _minPrice)*_yScale);
                         apntDown[bar - _firstBar].X = (bar - _firstBar)*BarPixels + BarPixels/2 - 1 + _spcLeft;
@@ -1016,11 +1021,11 @@ namespace Forex_Strategy_Builder
                     pathDown.AddLine(apntDown[_lastBar - _firstBar], new PointF(apntDown[_lastBar - _firstBar].X, 0));
                     pathDown.AddLine(new PointF(apntDown[_lastBar - _firstBar].X, 0), new PointF(apntDown[0].X, 0));
 
-                    Color colorUp = Color.FromArgb(50, Data.Strategy.Slot[slot].Component[cloudUp].ChartColor);
-                    Color colorDown = Color.FromArgb(50, Data.Strategy.Slot[slot].Component[cloudDown].ChartColor);
+                    Color colorUp = Color.FromArgb(50, _backtester.Strategy.Slot[slot].Component[cloudUp].ChartColor);
+                    Color colorDown = Color.FromArgb(50, _backtester.Strategy.Slot[slot].Component[cloudDown].ChartColor);
 
-                    var penUp = new Pen(Data.Strategy.Slot[slot].Component[cloudUp].ChartColor);
-                    var penDown = new Pen(Data.Strategy.Slot[slot].Component[cloudDown].ChartColor);
+                    var penUp = new Pen(_backtester.Strategy.Slot[slot].Component[cloudUp].ChartColor);
+                    var penDown = new Pen(_backtester.Strategy.Slot[slot].Component[cloudDown].ChartColor);
 
                     penUp.DashStyle = DashStyle.Dash;
                     penDown.DashStyle = DashStyle.Dash;
@@ -1046,26 +1051,26 @@ namespace Forex_Strategy_Builder
             for (int bar = _firstBar; bar <= _lastBar; bar++)
             {
                 int x = (bar - _firstBar)*BarPixels + _spcLeft;
-                var yHigh = (int) Math.Round(_yBottom - (Data.High[bar] - _minPrice)*_yScale);
+                var yHigh = (int)Math.Round(_yBottom - (_backtester.DataSet.High[bar] - _minPrice) * _yScale);
 
                 // Draw the corrected position price
-                for (int iPos = 0; iPos < Backtester.Positions(bar) && ShowPositionPrice; iPos++)
+                for (int iPos = 0; iPos < _backtester.Positions(bar) && ShowPositionPrice; iPos++)
                 {
-                    var yPrice = (int) Math.Round(_yBottom - (Backtester.SummaryPrice(bar) - _minPrice)*_yScale);
+                    var yPrice = (int) Math.Round(_yBottom - (_backtester.SummaryPrice(bar) - _minPrice)*_yScale);
 
                     if (yPrice >= _yBottom || yPrice <= _yTop) continue;
 
-                    if (Backtester.SummaryDir(bar) == PosDirection.Long)
+                    if (_backtester.SummaryDir(bar) == PosDirection.Long)
                     {
                         // Long
                         g.DrawLine(_penTradeLong, x, yPrice, x + BarPixels - 2, yPrice);
                     }
-                    else if (Backtester.SummaryDir(bar) == PosDirection.Short)
+                    else if (_backtester.SummaryDir(bar) == PosDirection.Short)
                     {
                         // Short
                         g.DrawLine(_penTradeShort, x, yPrice, x + BarPixels - 2, yPrice);
                     }
-                    else if (Backtester.SummaryDir(bar) == PosDirection.Closed)
+                    else if (_backtester.SummaryDir(bar) == PosDirection.Closed)
                     {
                         // Closed
                         g.DrawLine(_penTradeClose, x, yPrice, x + BarPixels - 2, yPrice);
@@ -1074,9 +1079,9 @@ namespace Forex_Strategy_Builder
 
                 // Draw Break Even
 
-                for (int ord = 0; ord < Backtester.Orders(bar) && ShowProtections; ord++)
+                for (int ord = 0; ord < _backtester.Orders(bar) && ShowProtections; ord++)
                 {
-                    Order order = Backtester.OrdFromNumb(Backtester.OrdNumb(bar, ord));
+                    Order order = _backtester.OrdFromNumb(_backtester.OrdNumb(bar, ord));
                     if (order.OrdOrigin == OrderOrigin.BreakEven)
                     {
                         var yOrder = (int) Math.Round(_yBottom - (order.OrdPrice - _minPrice)*_yScale);
@@ -1107,16 +1112,16 @@ namespace Forex_Strategy_Builder
                 }
 
                 // Draw the deals
-                for (int iPos = 0; iPos < Backtester.Positions(bar) && ShowOrders; iPos++)
+                for (int iPos = 0; iPos < _backtester.Positions(bar) && ShowOrders; iPos++)
                 {
-                    if (Backtester.PosTransaction(bar, iPos) == Transaction.Transfer) continue;
+                    if (_backtester.PosTransaction(bar, iPos) == Transaction.Transfer) continue;
 
-                    var yDeal = (int) Math.Round(_yBottom - (Backtester.PosOrdPrice(bar, iPos) - _minPrice)*_yScale);
+                    var yDeal = (int) Math.Round(_yBottom - (_backtester.PosOrdPrice(bar, iPos) - _minPrice)*_yScale);
 
-                    if (Backtester.PosDir(bar, iPos) == PosDirection.Long ||
-                        Backtester.PosDir(bar, iPos) == PosDirection.Short)
+                    if (_backtester.PosDir(bar, iPos) == PosDirection.Long ||
+                        _backtester.PosDir(bar, iPos) == PosDirection.Short)
                     {
-                        if (Backtester.OrdFromNumb(Backtester.PosOrdNumb(bar, iPos)).OrdDir == OrderDirection.Buy)
+                        if (_backtester.OrdFromNumb(_backtester.PosOrdNumb(bar, iPos)).OrdDir == OrderDirection.Buy)
                         {
                             // Buy
                             var pen = new Pen(_brushTradeLong, 2);
@@ -1167,7 +1172,7 @@ namespace Forex_Strategy_Builder
                             }
                         }
                     }
-                    else if (Backtester.PosDir(bar, iPos) == PosDirection.Closed)
+                    else if (_backtester.PosDir(bar, iPos) == PosDirection.Closed)
                     {
                         // Close
                         var pen = new Pen(_brushTradeClose, 2);
@@ -1194,7 +1199,7 @@ namespace Forex_Strategy_Builder
                 }
 
                 // Ambiguous note
-                if (ShowAmbiguousBars && Backtester.BackTestEval(bar) == BacktestEval.Ambiguous)
+                if (ShowAmbiguousBars && _backtester.BackTestEval(bar) == BacktestEval.Ambiguous)
                     g.DrawString("!", Font, _brushSignalRed, x + BarPixels/2 - 4, yHigh - 20);
             }
 
@@ -1224,7 +1229,7 @@ namespace Forex_Strategy_Builder
 
             if (_chartBars == 0) return;
 
-            foreach (IndicatorComp component in Data.Strategy.Slot[slot].Component)
+            foreach (IndicatorComp component in _backtester.Strategy.Slot[slot].Component)
                 if (component.ChartType != IndChartType.NoChart)
                     for (int bar = Math.Max(_firstBar - 1, component.FirstBar); bar <= _lastBar; bar++)
                     {
@@ -1233,10 +1238,10 @@ namespace Forex_Strategy_Builder
                         if (value < minValue) minValue = value;
                     }
 
-            minValue = Math.Min(minValue, Data.Strategy.Slot[slot].MinValue);
-            maxValue = Math.Max(maxValue, Data.Strategy.Slot[slot].MaxValue);
+            minValue = Math.Min(minValue, _backtester.Strategy.Slot[slot].MinValue);
+            maxValue = Math.Max(maxValue, _backtester.Strategy.Slot[slot].MaxValue);
 
-            foreach (double value in Data.Strategy.Slot[slot].SpecValue)
+            foreach (double value in _backtester.Strategy.Slot[slot].SpecValue)
                 if (Math.Abs(value - 0) < 0.00001)
                 {
                     minValue = Math.Min(minValue, 0);
@@ -1292,10 +1297,10 @@ namespace Forex_Strategy_Builder
                     g.DrawLine(_penGrid, xGridRight - 5, labelYMax, xGridRight, labelYMax);
             }
 
-            if (Data.Strategy.Slot[slot].SpecValue != null)
-                for (int i = 0; i < Data.Strategy.Slot[slot].SpecValue.Length; i++)
+            if (_backtester.Strategy.Slot[slot].SpecValue != null)
+                for (int i = 0; i < _backtester.Strategy.Slot[slot].SpecValue.Length; i++)
                 {
-                    label = Data.Strategy.Slot[slot].SpecValue[i];
+                    label = _backtester.Strategy.Slot[slot].SpecValue[i];
                     if (label <= maxValue && label >= minValue)
                     {
                         var labelY = (int) Math.Round(pnl.ClientSize.Height - bottomSpace - (label - minValue)*scale);
@@ -1319,7 +1324,7 @@ namespace Forex_Strategy_Builder
             // Vertical line
             if (ShowGrid)
             {
-                string date = Data.Time[_firstBar].ToString("dd.MM") + " " + Data.Time[_firstBar].ToString("HH:mm");
+                string date = _backtester.DataSet.Time[_firstBar].ToString("dd.MM") + " " + _backtester.DataSet.Time[_firstBar].ToString("HH:mm");
                 var dateWidth = (int) g.MeasureString(date, _font).Width;
                 for (int vertLineBar = _lastBar;
                      vertLineBar > _firstBar;
@@ -1332,7 +1337,7 @@ namespace Forex_Strategy_Builder
 
             bool isIndicatorValueAtClose = true;
             int indicatorValueShift = 1;
-            foreach (ListParam listParam in Data.Strategy.Slot[slot].IndParam.ListParam)
+            foreach (ListParam listParam in _backtester.Strategy.Slot[slot].IndParam.ListParam)
                 if (listParam.Caption == "Base price" && listParam.Text == "Open")
                 {
                     isIndicatorValueAtClose = false;
@@ -1340,7 +1345,7 @@ namespace Forex_Strategy_Builder
                 }
 
             // Indicator chart
-            foreach (IndicatorComp component in Data.Strategy.Slot[slot].Component)
+            foreach (IndicatorComp component in _backtester.Strategy.Slot[slot].Component)
             {
                 if (component.ChartType == IndChartType.Histogram)
                 {
@@ -1613,9 +1618,9 @@ namespace Forex_Strategy_Builder
 
 
             // Chart title
-            Indicator indicator = IndicatorStore.ConstructIndicator(Data.Strategy.Slot[slot].IndicatorName,
-                                                                    Data.Strategy.Slot[slot].SlotType);
-            indicator.IndParam = Data.Strategy.Slot[slot].IndParam;
+            Indicator indicator = IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                                    _backtester.Strategy.Slot[slot].SlotType);
+            indicator.IndParam = _backtester.Strategy.Slot[slot].IndParam;
             string indicatorText = indicator.ToString();
             Size sizeTitle = g.MeasureString(indicatorText, Font).ToSize();
             g.FillRectangle(_brushBack, new Rectangle(_spcLeft, 0, sizeTitle.Width, sizeTitle.Height));
@@ -1641,12 +1646,12 @@ namespace Forex_Strategy_Builder
 
             if (_chartBars == 0) return;
 
-            for (int bar = Math.Max(_firstBar, Data.FirstBar); bar <= _lastBar; bar++)
+            for (int bar = Math.Max(_firstBar, _backtester.Strategy.FirstBar); bar <= _lastBar; bar++)
             {
-                if (!Backtester.IsPos(bar)) continue;
+                if (!_backtester.IsPos(bar)) continue;
                 value = Configs.AccountInMoney
-                            ? (int) Math.Round(Backtester.MoneyProfitLoss(bar) + Backtester.MoneyFloatingPL(bar))
-                            : Backtester.ProfitLoss(bar) + Backtester.FloatingPL(bar);
+                            ? (int) Math.Round(_backtester.MoneyProfitLoss(bar) + _backtester.MoneyFloatingPL(bar))
+                            : _backtester.ProfitLoss(bar) + _backtester.FloatingPL(bar);
                 if (value > maxValue) maxValue = value;
                 if (value < minValue) minValue = value;
             }
@@ -1693,7 +1698,7 @@ namespace Forex_Strategy_Builder
             // Vertical line
             if (ShowGrid)
             {
-                string date = Data.Time[_firstBar].ToString("dd.MM") + " " + Data.Time[_firstBar].ToString("HH:mm");
+                string date = _backtester.DataSet.Time[_firstBar].ToString("dd.MM") + " " + _backtester.DataSet.Time[_firstBar].ToString("HH:mm");
                 var isDataWidth = (int) g.MeasureString(date, Font).Width;
                 for (int vertLineBar = _lastBar;
                      vertLineBar > _firstBar;
@@ -1708,17 +1713,17 @@ namespace Forex_Strategy_Builder
             var y0 = (int) Math.Round(pnl.ClientSize.Height - 5 + minValue*scale);
             for (int bar = _firstBar; bar <= _lastBar; bar++)
             {
-                if (!Backtester.IsPos(bar)) continue;
+                if (!_backtester.IsPos(bar)) continue;
                 value = Configs.AccountInMoney
-                            ? (int) Math.Round(Backtester.MoneyProfitLoss(bar) + Backtester.MoneyFloatingPL(bar))
-                            : Backtester.ProfitLoss(bar) + Backtester.FloatingPL(bar);
+                            ? (int) Math.Round(_backtester.MoneyProfitLoss(bar) + _backtester.MoneyFloatingPL(bar))
+                            : _backtester.ProfitLoss(bar) + _backtester.FloatingPL(bar);
                 int x = (bar - _firstBar)*BarPixels + _spcLeft;
                 var y = (int) Math.Round(pnl.ClientSize.Height - 7 - (value - minValue)*scale);
 
                 if (y == y0) continue;
                 Rectangle rect;
                 LinearGradientBrush lgBrush;
-                if (Backtester.SummaryDir(bar) == PosDirection.Long)
+                if (_backtester.SummaryDir(bar) == PosDirection.Long)
                 {
                     if (y > y0)
                     {
@@ -1736,7 +1741,7 @@ namespace Forex_Strategy_Builder
                         continue;
                     g.FillRectangle(lgBrush, rect);
                 }
-                else if (Backtester.SummaryDir(bar) == PosDirection.Short)
+                else if (_backtester.SummaryDir(bar) == PosDirection.Short)
                 {
                     if (y > y0)
                     {
@@ -1812,12 +1817,12 @@ namespace Forex_Strategy_Builder
             int maxValue = int.MinValue;
             int minValue = int.MaxValue;
             int value;
-            for (int iBar = Math.Max(_firstBar, Data.FirstBar); iBar <= _lastBar; iBar++)
+            for (int iBar = Math.Max(_firstBar, _backtester.Strategy.FirstBar); iBar <= _lastBar; iBar++)
             {
-                value = Configs.AccountInMoney ? (int) Backtester.MoneyBalance(iBar) : Backtester.Balance(iBar);
+                value = Configs.AccountInMoney ? (int) _backtester.MoneyBalance(iBar) : _backtester.Balance(iBar);
                 if (value > maxValue) maxValue = value;
                 if (value < minValue) minValue = value;
-                value = Configs.AccountInMoney ? (int) Backtester.MoneyEquity(iBar) : Backtester.Equity(iBar);
+                value = Configs.AccountInMoney ? (int) _backtester.MoneyEquity(iBar) : _backtester.Equity(iBar);
                 if (value > maxValue) maxValue = value;
                 if (value < minValue) minValue = value;
             }
@@ -1872,11 +1877,11 @@ namespace Forex_Strategy_Builder
             var apntEquity = new Point[_lastBar - _firstBar + 1];
             for (int bar = _firstBar; bar <= _lastBar; bar++)
             {
-                value = Configs.AccountInMoney ? (int) Backtester.MoneyBalance(bar) : Backtester.Balance(bar);
+                value = Configs.AccountInMoney ? (int) _backtester.MoneyBalance(bar) : _backtester.Balance(bar);
                 int x = (bar - _firstBar)*BarPixels + BarPixels/2 - 1 + xLeft;
                 var y = (int) Math.Round(yBottom - (value - minValue)*scale);
                 apntBalance[bar - _firstBar] = new Point(x, y);
-                value = Configs.AccountInMoney ? (int) Backtester.MoneyEquity(bar) : Backtester.Equity(bar);
+                value = Configs.AccountInMoney ? (int) _backtester.MoneyEquity(bar) : _backtester.Equity(bar);
                 y = (int) Math.Round(yBottom - (value - minValue)*scale);
                 apntEquity[bar - _firstBar] = new Point(x, y);
             }
@@ -1938,17 +1943,17 @@ namespace Forex_Strategy_Builder
             _asInfoTitle[_infoRows++] = Language.T("Profit Loss") + sUnit;
             _asInfoTitle[_infoRows++] = Language.T("Floating P/L") + sUnit;
 
-            for (int iSlot = 0; iSlot < Data.Strategy.Slots; iSlot++)
+            for (int iSlot = 0; iSlot < _backtester.Strategy.Slots; iSlot++)
             {
                 int iCompToShow = 0;
-                foreach (IndicatorComp indComp in Data.Strategy.Slot[iSlot].Component)
+                foreach (IndicatorComp indComp in _backtester.Strategy.Slot[iSlot].Component)
                     if (indComp.ShowInDynInfo) iCompToShow++;
                 if (iCompToShow == 0) continue;
 
                 _aiInfoType[_infoRows] = 1;
-                _asInfoTitle[_infoRows++] = Data.Strategy.Slot[iSlot].IndicatorName +
-                                            (Data.Strategy.Slot[iSlot].IndParam.CheckParam[0].Checked ? "*" : "");
-                foreach (IndicatorComp indComp in Data.Strategy.Slot[iSlot].Component)
+                _asInfoTitle[_infoRows++] = _backtester.Strategy.Slot[iSlot].IndicatorName +
+                                            (_backtester.Strategy.Slot[iSlot].IndParam.CheckParam[0].Checked ? "*" : "");
+                foreach (IndicatorComp indComp in _backtester.Strategy.Slot[iSlot].Component)
                     if (indComp.ShowInDynInfo) _asInfoTitle[_infoRows++] = indComp.CompName;
             }
 
@@ -1975,13 +1980,13 @@ namespace Forex_Strategy_Builder
             int iMaxInfoWidth = Configs.AccountInMoney
                                     ? (int)
                                       Math.Max(
-                                          g.MeasureString(Backtester.MinMoneyEquity.ToString("F2"), _fontDI).Width,
-                                          g.MeasureString(Backtester.MaxMoneyEquity.ToString("F2"), _fontDI).Width)
+                                          g.MeasureString(_backtester.MinMoneyEquity.ToString("F2"), _fontDI).Width,
+                                          g.MeasureString(_backtester.MaxMoneyEquity.ToString("F2"), _fontDI).Width)
                                     : (int)
                                       Math.Max(
-                                          g.MeasureString(Backtester.MinEquity.ToString(CultureInfo.InvariantCulture),
+                                          g.MeasureString(_backtester.MinEquity.ToString(CultureInfo.InvariantCulture),
                                                           _fontDI).Width,
-                                          g.MeasureString(Backtester.MaxEquity.ToString(CultureInfo.InvariantCulture),
+                                          g.MeasureString(_backtester.MaxEquity.ToString(CultureInfo.InvariantCulture),
                                                           _fontDI).Width);
             iMaxInfoWidth = (int) Math.Max(g.MeasureString("99/99/99", _fontDI).Width, iMaxInfoWidth);
 
@@ -2027,18 +2032,18 @@ namespace Forex_Strategy_Builder
             _asInfoTitle[_infoRows++] = Language.T("Profit Loss") + unit;
             _asInfoTitle[_infoRows++] = Language.T("Floating P/L") + unit;
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
                 int compToShow = 0;
-                foreach (IndicatorComp indComp in Data.Strategy.Slot[slot].Component)
+                foreach (IndicatorComp indComp in _backtester.Strategy.Slot[slot].Component)
                     if (indComp.ShowInDynInfo) compToShow++;
                 if (compToShow == 0) continue;
 
                 _asInfoTitle[_infoRows++] = "";
                 _aiInfoType[_infoRows] = 1;
-                _asInfoTitle[_infoRows++] = Data.Strategy.Slot[slot].IndicatorName +
-                                            (Data.Strategy.Slot[slot].IndParam.CheckParam[0].Checked ? "*" : "");
-                foreach (IndicatorComp indComp in Data.Strategy.Slot[slot].Component)
+                _asInfoTitle[_infoRows++] = _backtester.Strategy.Slot[slot].IndicatorName +
+                                            (_backtester.Strategy.Slot[slot].IndParam.CheckParam[0].Checked ? "*" : "");
+                foreach (IndicatorComp indComp in _backtester.Strategy.Slot[slot].Component)
                     if (indComp.ShowInDynInfo) _asInfoTitle[_infoRows++] = indComp.CompName;
             }
 
@@ -2069,7 +2074,7 @@ namespace Forex_Strategy_Builder
             barNumb = Math.Min(_chartBars - 1, barNumb);
 
             int bar = _firstBar + barNumb;
-            bar = Math.Min(Data.Bars - 1, bar);
+            bar = Math.Min(_backtester.DataSet.Bars - 1, bar);
 
             if (_barOld == bar) return;
             _barOld = bar;
@@ -2077,82 +2082,82 @@ namespace Forex_Strategy_Builder
             int row = 0;
             _asInfoValue = new String[200];
             _asInfoValue[row++] = (bar + 1).ToString(CultureInfo.InvariantCulture);
-            _asInfoValue[row++] = Data.Time[bar].ToString(Data.DF);
-            _asInfoValue[row++] = Data.Time[bar].ToString("HH:mm");
+            _asInfoValue[row++] = _backtester.DataSet.Time[bar].ToString(Data.DF);
+            _asInfoValue[row++] = _backtester.DataSet.Time[bar].ToString("HH:mm");
             if (_isDebug)
             {
-                _asInfoValue[row++] = Data.Open[bar].ToString(CultureInfo.InvariantCulture);
-                _asInfoValue[row++] = Data.High[bar].ToString(CultureInfo.InvariantCulture);
-                _asInfoValue[row++] = Data.Low[bar].ToString(CultureInfo.InvariantCulture);
-                _asInfoValue[row++] = Data.Close[bar].ToString(CultureInfo.InvariantCulture);
+                _asInfoValue[row++] = _backtester.DataSet.Open[bar].ToString(CultureInfo.InvariantCulture);
+                _asInfoValue[row++] = _backtester.DataSet.High[bar].ToString(CultureInfo.InvariantCulture);
+                _asInfoValue[row++] = _backtester.DataSet.Low[bar].ToString(CultureInfo.InvariantCulture);
+                _asInfoValue[row++] = _backtester.DataSet.Close[bar].ToString(CultureInfo.InvariantCulture);
             }
             else
             {
-                _asInfoValue[row++] = Data.Open[bar].ToString(Data.FF);
-                _asInfoValue[row++] = Data.High[bar].ToString(Data.FF);
-                _asInfoValue[row++] = Data.Low[bar].ToString(Data.FF);
-                _asInfoValue[row++] = Data.Close[bar].ToString(Data.FF);
+                _asInfoValue[row++] = _backtester.DataSet.Open[bar].ToString(Data.FF);
+                _asInfoValue[row++] = _backtester.DataSet.High[bar].ToString(Data.FF);
+                _asInfoValue[row++] = _backtester.DataSet.Low[bar].ToString(Data.FF);
+                _asInfoValue[row++] = _backtester.DataSet.Close[bar].ToString(Data.FF);
             }
-            _asInfoValue[row++] = Data.Volume[bar].ToString(CultureInfo.InvariantCulture);
+            _asInfoValue[row++] = _backtester.DataSet.Volume[bar].ToString(CultureInfo.InvariantCulture);
 
             _asInfoValue[row++] = "";
             if (Configs.AccountInMoney)
             {
                 // Balance
-                _asInfoValue[row++] = Backtester.MoneyBalance(bar).ToString("F2");
+                _asInfoValue[row++] = _backtester.MoneyBalance(bar).ToString("F2");
 
                 // Equity
-                _asInfoValue[row++] = Backtester.MoneyEquity(bar).ToString("F2");
+                _asInfoValue[row++] = _backtester.MoneyEquity(bar).ToString("F2");
 
                 // Profit Loss
-                if (Backtester.SummaryTrans(bar) == Transaction.Close ||
-                    Backtester.SummaryTrans(bar) == Transaction.Reduce ||
-                    Backtester.SummaryTrans(bar) == Transaction.Reverse)
-                    _asInfoValue[row++] = Backtester.MoneyProfitLoss(bar).ToString("F2");
+                if (_backtester.SummaryTrans(bar) == Transaction.Close ||
+                    _backtester.SummaryTrans(bar) == Transaction.Reduce ||
+                    _backtester.SummaryTrans(bar) == Transaction.Reverse)
+                    _asInfoValue[row++] = _backtester.MoneyProfitLoss(bar).ToString("F2");
                 else
                     _asInfoValue[row++] = "   -";
 
                 // Floating P/L
-                if (Backtester.Positions(bar) > 0 && Backtester.SummaryTrans(bar) != Transaction.Close)
-                    _asInfoValue[row++] = Backtester.MoneyFloatingPL(bar).ToString("F2");
+                if (_backtester.Positions(bar) > 0 && _backtester.SummaryTrans(bar) != Transaction.Close)
+                    _asInfoValue[row++] = _backtester.MoneyFloatingPL(bar).ToString("F2");
                 else
                     _asInfoValue[row++] = "   -";
             }
             else
             {
                 // Balance
-                _asInfoValue[row++] = Backtester.Balance(bar).ToString(CultureInfo.InvariantCulture);
+                _asInfoValue[row++] = _backtester.Balance(bar).ToString(CultureInfo.InvariantCulture);
 
                 // Equity
-                _asInfoValue[row++] = Backtester.Equity(bar).ToString(CultureInfo.InvariantCulture);
+                _asInfoValue[row++] = _backtester.Equity(bar).ToString(CultureInfo.InvariantCulture);
 
                 // Profit Loss
-                if (Backtester.SummaryTrans(bar) == Transaction.Close ||
-                    Backtester.SummaryTrans(bar) == Transaction.Reduce ||
-                    Backtester.SummaryTrans(bar) == Transaction.Reverse)
-                    _asInfoValue[row++] = Backtester.ProfitLoss(bar).ToString(CultureInfo.InvariantCulture);
+                if (_backtester.SummaryTrans(bar) == Transaction.Close ||
+                    _backtester.SummaryTrans(bar) == Transaction.Reduce ||
+                    _backtester.SummaryTrans(bar) == Transaction.Reverse)
+                    _asInfoValue[row++] = _backtester.ProfitLoss(bar).ToString(CultureInfo.InvariantCulture);
                 else
                     _asInfoValue[row++] = "   -";
 
                 // Profit Loss
-                if (Backtester.Positions(bar) > 0 && Backtester.SummaryTrans(bar) != Transaction.Close)
-                    _asInfoValue[row++] = Backtester.FloatingPL(bar).ToString(CultureInfo.InvariantCulture);
+                if (_backtester.Positions(bar) > 0 && _backtester.SummaryTrans(bar) != Transaction.Close)
+                    _asInfoValue[row++] = _backtester.FloatingPL(bar).ToString(CultureInfo.InvariantCulture);
                 else
                     _asInfoValue[row++] = "   -";
             }
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
-                if (Data.Strategy.Slot[slot] != null)
+                if (_backtester.Strategy.Slot[slot] != null)
                 {
                     int compToShow = 0;
-                    foreach (IndicatorComp indComp in Data.Strategy.Slot[slot].Component)
+                    foreach (IndicatorComp indComp in _backtester.Strategy.Slot[slot].Component)
                         if (indComp.ShowInDynInfo) compToShow++;
                     if (compToShow == 0) continue;
 
                     _asInfoValue[row++] = "";
                     _asInfoValue[row++] = "";
-                    foreach (IndicatorComp indComp in Data.Strategy.Slot[slot].Component)
+                    foreach (IndicatorComp indComp in _backtester.Strategy.Slot[slot].Component)
                     {
                         if (indComp.ShowInDynInfo)
                         {
@@ -2192,32 +2197,32 @@ namespace Forex_Strategy_Builder
 
             // Positions
             int pos;
-            for (pos = 0; pos < Backtester.Positions(bar); pos++)
+            for (pos = 0; pos < _backtester.Positions(bar); pos++)
             {
                 _asInfoValue[row++] = "";
-                _asInfoValue[row++] = Language.T(Backtester.PosDir(bar, pos).ToString());
-                _asInfoValue[row++] = Backtester.PosLots(bar, pos).ToString(CultureInfo.InvariantCulture);
-                _asInfoValue[row++] = Language.T(Backtester.PosTransaction(bar, pos).ToString());
-                _asInfoValue[row++] = Backtester.PosOrdNumb(bar, pos).ToString(CultureInfo.InvariantCulture);
-                _asInfoValue[row++] = Backtester.PosOrdPrice(bar, pos).ToString(Data.FF);
-                _asInfoValue[row++] = Backtester.PosPrice(bar, pos).ToString(Data.FF);
+                _asInfoValue[row++] = Language.T(_backtester.PosDir(bar, pos).ToString());
+                _asInfoValue[row++] = _backtester.PosLots(bar, pos).ToString(CultureInfo.InvariantCulture);
+                _asInfoValue[row++] = Language.T(_backtester.PosTransaction(bar, pos).ToString());
+                _asInfoValue[row++] = _backtester.PosOrdNumb(bar, pos).ToString(CultureInfo.InvariantCulture);
+                _asInfoValue[row++] = _backtester.PosOrdPrice(bar, pos).ToString(Data.FF);
+                _asInfoValue[row++] = _backtester.PosPrice(bar, pos).ToString(Data.FF);
 
                 // Profit Loss
-                if (Backtester.PosTransaction(bar, pos) == Transaction.Close ||
-                    Backtester.PosTransaction(bar, pos) == Transaction.Reduce ||
-                    Backtester.PosTransaction(bar, pos) == Transaction.Reverse)
+                if (_backtester.PosTransaction(bar, pos) == Transaction.Close ||
+                    _backtester.PosTransaction(bar, pos) == Transaction.Reduce ||
+                    _backtester.PosTransaction(bar, pos) == Transaction.Reverse)
                     _asInfoValue[row++] = Configs.AccountInMoney
-                                              ? Backtester.PosMoneyProfitLoss(bar, pos).ToString("F2")
-                                              : Math.Round(Backtester.PosProfitLoss(bar, pos)).ToString(
+                                              ? _backtester.PosMoneyProfitLoss(bar, pos).ToString("F2")
+                                              : Math.Round(_backtester.PosProfitLoss(bar, pos)).ToString(
                                                   CultureInfo.InvariantCulture);
                 else
                     _asInfoValue[row++] = "   -";
 
                 // Floating P/L
-                if (pos == Backtester.Positions(bar) - 1 && Backtester.PosTransaction(bar, pos) != Transaction.Close)
+                if (pos == _backtester.Positions(bar) - 1 && _backtester.PosTransaction(bar, pos) != Transaction.Close)
                     _asInfoValue[row++] = Configs.AccountInMoney
-                                              ? Backtester.PosMoneyFloatingPL(bar, pos).ToString("F2")
-                                              : Math.Round(Backtester.PosFloatingPL(bar, pos)).ToString(
+                                              ? _backtester.PosMoneyFloatingPL(bar, pos).ToString("F2")
+                                              : Math.Round(_backtester.PosFloatingPL(bar, pos)).ToString(
                                                   CultureInfo.InvariantCulture);
                 else
                     _asInfoValue[row++] = "   -";
@@ -2617,7 +2622,7 @@ namespace Forex_Strategy_Builder
         private void ScrollValueChanged(object sender, EventArgs e)
         {
             _firstBar = _scroll.Value;
-            _lastBar = Math.Min(Data.Bars - 1, _firstBar + _chartBars - 1);
+            _lastBar = Math.Min(_backtester.DataSet.Bars - 1, _firstBar + _chartBars - 1);
             _lastBar = Math.Max(_lastBar, _firstBar);
 
             InvalidateAllPanels();
@@ -2722,7 +2727,7 @@ namespace Forex_Strategy_Builder
                 if (_mouseX >= _xLeft && _mouseX <= _xRight && _mouseY >= _yTop && _mouseY <= _yBottom)
                 {
                     int selectedBar = (e.X - _xLeft)/BarPixels + _firstBar;
-                    var be = new BarExplorer(selectedBar);
+                    var be = new BarExplorer(_backtester, selectedBar);
                     be.ShowDialog();
                 }
             }
@@ -3055,18 +3060,18 @@ namespace Forex_Strategy_Builder
             int oldChartBars = _chartBars;
 
             _chartBars = _chartWidth/BarPixels;
-            if (_chartBars > Data.Bars - Data.FirstBar)
-                _chartBars = Data.Bars - Data.FirstBar;
+            if (_chartBars > _backtester.DataSet.Bars - _backtester.Strategy.FirstBar)
+                _chartBars = _backtester.DataSet.Bars - _backtester.Strategy.FirstBar;
 
-            if (_lastBar < Data.Bars - 1)
+            if (_lastBar < _backtester.DataSet.Bars - 1)
             {
                 _firstBar += (oldChartBars - _chartBars)/2;
-                if (_firstBar > Data.Bars - _chartBars)
-                    _firstBar = Data.Bars - _chartBars;
+                if (_firstBar > _backtester.DataSet.Bars - _chartBars)
+                    _firstBar = _backtester.DataSet.Bars - _chartBars;
             }
             else
             {
-                _firstBar = Math.Max(Data.FirstBar, Data.Bars - _chartBars);
+                _firstBar = Math.Max(_backtester.Strategy.FirstBar, _backtester.DataSet.Bars - _chartBars);
             }
 
             _lastBar = _firstBar + _chartBars - 1;
@@ -3089,21 +3094,21 @@ namespace Forex_Strategy_Builder
             int oldChartBars = _chartBars;
 
             _chartBars = _chartWidth/BarPixels;
-            if (_chartBars > Data.Bars - Data.FirstBar)
-                _chartBars = Data.Bars - Data.FirstBar;
+            if (_chartBars > _backtester.DataSet.Bars - _backtester.Strategy.FirstBar)
+                _chartBars = _backtester.DataSet.Bars - _backtester.Strategy.FirstBar;
 
-            if (_lastBar < Data.Bars - 1)
+            if (_lastBar < _backtester.DataSet.Bars - 1)
             {
                 _firstBar -= (_chartBars - oldChartBars)/2;
-                if (_firstBar < Data.FirstBar)
-                    _firstBar = Data.FirstBar;
+                if (_firstBar < _backtester.Strategy.FirstBar)
+                    _firstBar = _backtester.Strategy.FirstBar;
 
-                if (_firstBar > Data.Bars - _chartBars)
-                    _firstBar = Data.Bars - _chartBars;
+                if (_firstBar > _backtester.DataSet.Bars - _chartBars)
+                    _firstBar = _backtester.DataSet.Bars - _chartBars;
             }
             else
             {
-                _firstBar = Math.Max(Data.FirstBar, Data.Bars - _chartBars);
+                _firstBar = Math.Max(_backtester.Strategy.FirstBar, _backtester.DataSet.Bars - _chartBars);
             }
 
             _lastBar = _firstBar + _chartBars - 1;

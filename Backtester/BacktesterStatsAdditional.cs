@@ -6,6 +6,7 @@
 
 using System;
 using System.Globalization;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -14,114 +15,114 @@ namespace Forex_Strategy_Builder
     /// </summary>
     public partial class Backtester
     {
-        private static double[] _longBalance;
-        private static double[] _shortBalance;
-        private static double[] _longMoneyBalance;
-        private static double[] _shortMoneyBalance;
-        private static double _maxLongBalance;
-        private static double _minLongBalance;
-        private static double _maxShortBalance;
-        private static double _minShortBalance;
+        private double[] _longBalance;
+        private double[] _shortBalance;
+        private double[] _longMoneyBalance;
+        private double[] _shortMoneyBalance;
+        private double _maxLongBalance;
+        private double _minLongBalance;
+        private double _maxShortBalance;
+        private double _minShortBalance;
 
-        private static DateTime _maxLongBalanceDate;
-        private static DateTime _minLongBalanceDate;
-        private static DateTime _maxShortBalanceDate;
-        private static DateTime _minShortBalanceDate;
-        private static DateTime _maxLongMoneyBalanceDate;
-        private static DateTime _minLongMoneyBalanceDate;
-        private static DateTime _maxShortMoneyBalanceDate;
-        private static DateTime _minShortMoneyBalanceDate;
+        private DateTime _maxLongBalanceDate;
+        private DateTime _minLongBalanceDate;
+        private DateTime _maxShortBalanceDate;
+        private DateTime _minShortBalanceDate;
+        private DateTime _maxLongMoneyBalanceDate;
+        private DateTime _minLongMoneyBalanceDate;
+        private DateTime _maxShortMoneyBalanceDate;
+        private DateTime _minShortMoneyBalanceDate;
 
-        private static double _grossLongProfit;
-        private static double _grossLongLoss;
-        private static double _grossShortProfit;
-        private static double _grossShortLoss;
-        private static double _grossLongMoneyProfit;
-        private static double _grossLongMoneyLoss;
-        private static double _grossShortMoneyProfit;
-        private static double _grossShortMoneyLoss;
+        private double _grossLongProfit;
+        private double _grossLongLoss;
+        private double _grossShortProfit;
+        private double _grossShortLoss;
+        private double _grossLongMoneyProfit;
+        private double _grossLongMoneyLoss;
+        private double _grossShortMoneyProfit;
+        private double _grossShortMoneyLoss;
 
-        private static double _maxLongDrawdown;
-        private static double _maxShortDrawdown;
-        private static double _maxLongMoneyDrawdown;
-        private static double _maxShortMoneyDrawdown;
-        private static double _maxLongMoneyDrawdownPercent;
-        private static double _maxShortMoneyDrawdownPercent;
-        private static DateTime _maxLongDrawdownDate;
-        private static DateTime _maxShortDrawdownDate;
-        private static DateTime _maxLongMoneyDrawdownDate;
-        private static DateTime _maxShortMoneyDrawdownDate;
+        private double _maxLongDrawdown;
+        private double _maxShortDrawdown;
+        private double _maxLongMoneyDrawdown;
+        private double _maxShortMoneyDrawdown;
+        private double _maxLongMoneyDrawdownPercent;
+        private double _maxShortMoneyDrawdownPercent;
+        private DateTime _maxLongDrawdownDate;
+        private DateTime _maxShortDrawdownDate;
+        private DateTime _maxLongMoneyDrawdownDate;
+        private DateTime _maxShortMoneyDrawdownDate;
 
-        private static int _barsWithLongPos;
-        private static int _barsWithShortPos;
-        private static int _barsWithPos;
+        private int _barsWithLongPos;
+        private int _barsWithShortPos;
+        private int _barsWithPos;
 
-        private static int _winningLongTrades;
-        private static int _winningShortTrades;
-        private static int _losingLongTrades;
-        private static int _losingShortTrades;
-        private static int _totalLongTrades;
-        private static int _totalShortTrades;
+        private int _winningLongTrades;
+        private int _winningShortTrades;
+        private int _losingLongTrades;
+        private int _losingShortTrades;
+        private int _totalLongTrades;
+        private int _totalShortTrades;
 
-        private static double _maxLongWin;
-        private static double _maxShortWin;
-        private static double _maxLongMoneyWin;
-        private static double _maxShortMoneyWin;
-        private static double _maxLongLoss;
-        private static double _maxShortLoss;
-        private static double _maxLongMoneyLoss;
-        private static double _maxShortMoneyLoss;
+        private double _maxLongWin;
+        private double _maxShortWin;
+        private double _maxLongMoneyWin;
+        private double _maxShortMoneyWin;
+        private double _maxLongLoss;
+        private double _maxShortLoss;
+        private double _maxLongMoneyLoss;
+        private double _maxShortMoneyLoss;
 
-        private static double _ahpr;
-        private static double _ahprLong;
-        private static double _ahprShort;
-        private static double _ghpr;
-        private static double _ghprLong;
-        private static double _ghprShort;
-        private static double _sharpeRatio;
-        private static double _sharpeRatioLong;
-        private static double _sharpeRatioShort;
+        private double _ahpr;
+        private double _ahprLong;
+        private double _ahprShort;
+        private double _ghpr;
+        private double _ghprLong;
+        private double _ghprShort;
+        private double _sharpeRatio;
+        private double _sharpeRatioLong;
+        private double _sharpeRatioShort;
 
         /// <summary>
         /// Gets the Additional Stats Parameter Name.
         /// </summary>
-        public static string[] AdditionalStatsParamName { get; private set; }
+        public string[] AdditionalStatsParamName { get; private set; }
 
         /// <summary>
         /// Gets the Additional Stats Value Long + Short.
         /// </summary>
-        public static string[] AdditionalStatsValueTotal { get; private set; }
+        public string[] AdditionalStatsValueTotal { get; private set; }
 
         /// <summary>
         /// Gets the Additional Stats Value Long.
         /// </summary>
-        public static string[] AdditionalStatsValueLong { get; private set; }
+        public string[] AdditionalStatsValueLong { get; private set; }
 
         /// <summary>
         /// Gets the Additional Stats Value Short.
         /// </summary>
-        public static string[] AdditionalStatsValueShort { get; private set; }
+        public string[] AdditionalStatsValueShort { get; private set; }
 
         /// <summary>
         /// Gets the long balance in pips.
         /// </summary>
-        public static int NetLongBalance
+        public int NetLongBalance
         {
-            get { return (int) Math.Round(_longBalance[Bars - 1]); }
+            get { return (int)Math.Round(_longBalance[DataSet.Bars - 1]); }
         }
 
         /// <summary>
         /// Gets the short balance in pips.
         /// </summary>
-        public static int NetShortBalance
+        public int NetShortBalance
         {
-            get { return (int) Math.Round(_shortBalance[Bars - 1]); }
+            get { return (int)Math.Round(_shortBalance[DataSet.Bars - 1]); }
         }
 
         /// <summary>
         /// Gets the max long balance in pips.
         /// </summary>
-        public static int MaxLongBalance
+        public int MaxLongBalance
         {
             get { return (int) Math.Round(_maxLongBalance); }
         }
@@ -129,7 +130,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Gets the max short balance in pips.
         /// </summary>
-        public static int MaxShortBalance
+        public int MaxShortBalance
         {
             get { return (int) Math.Round(_maxShortBalance); }
         }
@@ -137,7 +138,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Gets the min long balance in pips.
         /// </summary>
-        public static int MinLongBalance
+        public int MinLongBalance
         {
             get { return (int) Math.Round(_minLongBalance); }
         }
@@ -145,7 +146,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Gets the min short balance in pips.
         /// </summary>
-        public static int MinShortBalance
+        public int MinShortBalance
         {
             get { return (int) Math.Round(_minShortBalance); }
         }
@@ -153,43 +154,43 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Gets the long balance in money
         /// </summary>
-        public static double NetLongMoneyBalance
+        public double NetLongMoneyBalance
         {
-            get { return _longMoneyBalance[Bars - 1]; }
+            get { return _longMoneyBalance[DataSet.Bars - 1]; }
         }
 
         /// <summary>
         /// Gets the short balance in money.
         /// </summary>
-        public static double NetShortMoneyBalance
+        public double NetShortMoneyBalance
         {
-            get { return _shortMoneyBalance[Bars - 1]; }
+            get { return _shortMoneyBalance[DataSet.Bars - 1]; }
         }
 
         /// <summary>
         /// Gets the max long balance in money.
         /// </summary>
-        public static double MaxLongMoneyBalance { get; private set; }
+        public double MaxLongMoneyBalance { get; private set; }
 
         /// <summary>
         /// Gets the max short balance in money.
         /// </summary>
-        public static double MaxShortMoneyBalance { get; private set; }
+        public double MaxShortMoneyBalance { get; private set; }
 
         /// <summary>
         /// Gets the min long balance in money.
         /// </summary>
-        public static double MinLongMoneyBalance { get; private set; }
+        public double MinLongMoneyBalance { get; private set; }
 
         /// <summary>
         /// Gets the min short balance in money.
         /// </summary>
-        public static double MinShortMoneyBalance { get; private set; }
+        public double MinShortMoneyBalance { get; private set; }
 
         /// <summary>
         /// Returns the long balance at the end of the bar in pips.
         /// </summary>
-        public static int LongBalance(int bar)
+        public int LongBalance(int bar)
         {
             return (int) Math.Round(_longBalance[bar]);
         }
@@ -197,7 +198,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the short balance at the end of the bar in pips.
         /// </summary>
-        public static int ShortBalance(int bar)
+        public int ShortBalance(int bar)
         {
             return (int) Math.Round(_shortBalance[bar]);
         }
@@ -205,7 +206,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the long balance at the end of the bar in money.
         /// </summary>
-        public static double LongMoneyBalance(int bar)
+        public double LongMoneyBalance(int bar)
         {
             return _longMoneyBalance[bar];
         }
@@ -213,7 +214,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the short balance at the end of the bar in money.
         /// </summary>
-        public static double ShortMoneyBalance(int bar)
+        public double ShortMoneyBalance(int bar)
         {
             return _shortMoneyBalance[bar];
         }
@@ -221,12 +222,12 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Calculates the values of the stats parameters.
         /// </summary>
-        private static void CalculateAdditionalStats()
+        private void CalculateAdditionalStats()
         {
-            _longBalance = new double[Bars];
-            _shortBalance = new double[Bars];
-            _longMoneyBalance = new double[Bars];
-            _shortMoneyBalance = new double[Bars];
+            _longBalance = new double[DataSet.Bars];
+            _shortBalance = new double[DataSet.Bars];
+            _longMoneyBalance = new double[DataSet.Bars];
+            _shortMoneyBalance = new double[DataSet.Bars];
 
             MaxLongMoneyBalance = Configs.InitialAccount;
             MinLongMoneyBalance = Configs.InitialAccount;
@@ -237,18 +238,18 @@ namespace Forex_Strategy_Builder
             _maxShortBalance = 0;
             _minShortBalance = 0;
 
-            _maxLongBalanceDate = Time[0];
-            _minLongBalanceDate = Time[0];
-            _maxShortBalanceDate = Time[0];
-            _minShortBalanceDate = Time[0];
-            _maxLongMoneyBalanceDate = Time[0];
-            _minLongMoneyBalanceDate = Time[0];
-            _maxShortMoneyBalanceDate = Time[0];
-            _minShortMoneyBalanceDate = Time[0];
-            _maxLongDrawdownDate = Time[0];
-            _maxShortDrawdownDate = Time[0];
-            _maxLongMoneyDrawdownDate = Time[0];
-            _maxShortMoneyDrawdownDate = Time[0];
+            _maxLongBalanceDate = DataSet.Time[0];
+            _minLongBalanceDate = DataSet.Time[0];
+            _maxShortBalanceDate = DataSet.Time[0];
+            _minShortBalanceDate = DataSet.Time[0];
+            _maxLongMoneyBalanceDate = DataSet.Time[0];
+            _minLongMoneyBalanceDate = DataSet.Time[0];
+            _maxShortMoneyBalanceDate = DataSet.Time[0];
+            _minShortMoneyBalanceDate = DataSet.Time[0];
+            _maxLongDrawdownDate = DataSet.Time[0];
+            _maxShortDrawdownDate = DataSet.Time[0];
+            _maxLongMoneyDrawdownDate = DataSet.Time[0];
+            _maxShortMoneyDrawdownDate = DataSet.Time[0];
 
             _grossLongProfit = 0;
             _grossLongLoss = 0;
@@ -290,7 +291,7 @@ namespace Forex_Strategy_Builder
             _maxLongMoneyLoss = 0;
             _maxShortMoneyLoss = 0;
 
-            for (int bar = 0; bar < FirstBar; bar++)
+            for (int bar = 0; bar < Strategy.FirstBar; bar++)
             {
                 _longBalance[bar] = 0;
                 _shortBalance[bar] = 0;
@@ -298,7 +299,7 @@ namespace Forex_Strategy_Builder
                 _shortMoneyBalance[bar] = Configs.InitialAccount;
             }
 
-            for (int bar = FirstBar; bar < Bars; bar++)
+            for (int bar = Strategy.FirstBar; bar < DataSet.Bars; bar++)
             {
                 _longBalance[bar] = _longBalance[bar - 1];
                 _shortBalance[bar] = _shortBalance[bar - 1];
@@ -390,69 +391,69 @@ namespace Forex_Strategy_Builder
                 if (_maxLongBalance < _longBalance[bar])
                 {
                     _maxLongBalance = _longBalance[bar];
-                    _maxLongBalanceDate = Time[bar];
+                    _maxLongBalanceDate = DataSet.Time[bar];
                 }
                 if (_minLongBalance > _longBalance[bar])
                 {
                     _minLongBalance = _longBalance[bar];
-                    _minLongBalanceDate = Time[bar];
+                    _minLongBalanceDate = DataSet.Time[bar];
                 }
                 if (_maxShortBalance < _shortBalance[bar])
                 {
                     _maxShortBalance = _shortBalance[bar];
-                    _maxShortBalanceDate = Time[bar];
+                    _maxShortBalanceDate = DataSet.Time[bar];
                 }
                 if (_minShortBalance > _shortBalance[bar])
                 {
                     _minShortBalance = _shortBalance[bar];
-                    _minShortBalanceDate = Time[bar];
+                    _minShortBalanceDate = DataSet.Time[bar];
                 }
                 if (MaxLongMoneyBalance < _longMoneyBalance[bar])
                 {
                     MaxLongMoneyBalance = _longMoneyBalance[bar];
-                    _maxLongMoneyBalanceDate = Time[bar];
+                    _maxLongMoneyBalanceDate = DataSet.Time[bar];
                 }
                 if (MinLongMoneyBalance > _longMoneyBalance[bar])
                 {
                     MinLongMoneyBalance = _longMoneyBalance[bar];
-                    _minLongMoneyBalanceDate = Time[bar];
+                    _minLongMoneyBalanceDate = DataSet.Time[bar];
                 }
                 if (MaxShortMoneyBalance < _shortMoneyBalance[bar])
                 {
                     MaxShortMoneyBalance = _shortMoneyBalance[bar];
-                    _maxShortMoneyBalanceDate = Time[bar];
+                    _maxShortMoneyBalanceDate = DataSet.Time[bar];
                 }
                 if (MinShortMoneyBalance > _shortMoneyBalance[bar])
                 {
                     MinShortMoneyBalance = _shortMoneyBalance[bar];
-                    _minShortMoneyBalanceDate = Time[bar];
+                    _minShortMoneyBalanceDate = DataSet.Time[bar];
                 }
 
                 // Maximum Drawdown
                 if (_maxLongBalance - _longBalance[bar] > _maxLongDrawdown)
                 {
                     _maxLongDrawdown = _maxLongBalance - _longBalance[bar];
-                    _maxLongDrawdownDate = Time[bar];
+                    _maxLongDrawdownDate = DataSet.Time[bar];
                 }
 
                 if (MaxLongMoneyBalance - _longMoneyBalance[bar] > _maxLongMoneyDrawdown)
                 {
                     _maxLongMoneyDrawdown = MaxLongMoneyBalance - _longMoneyBalance[bar];
                     _maxLongMoneyDrawdownPercent = 100*_maxLongMoneyDrawdown/MaxLongMoneyBalance;
-                    _maxLongMoneyDrawdownDate = Time[bar];
+                    _maxLongMoneyDrawdownDate = DataSet.Time[bar];
                 }
 
                 if (_maxShortBalance - _shortBalance[bar] > _maxShortDrawdown)
                 {
                     _maxShortDrawdown = _maxShortBalance - _shortBalance[bar];
-                    _maxShortDrawdownDate = Time[bar];
+                    _maxShortDrawdownDate = DataSet.Time[bar];
                 }
 
                 if (MaxShortMoneyBalance - _shortMoneyBalance[bar] > _maxShortMoneyDrawdown)
                 {
                     _maxShortMoneyDrawdown = MaxShortMoneyBalance - _shortMoneyBalance[bar];
                     _maxShortMoneyDrawdownPercent = 100*_maxShortMoneyDrawdown/MaxShortMoneyBalance;
-                    _maxShortMoneyDrawdownDate = Time[bar];
+                    _maxShortMoneyDrawdownDate = DataSet.Time[bar];
                 }
             }
 
@@ -549,7 +550,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the additional stats in pips.
         /// </summary>
-        private static void SetAdditionalStats()
+        private void SetAdditionalStats()
         {
             string unit = " " + Language.T("pips");
 
@@ -596,7 +597,7 @@ namespace Forex_Strategy_Builder
                 Math.Round(_grossProfit) + unit,
                 Math.Round(_grossLoss) + unit,
                 (Math.Abs(_grossLoss - 0) < 0.00001 ? "N/A" : Math.Abs(_grossProfit/_grossLoss).ToString("F2")),
-                Math.Round(((365f/Time[Bars - 1].Subtract(Time[0]).Days)*NetBalance)) + unit,
+                Math.Round(((365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*NetBalance)) + unit,
                 MinBalance + unit,
                 _minBalanceDate.ToShortDateString(),
                 MaxBalance + unit,
@@ -604,10 +605,10 @@ namespace Forex_Strategy_Builder
                 Math.Abs(MinBalance) + unit,
                 Math.Round(_maxDrawdown) + unit,
                 _maxDrawdownDate.ToShortDateString(),
-                Bars.ToString(CultureInfo.InvariantCulture),
-                (Bars - FirstBar).ToString(CultureInfo.InvariantCulture),
+                DataSet.Bars.ToString(CultureInfo.InvariantCulture),
+                (DataSet.Bars - Strategy.FirstBar).ToString(CultureInfo.InvariantCulture),
                 _barsWithPos.ToString(CultureInfo.InvariantCulture),
-                (100f*_barsWithPos/(Bars - FirstBar)).ToString("F2") + "%",
+                (100f*_barsWithPos/(DataSet.Bars - Strategy.FirstBar)).ToString("F2") + "%",
                 totalTrades.ToString(CultureInfo.InvariantCulture),
                 totalWinTrades.ToString(CultureInfo.InvariantCulture),
                 totalLossTrades.ToString(CultureInfo.InvariantCulture),
@@ -627,7 +628,7 @@ namespace Forex_Strategy_Builder
                 Math.Round(_grossLongProfit) + unit,
                 Math.Round(_grossLongLoss) + unit,
                 (Math.Abs(_grossLongLoss - 0) < 0.00001 ? "N/A" : Math.Abs(_grossLongProfit/_grossLongLoss).ToString("F2")),
-                Math.Round(((365f/Time[Bars - 1].Subtract(Time[0]).Days)*NetLongBalance)) + unit,
+                Math.Round(((365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*NetLongBalance)) + unit,
                 MinLongBalance + unit,
                 _minLongBalanceDate.ToShortDateString(),
                 MaxLongBalance + unit,
@@ -635,10 +636,10 @@ namespace Forex_Strategy_Builder
                 Math.Round(Math.Abs(_minLongBalance)) + unit,
                 Math.Round(_maxLongDrawdown) + unit,
                 _maxLongDrawdownDate.ToShortDateString(),
-                Bars.ToString(CultureInfo.InvariantCulture),
-                (Bars - FirstBar).ToString(CultureInfo.InvariantCulture),
+                DataSet.Bars.ToString(CultureInfo.InvariantCulture),
+                (DataSet.Bars - Strategy.FirstBar).ToString(CultureInfo.InvariantCulture),
                 _barsWithLongPos.ToString(CultureInfo.InvariantCulture),
-                (100f*_barsWithLongPos/(Bars - FirstBar)).ToString("F2") + "%",
+                (100f*_barsWithLongPos/(DataSet.Bars - Strategy.FirstBar)).ToString("F2") + "%",
                 _totalLongTrades.ToString(CultureInfo.InvariantCulture),
                 _winningLongTrades.ToString(CultureInfo.InvariantCulture),
                 _losingLongTrades.ToString(CultureInfo.InvariantCulture),
@@ -658,7 +659,7 @@ namespace Forex_Strategy_Builder
                 Math.Round(_grossShortProfit) + unit,
                 Math.Round(_grossShortLoss) + unit,
                 (Math.Abs(_grossShortLoss - 0) < 0.00001 ? "N/A" : Math.Abs(_grossShortProfit/_grossShortLoss).ToString("F2")),
-                Math.Round(((365f/Time[Bars - 1].Subtract(Time[0]).Days)*NetShortBalance)) + unit,
+                Math.Round(((365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*NetShortBalance)) + unit,
                 MinShortBalance + unit,
                 _minShortBalanceDate.ToShortDateString(),
                 MaxShortBalance + unit,
@@ -666,10 +667,10 @@ namespace Forex_Strategy_Builder
                 Math.Round(Math.Abs(_minShortBalance)) + unit,
                 Math.Round(_maxShortDrawdown) + unit,
                 _maxShortDrawdownDate.ToShortDateString(),
-                Bars.ToString(CultureInfo.InvariantCulture),
-                (Bars - FirstBar).ToString(CultureInfo.InvariantCulture),
+                DataSet.Bars.ToString(CultureInfo.InvariantCulture),
+                (DataSet.Bars - Strategy.FirstBar).ToString(CultureInfo.InvariantCulture),
                 _barsWithShortPos.ToString(CultureInfo.InvariantCulture),
-                (100f*_barsWithShortPos/(Bars - FirstBar)).ToString("F2") + "%",
+                (100f*_barsWithShortPos/(DataSet.Bars - Strategy.FirstBar)).ToString("F2") + "%",
                 _totalShortTrades.ToString(CultureInfo.InvariantCulture),
                 _winningShortTrades.ToString(CultureInfo.InvariantCulture),
                 _losingShortTrades.ToString(CultureInfo.InvariantCulture),
@@ -685,7 +686,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the additional stats in Money.
         /// </summary>
-        private static void SetAdditionalMoneyStats()
+        private void SetAdditionalMoneyStats()
         {
             string unit = " " + Configs.AccountCurrency;
 
@@ -739,8 +740,8 @@ namespace Forex_Strategy_Builder
                 GrossMoneyProfit.ToString("F2") + unit,
                 GrossMoneyLoss.ToString("F2") + unit,
                 (Math.Abs(GrossMoneyLoss - 0) < 0.00001 ? "N/A" : Math.Abs(GrossMoneyProfit/GrossMoneyLoss).ToString("F2")),
-                ((365f/Time[Bars - 1].Subtract(Time[0]).Days)*(NetMoneyBalance - Configs.InitialAccount)).ToString("F2") + unit,
-                (100*(365f/Time[Bars - 1].Subtract(Time[0]).Days)*(NetMoneyBalance - Configs.InitialAccount)/Configs.InitialAccount).ToString("F2") + "%",
+                ((365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*(NetMoneyBalance - Configs.InitialAccount)).ToString("F2") + unit,
+                (100*(365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*(NetMoneyBalance - Configs.InitialAccount)/Configs.InitialAccount).ToString("F2") + "%",
                 MinMoneyBalance.ToString("F2") + unit,
                 _minMoneyBalanceDate.ToShortDateString(),
                 MaxMoneyBalance.ToString("F2") + unit,
@@ -749,10 +750,10 @@ namespace Forex_Strategy_Builder
                 MaxMoneyDrawdown.ToString("F2") + unit,
                 _maxMoneyDrawdownPercent.ToString("F2") + "%",
                 _maxMoneyDrawdownDate.ToShortDateString(),
-                Bars.ToString(CultureInfo.InvariantCulture),
-                (Bars - FirstBar).ToString(CultureInfo.InvariantCulture),
+                DataSet.Bars.ToString(CultureInfo.InvariantCulture),
+                (DataSet.Bars - Strategy.FirstBar).ToString(CultureInfo.InvariantCulture),
                 _barsWithPos.ToString(CultureInfo.InvariantCulture),
-                (100f*_barsWithPos/(Bars - FirstBar)).ToString("F2") + "%",
+                (100f*_barsWithPos/(DataSet.Bars - Strategy.FirstBar)).ToString("F2") + "%",
                 totalTrades.ToString(CultureInfo.InvariantCulture),
                 totalWinTrades.ToString(CultureInfo.InvariantCulture),
                 totalLossTrades.ToString(CultureInfo.InvariantCulture),
@@ -776,9 +777,9 @@ namespace Forex_Strategy_Builder
                 _grossLongMoneyProfit.ToString("F2") + unit,
                 _grossLongMoneyLoss.ToString("F2") + unit,
                 (Math.Abs(_grossLongMoneyLoss - 0) < 0.00001 ? "N/A" : Math.Abs(_grossLongMoneyProfit/_grossLongMoneyLoss).ToString("F2")),
-                ((365f/Time[Bars - 1].Subtract(Time[0]).Days)*
+                ((365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*
                 (NetLongMoneyBalance - Configs.InitialAccount)).ToString("F2") + unit,
-                (100*(365f/Time[Bars - 1].Subtract(Time[0]).Days)*
+                (100*(365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*
                 (NetLongMoneyBalance - Configs.InitialAccount)/Configs.InitialAccount).ToString("F2") + "%",
                 MinLongMoneyBalance.ToString("F2") + unit,
                 _minLongMoneyBalanceDate.ToShortDateString(),
@@ -788,10 +789,10 @@ namespace Forex_Strategy_Builder
                 _maxLongMoneyDrawdown.ToString("F2") + unit,
                 _maxLongMoneyDrawdownPercent.ToString("F2") + "%",
                 _maxLongMoneyDrawdownDate.ToShortDateString(),
-                Bars.ToString(CultureInfo.InvariantCulture),
-                (Bars - FirstBar).ToString(CultureInfo.InvariantCulture),
+                DataSet.Bars.ToString(CultureInfo.InvariantCulture),
+                (DataSet.Bars - Strategy.FirstBar).ToString(CultureInfo.InvariantCulture),
                 _barsWithLongPos.ToString(CultureInfo.InvariantCulture),
-                (100f*_barsWithLongPos/(Bars - FirstBar)).ToString("F2") + "%",
+                (100f*_barsWithLongPos/(DataSet.Bars - Strategy.FirstBar)).ToString("F2") + "%",
                 _totalLongTrades.ToString(CultureInfo.InvariantCulture),
                 _winningLongTrades.ToString(CultureInfo.InvariantCulture),
                 _losingLongTrades.ToString(CultureInfo.InvariantCulture),
@@ -816,8 +817,8 @@ namespace Forex_Strategy_Builder
                 _grossShortMoneyProfit.ToString("F2") + unit,
                 _grossShortMoneyLoss.ToString("F2") + unit,
                 (Math.Abs(_grossShortMoneyLoss - 0) < 0.0001 ? "N/A" : Math.Abs(_grossShortMoneyProfit/_grossShortMoneyLoss).ToString("F2")),
-                ((365f/Time[Bars - 1].Subtract(Time[0]).Days)*(NetShortMoneyBalance - Configs.InitialAccount)).ToString("F2") + unit,
-                (100*(365f/Time[Bars - 1].Subtract(Time[0]).Days)*(NetShortMoneyBalance - Configs.InitialAccount)/Configs.InitialAccount).ToString("F2") + "%",
+                ((365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*(NetShortMoneyBalance - Configs.InitialAccount)).ToString("F2") + unit,
+                (100*(365f/DataSet.Time[DataSet.Bars - 1].Subtract(DataSet.Time[0]).Days)*(NetShortMoneyBalance - Configs.InitialAccount)/Configs.InitialAccount).ToString("F2") + "%",
                 MinShortMoneyBalance.ToString("F2") + unit,
                 _minShortMoneyBalanceDate.ToShortDateString(),
                 MaxShortMoneyBalance.ToString("F2") + unit,
@@ -826,10 +827,10 @@ namespace Forex_Strategy_Builder
                 _maxShortMoneyDrawdown.ToString("F2") + unit,
                 _maxShortMoneyDrawdownPercent.ToString("F2") + "%",
                 _maxShortMoneyDrawdownDate.ToShortDateString(),
-                Bars.ToString(CultureInfo.InvariantCulture),
-                (Bars - FirstBar).ToString(CultureInfo.InvariantCulture),
+                DataSet.Bars.ToString(CultureInfo.InvariantCulture),
+                (DataSet.Bars - Strategy.FirstBar).ToString(CultureInfo.InvariantCulture),
                 _barsWithShortPos.ToString(CultureInfo.InvariantCulture),
-                (100f*_barsWithShortPos/(Bars - FirstBar)).ToString("F2") + "%",
+                (100f*_barsWithShortPos/(DataSet.Bars - Strategy.FirstBar)).ToString("F2") + "%",
                 _totalShortTrades.ToString(CultureInfo.InvariantCulture),
                 _winningShortTrades.ToString(CultureInfo.InvariantCulture),
                 _losingShortTrades.ToString(CultureInfo.InvariantCulture),

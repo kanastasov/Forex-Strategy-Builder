@@ -44,6 +44,7 @@ namespace Forex_Strategy_Builder
                                 ScrollBars = ScrollBars.Vertical
                             };
         }
+        private Backtester Backtester { get; set; }
 
         private TextBox TbxInput { get; set; }
         private TextBox TbxOutput { get; set; }
@@ -216,7 +217,7 @@ namespace Forex_Strategy_Builder
             const int rep = 1000;
 
             for (int i = 0; i < rep; i++)
-                Data.Strategy.Clone();
+                Backtester.Strategy.Clone();
 
             DateTime dtStop = DateTime.Now;
             TimeSpan tsCalcTime = dtStop.Subtract(dtStart);
@@ -275,7 +276,7 @@ namespace Forex_Strategy_Builder
             if (match.Success)
             {
                 int bar = int.Parse(match.Groups["numb"].Value);
-                if (bar < 1 || bar > Data.Bars)
+                if (bar < 1 || bar > Data.DataSet.Bars)
                     return;
 
                 bar--;
@@ -287,10 +288,10 @@ namespace Forex_Strategy_Builder
                                                "Low    {7:F4}" + Environment.NewLine +
                                                "Close  {8:F4}" + Environment.NewLine +
                                                "Volume {9:D6}",
-                                               Data.Time[bar].Day, Data.Time[bar].Month, Data.Time[bar].Year,
-                                               Data.Time[bar].Hour, Data.Time[bar].Minute,
-                                               Data.Open[bar], Data.High[bar], Data.Low[bar], Data.Close[bar],
-                                               Data.Volume[bar]);
+                                               Data.DataSet.Time[bar].Day, Data.DataSet.Time[bar].Month, Data.DataSet.Time[bar].Year,
+                                               Data.DataSet.Time[bar].Hour, Data.DataSet.Time[bar].Minute,
+                                               Data.DataSet.Open[bar], Data.DataSet.High[bar], Data.DataSet.Low[bar], Data.DataSet.Close[bar],
+                                               Data.DataSet.Volume[bar]);
 
                 TbxOutput.Text += "Bar" + Environment.NewLine + "-----------------" +
                                   Environment.NewLine + barInfo + Environment.NewLine;
@@ -315,7 +316,7 @@ namespace Forex_Strategy_Builder
         private void ShowStrategy()
         {
             TbxOutput.Text += "Strategy" + Environment.NewLine + "-----------------" +
-                              Environment.NewLine + Data.Strategy + Environment.NewLine;
+                              Environment.NewLine + Backtester.Strategy + Environment.NewLine;
         }
 
         /// <summary>
@@ -329,21 +330,21 @@ namespace Forex_Strategy_Builder
             if (match.Success)
             {
                 int bar = int.Parse(match.Groups["numb"].Value);
-                if (bar < 1 || bar > Data.Bars)
+                if (bar < 1 || bar > Data.DataSet.Bars)
                     return;
 
                 bar--;
 
                 var sb = new StringBuilder();
-                for (int iSlot = 0; iSlot < Data.Strategy.Slots; iSlot++)
+                for (int iSlot = 0; iSlot < Backtester.Strategy.Slots; iSlot++)
                 {
-                    Indicator indicator = IndicatorStore.ConstructIndicator(Data.Strategy.Slot[iSlot].IndicatorName,
-                                                                            Data.Strategy.Slot[iSlot].SlotType);
+                    Indicator indicator = IndicatorStore.ConstructIndicator(Backtester.Strategy.Slot[iSlot].IndicatorName,
+                                                                            Backtester.Strategy.Slot[iSlot].SlotType);
 
                     sb.Append(Environment.NewLine + indicator + Environment.NewLine + "Logic: " +
                               indicator.IndParam.ListParam[0].Text + Environment.NewLine + "-----------------" +
                               Environment.NewLine);
-                    foreach (IndicatorComp indComp in Data.Strategy.Slot[iSlot].Component)
+                    foreach (IndicatorComp indComp in Backtester.Strategy.Slot[iSlot].Component)
                     {
                         sb.Append(indComp.CompName + "    ");
                         sb.Append(indComp.Value[bar] + Environment.NewLine);

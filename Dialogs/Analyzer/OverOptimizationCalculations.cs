@@ -26,15 +26,18 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
         private OverOptimizationDataTable[] _tableReport;
         private int _tablesCount; // The count of data tables.
 
+        private Backtester Backtester { get; set; }
+
+
         /// <summary>
         /// Counts the numeric parameters of the strategy.
         /// </summary>
         private void CountStrategyParams()
         {
             _countStratParams = 0;
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < Backtester.Strategy.Slots; slot++)
                 for (int numParam = 0; numParam < 6; numParam++)
-                    if (Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled)
+                    if (Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled)
                         _countStratParams++;
         }
 
@@ -51,11 +54,11 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
             _tableParameters = new OverOptimizationDataTable(percentDeviation, countParam)
                                    {Name = "Values of the Parameters"};
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < Backtester.Strategy.Slots; slot++)
                 for (int numParam = 0; numParam < 6; numParam++)
-                    if (Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled && _countStratParams < countParam)
+                    if (Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled && _countStratParams < countParam)
                     {
-                        NumericParam currentParam = Data.Strategy.Slot[slot].IndParam.NumParam[numParam];
+                        NumericParam currentParam = Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam];
                         double minVal = currentParam.Min;
                         double maxVal = currentParam.Max;
                         int point = currentParam.Point;
@@ -125,19 +128,19 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
 
             int parNumber = 0;
             bool isBGWorkCanceled = false;
-            for (int slot = 0; slot < Data.Strategy.Slots && !isBGWorkCanceled; slot++)
+            for (int slot = 0; slot < Backtester.Strategy.Slots && !isBGWorkCanceled; slot++)
                 for (int numParam = 0; numParam < 6 && !isBGWorkCanceled; numParam++)
-                    if (Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled && parNumber < countParam)
+                    if (Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled && parNumber < countParam)
                     {
                         for (int index = percentDeviation; index >= -percentDeviation && !isBGWorkCanceled; index--)
                         {
                             isBGWorkCanceled = _bgWorker.CancellationPending;
-                            Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Value = _tableParameters.GetData(
+                            Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Value = _tableParameters.GetData(
                                 index, parNumber);
 
                             CalculateIndicator(slot);
-                            Backtester.Calculate();
-                            Backtester.CalculateAccountStats();
+                            //Backtester.Calculate();
+                            //Backtester.CalculateAccountStats();
 
                             var statValues = new[]
                                                  {
@@ -172,7 +175,7 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
                         }
 
                         // Set default value
-                        Data.Strategy.Slot[slot].IndParam.NumParam[numParam].Value = _tableParameters.GetData(0,
+                        Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Value = _tableParameters.GetData(0,
                                                                                                               parNumber);
                         CalculateIndicator(slot);
                         parNumber++;
@@ -184,7 +187,7 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
         /// </summary>
         private void CalculateIndicator(int slot)
         {
-            IndicatorParam ip = Data.Strategy.Slot[slot].IndParam;
+            IndicatorParam ip = Backtester.Strategy.Slot[slot].IndParam;
 
             Indicator indicator = IndicatorStore.ConstructIndicator(ip.IndicatorName, ip.SlotType);
 
@@ -212,18 +215,18 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
 
             indicator.Calculate(ip.SlotType);
 
-            // Sets Data.Strategy
-            Data.Strategy.Slot[slot].IndicatorName = indicator.IndicatorName;
-            Data.Strategy.Slot[slot].IndParam = indicator.IndParam;
-            Data.Strategy.Slot[slot].Component = indicator.Component;
-            Data.Strategy.Slot[slot].SeparatedChart = indicator.SeparatedChart;
-            Data.Strategy.Slot[slot].SpecValue = indicator.SpecialValues;
-            Data.Strategy.Slot[slot].MinValue = indicator.SeparatedChartMinValue;
-            Data.Strategy.Slot[slot].MaxValue = indicator.SeparatedChartMaxValue;
-            Data.Strategy.Slot[slot].IsDefined = true;
+            // Sets Backtester.Strategy
+            Backtester.Strategy.Slot[slot].IndicatorName = indicator.IndicatorName;
+            Backtester.Strategy.Slot[slot].IndParam = indicator.IndParam;
+            Backtester.Strategy.Slot[slot].Component = indicator.Component;
+            Backtester.Strategy.Slot[slot].SeparatedChart = indicator.SeparatedChart;
+            Backtester.Strategy.Slot[slot].SpecValue = indicator.SpecialValues;
+            Backtester.Strategy.Slot[slot].MinValue = indicator.SeparatedChartMinValue;
+            Backtester.Strategy.Slot[slot].MaxValue = indicator.SeparatedChartMaxValue;
+            Backtester.Strategy.Slot[slot].IsDefined = true;
 
             // Searches the indicators' components to determine the Data.FirstBar 
-            Data.FirstBar = Data.Strategy.SetFirstBar();
+            Backtester.Strategy.SetFirstBar();
         }
 
         /// <summary>
@@ -244,7 +247,7 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
         private void SaveReport(string report)
         {
             string pathReport;
-            string partilPath = Data.StrategyPath.Replace(".xml", "");
+            string partilPath = Backtester.Strategy.StrategyPath.Replace(".xml", "");
             int reportIndex = 0;
             do
             {

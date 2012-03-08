@@ -16,14 +16,17 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         /// <summary>
         /// Constructor
         /// </summary>
-        public Parameter(OptimizerParameterType type, int slotNumber, int paramNumber)
+        public Parameter(Backtester backtester, OptimizerParameterType type, int slotNumber, int paramNumber)
         {
+            _backtester = backtester;
             Type = type;
             SlotNumber = slotNumber;
             NumParam = paramNumber;
             _bestValue = Value;
             OldBestValue = Value;
         }
+
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Type of the parameter
@@ -48,7 +51,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             get
             {
                 return Type == OptimizerParameterType.Indicator
-                           ? Data.Strategy.Slot[SlotNumber].IndParam
+                           ? _backtester.Strategy.Slot[SlotNumber].IndParam
                            : null;
             }
         }
@@ -61,7 +64,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             get
             {
                 return Type == OptimizerParameterType.Indicator
-                           ? Data.Strategy.Slot[SlotNumber].IndicatorName
+                           ? _backtester.Strategy.Slot[SlotNumber].IndicatorName
                            : Language.T("Permanent Protection");
             }
         }
@@ -77,7 +80,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                 switch (Type)
                 {
                     case OptimizerParameterType.Indicator:
-                        name = Data.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Caption;
+                        name = _backtester.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Caption;
                         break;
                     case OptimizerParameterType.PermanentSL:
                         name = Language.T("Permanent Stop Loss");
@@ -104,16 +107,16 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                 switch (Type)
                 {
                     case OptimizerParameterType.Indicator:
-                        value = Data.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Value;
+                        value = _backtester.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Value;
                         break;
                     case OptimizerParameterType.PermanentSL:
-                        value = Data.Strategy.PermanentSL;
+                        value = _backtester.Strategy.PermanentSL;
                         break;
                     case OptimizerParameterType.PermanentTP:
-                        value = Data.Strategy.PermanentTP;
+                        value = _backtester.Strategy.PermanentTP;
                         break;
                     case OptimizerParameterType.BreakEven:
-                        value = Data.Strategy.BreakEven;
+                        value = _backtester.Strategy.BreakEven;
                         break;
                 }
                 return value;
@@ -123,16 +126,16 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                 switch (Type)
                 {
                     case OptimizerParameterType.Indicator:
-                        Data.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Value = value;
+                        _backtester.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Value = value;
                         break;
                     case OptimizerParameterType.PermanentSL:
-                        Data.Strategy.PermanentSL = (int) value;
+                        _backtester.Strategy.PermanentSL = (int) value;
                         break;
                     case OptimizerParameterType.PermanentTP:
-                        Data.Strategy.PermanentTP = (int) value;
+                        _backtester.Strategy.PermanentTP = (int) value;
                         break;
                     case OptimizerParameterType.BreakEven:
-                        Data.Strategy.BreakEven = (int) value;
+                        _backtester.Strategy.BreakEven = (int) value;
                         break;
                 }
             }
@@ -146,7 +149,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             get
             {
                 return Type == OptimizerParameterType.Indicator
-                           ? Data.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Min
+                           ? _backtester.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Min
                            : 5;
             }
         }
@@ -159,7 +162,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             get
             {
                 return Type == OptimizerParameterType.Indicator
-                           ? Data.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Max
+                           ? _backtester.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Max
                            : 5000;
             }
         }
@@ -172,7 +175,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             get
             {
                 return Type == OptimizerParameterType.Indicator
-                           ? Data.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Point
+                           ? _backtester.Strategy.Slot[SlotNumber].IndParam.NumParam[NumParam].Point
                            : 0;
             }
         }
@@ -186,7 +189,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             {
                 return Type == OptimizerParameterType.Indicator
                            ? Math.Round(Math.Pow(10, -Point), Point)
-                           : (Data.InstrProperties.IsFiveDigits ? 10 : 1);
+                           : (Data.DataSet.InstrProperties.IsFiveDigits ? 10 : 1);
             }
         }
 

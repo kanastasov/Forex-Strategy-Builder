@@ -84,7 +84,7 @@ namespace Forex_Strategy_Builder
             ToolStripStrategy.Items.Add(tsbtOptimizer);
 
             // Strategy Layout
-            StrategyField = new StrategyLayout(Data.Strategy.Clone()) {Parent = PanelStrategy};
+            StrategyField = new StrategyLayout {Parent = PanelStrategy};
             StrategyField.ButtonAddOpenFilter.Click += BtnAddOpenFilterClick;
             StrategyField.ButtonAddCloseFilter.Click += BtnAddCloseFilterClick;
 
@@ -160,18 +160,18 @@ namespace Forex_Strategy_Builder
         }
 
         /// <summary>
-        /// Creates a new strategy layout using Data.Strategy
+        /// Creates a new strategy layout using _backtester.Strategy
         /// </summary>
         protected void RebuildStrategyLayout()
         {
-            StrategyField.RebuildStrategyControls(Data.Strategy.Clone());
+            StrategyField.RebuildStrategyControls(Backtester.Strategy.Clone());
             StrategyField.PanelProperties.Click += PnlAveragingClick;
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < Backtester.Strategy.Slots; slot++)
             {
                 StrategyField.SlotPanelsList[slot].ContextMenuStrip = new ContextMenuStrip();
                 StrategyField.SlotPanelsList[slot].ContextMenuStrip.Items.AddRange(GetStrategySlotContextMenuItems(slot));
                 StrategyField.SlotPanelsList[slot].MouseClick += PnlSlotMouseUp;
-                if (slot != Data.Strategy.OpenSlot && slot != Data.Strategy.CloseSlot)
+                if (slot != Backtester.Strategy.OpenSlot && slot != Backtester.Strategy.CloseSlot)
                     StrategyField.SlotPanelsList[slot].CloseButton.Click += BtnRemoveSlotClick;
             }
 
@@ -193,7 +193,7 @@ namespace Forex_Strategy_Builder
                                 };
             miUpwards.Click += SlotContextMenuClick;
             miUpwards.Enabled = (slot > 1 &&
-                                 Data.Strategy.Slot[slot].SlotType == Data.Strategy.Slot[slot - 1].SlotType);
+                                 Backtester.Strategy.Slot[slot].SlotType == Backtester.Strategy.Slot[slot - 1].SlotType);
 
             var miDownwards = new ToolStripMenuItem
                                   {
@@ -203,8 +203,8 @@ namespace Forex_Strategy_Builder
                                       Tag = slot
                                   };
             miDownwards.Click += SlotContextMenuClick;
-            miDownwards.Enabled = (slot < Data.Strategy.Slots - 1 &&
-                                   Data.Strategy.Slot[slot].SlotType == Data.Strategy.Slot[slot + 1].SlotType);
+            miDownwards.Enabled = (slot < Backtester.Strategy.Slots - 1 &&
+                                   Backtester.Strategy.Slot[slot].SlotType == Backtester.Strategy.Slot[slot + 1].SlotType);
 
             var miDuplicate = new ToolStripMenuItem
                                   {
@@ -214,10 +214,10 @@ namespace Forex_Strategy_Builder
                                       Tag = slot
                                   };
             miDuplicate.Click += SlotContextMenuClick;
-            miDuplicate.Enabled = (Data.Strategy.Slot[slot].SlotType == SlotTypes.OpenFilter &&
-                                   Data.Strategy.OpenFilters < Strategy.MaxOpenFilters ||
-                                   Data.Strategy.Slot[slot].SlotType == SlotTypes.CloseFilter &&
-                                   Data.Strategy.CloseFilters < Strategy.MaxCloseFilters);
+            miDuplicate.Enabled = (Backtester.Strategy.Slot[slot].SlotType == SlotTypes.OpenFilter &&
+                                   Backtester.Strategy.OpenFilters < Strategy.MaxOpenFilters ||
+                                   Backtester.Strategy.Slot[slot].SlotType == SlotTypes.CloseFilter &&
+                                   Backtester.Strategy.CloseFilters < Strategy.MaxCloseFilters);
 
             var miDelete = new ToolStripMenuItem
                                {
@@ -227,8 +227,8 @@ namespace Forex_Strategy_Builder
                                    Tag = slot
                                };
             miDelete.Click += SlotContextMenuClick;
-            miDelete.Enabled = (Data.Strategy.Slot[slot].SlotType == SlotTypes.OpenFilter ||
-                                Data.Strategy.Slot[slot].SlotType == SlotTypes.CloseFilter);
+            miDelete.Enabled = (Backtester.Strategy.Slot[slot].SlotType == SlotTypes.OpenFilter ||
+                                Backtester.Strategy.Slot[slot].SlotType == SlotTypes.CloseFilter);
 
             var itemCollection = new ToolStripItem[]
                                      {
@@ -244,7 +244,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected void RepaintStrategyLayout()
         {
-            StrategyField.RepaintStrategyControls(Data.Strategy.Clone());
+            StrategyField.RepaintStrategyControls(Backtester.Strategy.Clone());
         }
 
         /// <summary>
@@ -353,13 +353,13 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void BtnStrategyDescriptionClick(object sender, EventArgs e)
         {
-            string oldInfo = Data.Strategy.Description;
-            var si = new StrategyDescription();
+            string oldInfo = Backtester.Strategy.Description;
+            var si = new StrategyDescription(Backtester);
             si.ShowDialog();
-            if (oldInfo == Data.Strategy.Description) return;
-            Data.SetStrategyIndicators();
+            if (oldInfo == Backtester.Strategy.Description) return;
+            //Data.SetStrategyIndicators(); TODO
             SetStrategyDescriptionButton();
-            Text = Path.GetFileNameWithoutExtension(Data.StrategyName) + "* - " + Data.ProgramName;
+            Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + "* - " + Data.ProgramName;
             Data.IsStrategyChanged = true;
         }
 
@@ -368,13 +368,14 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void SetStrategyDescriptionButton()
         {
-            if (string.IsNullOrEmpty(Data.Strategy.Description))
+            if (string.IsNullOrEmpty(Backtester.Strategy.Description))
             {
                 ButtonStrategyInfo.Image = Resources.str_info_noinfo;
             }
             else
             {
-                ButtonStrategyInfo.Image = Data.IsStrDescriptionRelevant() ? Resources.str_info_infook : Resources.str_info_warning;
+                //ButtonStrategyInfo.Image = Data.IsStrDescriptionRelevant() ? Resources.str_info_infook : Resources.str_info_warning; TODO FIX
+                ButtonStrategyInfo.Image = Resources.str_info_infook;
             }
         }
     }

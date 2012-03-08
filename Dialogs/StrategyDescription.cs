@@ -8,18 +8,22 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
     public sealed class StrategyDescription : Form
     {
         private String _oldInfo;
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Make a form
         /// </summary>
-        public StrategyDescription()
+        public StrategyDescription(Backtester backtester)
         {
+            _backtester = backtester;
+
             PnlBase = new Panel();
             PnlWarnBase = new FancyPanel();
             LblWarning = new Label();
@@ -52,15 +56,15 @@ namespace Forex_Strategy_Builder
             LblWarning.ForeColor = LayoutColors.ColorControlText;
             LblWarning.AutoSize = false;
             LblWarning.Dock = DockStyle.Fill;
-            if (Data.Strategy.Description != "")
+            if (_backtester.Strategy.Description != "")
             {
-                if (!Data.IsStrDescriptionRelevant())
-                {
-                    LblWarning.Font = new Font(Font, FontStyle.Bold);
-                    LblWarning.Text = Language.T("This description might be outdated!");
-                }
-                else
-                    LblWarning.Text = Path.GetFileNameWithoutExtension(Data.StrategyName);
+                //if (!Data.IsStrDescriptionRelevant())
+                //{
+                //    LblWarning.Font = new Font(Font, FontStyle.Bold);
+                //    LblWarning.Text = Language.T("This description might be outdated!");
+                //}
+                //else TODO FIX
+                    LblWarning.Text = Path.GetFileNameWithoutExtension(_backtester.Strategy.StrategyName);
             }
             else
                 LblWarning.Text = Language.T("You can write a description of the strategy!");
@@ -81,7 +85,7 @@ namespace Forex_Strategy_Builder
             TxboxInfo.AcceptsTab = true;
             TxboxInfo.ScrollBars = ScrollBars.Vertical;
             TxboxInfo.KeyDown += TxboxInfo_KeyDown;
-            TxboxInfo.Text = Data.Strategy.Description;
+            TxboxInfo.Text = _backtester.Strategy.Description;
             TxboxInfo.Select(0, 0);
 
             // BtnClose
@@ -99,7 +103,7 @@ namespace Forex_Strategy_Builder
             BtnClear.Click += BtnClearClick;
             BtnClear.UseVisualStyleBackColor = true;
 
-            _oldInfo = Data.Strategy.Description;
+            _oldInfo = _backtester.Strategy.Description;
         }
 
         private Panel PnlBase { get; set; }
@@ -163,7 +167,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
 
         /// <summary>
@@ -184,7 +188,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void BtnAcceptClick(object sender, EventArgs e)
         {
-            Data.Strategy.Description = TxboxInfo.Text;
+            _backtester.Strategy.Description = TxboxInfo.Text;
             _oldInfo = TxboxInfo.Text;
             Close();
         }
@@ -220,7 +224,7 @@ namespace Forex_Strategy_Builder
                     e.Cancel = true;
                     break;
                 case DialogResult.Yes:
-                    Data.Strategy.Description = TxboxInfo.Text;
+                    _backtester.Strategy.Description = TxboxInfo.Text;
                     _oldInfo = TxboxInfo.Text;
                     Close();
                     break;

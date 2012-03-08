@@ -31,11 +31,12 @@ namespace Forex_Strategy_Builder
             else
                 OrdNumb = ordNumb;
 
-            if (Backtester.PosFromNumb(posNumb).PosDir == PosDirection.None   ||
-                Backtester.PosFromNumb(posNumb).PosDir == PosDirection.Closed &&
-                wpType != WayPointType.Exit && wpType != WayPointType.Reduce)
-                PosNumb = -1;
-            else
+            //TODO Check this.
+            //if (Backtester.PosFromNumb(posNumb).PosDir == PosDirection.None   ||
+            //    Backtester.PosFromNumb(posNumb).PosDir == PosDirection.Closed &&
+            //    wpType != WayPointType.Exit && wpType != WayPointType.Reduce)
+            //    PosNumb = -1;
+            //else
                 PosNumb = posNumb;
         }
 

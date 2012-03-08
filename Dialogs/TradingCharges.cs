@@ -7,6 +7,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -70,9 +71,9 @@ namespace Forex_Strategy_Builder
             LblSwapLong.BackColor = Color.Transparent;
             LblSwapLong.AutoSize = true;
             LblSwapLong.Text = Language.T("Swap number for a long position rollover") + " [" +
-                               (Data.InstrProperties.SwapType == CommissionType.money
-                                    ? Data.InstrProperties.PriceIn
-                                    : Language.T(Data.InstrProperties.SwapType.ToString())) + "]" +
+                               (Data.DataSet.InstrProperties.SwapType == CommissionType.money
+                                    ? Data.DataSet.InstrProperties.PriceIn
+                                    : Language.T(Data.DataSet.InstrProperties.SwapType.ToString())) + "]" +
                                Environment.NewLine +
                                "(" + Language.T("A positive value decreases your profit.") + ")";
 
@@ -82,9 +83,9 @@ namespace Forex_Strategy_Builder
             LblSwapShort.BackColor = Color.Transparent;
             LblSwapShort.AutoSize = true;
             LblSwapShort.Text = Language.T("Swap number for a short position rollover") + " [" +
-                                (Data.InstrProperties.SwapType == CommissionType.money
-                                     ? Data.InstrProperties.PriceIn
-                                     : Language.T(Data.InstrProperties.SwapType.ToString())) + "]" +
+                                (Data.DataSet.InstrProperties.SwapType == CommissionType.money
+                                     ? Data.DataSet.InstrProperties.PriceIn
+                                     : Language.T(Data.DataSet.InstrProperties.SwapType.ToString())) + "]" +
                                 Environment.NewLine +
                                 "(" + Language.T("A negative value decreases your profit.") + ")";
 
@@ -94,11 +95,11 @@ namespace Forex_Strategy_Builder
             LblCommission.BackColor = Color.Transparent;
             LblCommission.AutoSize = true;
             LblCommission.Text = Language.T("Commission in") + " " +
-                                 Data.InstrProperties.CommissionTypeToString + " " +
-                                 Data.InstrProperties.CommissionScopeToString + " " +
-                                 Data.InstrProperties.CommissionTimeToString +
-                                 (Data.InstrProperties.CommissionType == CommissionType.money
-                                      ? " [" + Data.InstrProperties.PriceIn + "]"
+                                 Data.DataSet.InstrProperties.CommissionTypeToString + " " +
+                                 Data.DataSet.InstrProperties.CommissionScopeToString + " " +
+                                 Data.DataSet.InstrProperties.CommissionTimeToString +
+                                 (Data.DataSet.InstrProperties.CommissionType == CommissionType.money
+                                      ? " [" + Data.DataSet.InstrProperties.PriceIn + "]"
                                       : "");
 
             // Label Slippage
@@ -348,7 +349,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
 
         /// <summary>

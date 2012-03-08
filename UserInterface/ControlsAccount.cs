@@ -7,7 +7,6 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using Forex_Strategy_Builder.Dialogs;
 
 namespace Forex_Strategy_Builder
 {
@@ -89,7 +88,7 @@ namespace Forex_Strategy_Builder
             BalanceChart.PopUpContextMenu.Items.AddRange(GetBalanceChartContextMenuItems());
             BalanceChart.MouseMove += SmallBalanceChartMouseMove;
             BalanceChart.MouseLeave += SmallBalanceChartMouseLeave;
-            BalanceChart.MouseUp += SmallBalanceChart_MouseUp;
+            BalanceChart.MouseUp += SmallBalanceChartMouseUp;
             toolTip.SetToolTip(BalanceChart, Language.T("Click to view the full chart.") +
                                              Environment.NewLine +
                                              Language.T("Right click to detach chart."));
@@ -160,68 +159,23 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Shows the full account chart after clicking on it
         /// </summary>
-        private void SmallBalanceChart_MouseUp(object sender, MouseEventArgs e)
+        private void SmallBalanceChartMouseUp(object sender, MouseEventArgs e)
         {
             if(!Data.IsData || !Data.IsResult) return;
 
-            if (e.Button == MouseButtons.Left)
+            switch (e.Button)
             {
-                ShowFullBalanceChart();
-            }
-            else if (e.Button == MouseButtons.Right)
-            {
-                DetachBalanceChart();
+                case MouseButtons.Left:
+                    ShowFullBalanceChart();
+                    break;
+                case MouseButtons.Right:
+                    DetachBalanceChart();
+                    break;
             }
         }
 
-        private static void DetachBalanceChart()
+        protected virtual void DetachBalanceChart()
         {
-            if(!Data.IsData || !Data.IsResult) return;
-
-            var balanceChart = new SeparateBalanceChart();
-            balanceChart.ShowDialog();
-        }
-
-        private static void ShowFullBalanceChart()
-        {
-            if(!Data.IsData || !Data.IsResult) return;
-
-            var chart = new Chart
-            {
-                BarPixels = Configs.BalanceChartZoom,
-                ShowInfoPanel = Configs.BalanceChartInfoPanel,
-                ShowDynInfo = Configs.BalanceChartDynamicInfo,
-                ShowGrid = Configs.BalanceChartGrid,
-                ShowCross = Configs.BalanceChartCross,
-                ShowVolume = Configs.BalanceChartVolume,
-                ShowPositionLots = Configs.BalanceChartLots,
-                ShowOrders = Configs.BalanceChartEntryExitPoints,
-                ShowPositionPrice = Configs.BalanceChartCorrectedPositionPrice,
-                ShowBalanceEquity = Configs.BalanceChartBalanceEquityChart,
-                ShowFloatingPL = Configs.BalanceChartFloatingPLChart,
-                ShowIndicators = Configs.BalanceChartIndicators,
-                ShowAmbiguousBars = Configs.BalanceChartAmbiguousMark,
-                TrueCharts = Configs.BalanceChartTrueCharts,
-                ShowProtections = Configs.BalanceChartProtections
-            };
-
-            chart.ShowDialog();
-
-            Configs.BalanceChartZoom = chart.BarPixels;
-            Configs.BalanceChartInfoPanel = chart.ShowInfoPanel;
-            Configs.BalanceChartDynamicInfo = chart.ShowDynInfo;
-            Configs.BalanceChartGrid = chart.ShowGrid;
-            Configs.BalanceChartCross = chart.ShowCross;
-            Configs.BalanceChartVolume = chart.ShowVolume;
-            Configs.BalanceChartLots = chart.ShowPositionLots;
-            Configs.BalanceChartEntryExitPoints = chart.ShowOrders;
-            Configs.BalanceChartCorrectedPositionPrice = chart.ShowPositionPrice;
-            Configs.BalanceChartBalanceEquityChart = chart.ShowBalanceEquity;
-            Configs.BalanceChartFloatingPLChart = chart.ShowFloatingPL;
-            Configs.BalanceChartIndicators = chart.ShowIndicators;
-            Configs.BalanceChartAmbiguousMark = chart.ShowAmbiguousBars;
-            Configs.BalanceChartTrueCharts = chart.TrueCharts;
-            Configs.BalanceChartProtections = chart.ShowProtections;
         }
 
         /// <summary>

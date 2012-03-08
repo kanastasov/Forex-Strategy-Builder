@@ -11,6 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 using System.Xml;
+using Forex_Strategy_Builder.Dialogs;
 using Forex_Strategy_Builder.Dialogs.Analyzer;
 using Forex_Strategy_Builder.Dialogs.JForex;
 
@@ -101,7 +102,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (IsDiscardSelectedIndexChange)
+            if (_isDiscardSelectedIndexChange)
                 return;
 
             var cbx = (ToolStripComboBox) sender;
@@ -122,7 +123,7 @@ namespace Forex_Strategy_Builder
                 }
                 else
                 {
-                    SetMarket(Data.Symbol, Data.Period);
+                    SetMarket(Data.Symbol, Data.DataSet.Period);
                 }
             }
             else
@@ -166,7 +167,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void MenuStrategyCopyOnClick(object sender, EventArgs e)
         {
-            XmlDocument xmlDoc = StrategyXML.CreateStrategyXmlDoc(Data.Strategy);
+            XmlDocument xmlDoc = StrategyXML.CreateStrategyXmlDoc(Backtester.Strategy);
             Clipboard.SetText(xmlDoc.InnerXml);
         }
 
@@ -197,15 +198,15 @@ namespace Forex_Strategy_Builder
                 return;
             }
 
-            Data.Strategy = tempStrategy;
-            Data.StrategyName = tempStrategy.StrategyName;
+            Backtester.Strategy = tempStrategy;
+            Backtester.Strategy.StrategyName = tempStrategy.StrategyName;
 
-            Data.SetStrategyIndicators();
+            SetStrategyIndicators();
             RebuildStrategyLayout();
 
-            Text = Data.Strategy.StrategyName + " - " + Data.ProgramName;
+            Text = Backtester.Strategy.StrategyName + " - " + Data.ProgramName;
             Data.IsStrategyChanged = false;
-            Data.LoadedSavedStrategy = Data.StrategyPath;
+            Data.LoadedSavedStrategy = Backtester.Strategy.StrategyPath;
             Data.StackStrategy.Clear();
 
             AfterStrategyOpening(false);
@@ -331,7 +332,7 @@ namespace Forex_Strategy_Builder
             Configs.Autoscan = toolStripMenuItem.Checked;
             Calculate(false);
 
-            if (toolStripMenuItem.Checked && !Data.IsIntrabarData)
+            if (toolStripMenuItem.Checked && !Data.DataSet.IsIntrabarData)
                 PrepareScannerCompactMode();
         }
 
@@ -356,7 +357,7 @@ namespace Forex_Strategy_Builder
         }
 
         /// <summary>
-        /// Opens the strategy settings dialogue.
+        /// Sets Auto use previous bar value.
         /// </summary>
         protected override void MenuStrategyAUPBVOnClick(object sender, EventArgs e)
         {
@@ -437,13 +438,53 @@ namespace Forex_Strategy_Builder
         }
 
         /// <summary>
+        ///   Export menu
+        /// </summary>
+        protected override void ExportOnClick(object sender, EventArgs e)
+        {
+            var mi = (ToolStripMenuItem)sender;
+            string name = mi.Name;
+
+            var exporter = new Exporter(Backtester);
+
+            switch (name)
+            {
+                case "dataOnly":
+                    exporter.ExportDataOnly();
+                    break;
+                case "CSVData":
+                    exporter.ExportCSVData();
+                    break;
+                case "indicators":
+                    exporter.ExportIndicators();
+                    break;
+                case "summary":
+                    exporter.ExportBarSummary();
+                    break;
+                case "positions":
+                    exporter.ExportPositions(true);
+                    break;
+                case "positionsNoTransfer":
+                    exporter.ExportPositions(false);
+                    break;
+                case "positionInMoney":
+                    exporter.ExportPositionsInMoney(true);
+                    break;
+                case "positionInMoneyNoTransfer":
+                    exporter.ExportPositionsInMoney(false);
+                    break;
+            }
+        }
+
+
+        /// <summary>
         /// Loads the previously generated strategy
         /// </summary>
         protected override void MenuPrevHistoryOnClick(object sender, EventArgs e)
         {
             if (Data.GeneratorHistory.Count <= 0 || Data.GenHistoryIndex <= 0) return;
             Data.GenHistoryIndex--;
-            Data.Strategy = Data.GeneratorHistory[Data.GenHistoryIndex].Clone();
+            Backtester.Strategy = Data.GeneratorHistory[Data.GenHistoryIndex].Clone();
             RebuildStrategyLayout();
             Calculate(true);
         }
@@ -455,7 +496,7 @@ namespace Forex_Strategy_Builder
         {
             if (Data.GeneratorHistory.Count <= 0 || Data.GenHistoryIndex >= Data.GeneratorHistory.Count - 1) return;
             Data.GenHistoryIndex++;
-            Data.Strategy = Data.GeneratorHistory[Data.GenHistoryIndex].Clone();
+            Backtester.Strategy = Data.GeneratorHistory[Data.GenHistoryIndex].Clone();
             RebuildStrategyLayout();
             Calculate(true);
         }
@@ -791,7 +832,7 @@ namespace Forex_Strategy_Builder
             // Check if the current strategy uses logical groups
             bool usefroup = false;
             var closegroup = new List<string>();
-            foreach (IndicatorSlot slot in Data.Strategy.Slot)
+            foreach (IndicatorSlot slot in Backtester.Strategy.Slot)
             {
                 if (slot.SlotType == SlotTypes.OpenFilter && slot.LogicalGroup != "A")
                     usefroup = true;
@@ -859,9 +900,16 @@ namespace Forex_Strategy_Builder
             var toolStripMenuItem = (ToolStripMenuItem) sender;
             Configs.ShowPriceChartOnAccountChart = toolStripMenuItem.Checked;
 
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(Backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
+        }
+        protected override void DetachBalanceChart()
+        {
+            if(!Data.IsData || !Data.IsResult) return;
+
+            var balanceChart = new SeparateBalanceChart(Backtester);
+            balanceChart.ShowDialog();
         }
 
         /// <summary>
@@ -883,7 +931,9 @@ namespace Forex_Strategy_Builder
 
                 Calculate(false);
                 RebuildStrategyLayout();
-                InfoPanelMarketStatistics.Update(Data.MarketStatsParam, Data.MarketStatsValue, Data.MarketStatsFlag,
+                InfoPanelMarketStatistics.Update(Data.DataStats.MarketStatsParam,
+                                                 Data.DataStats.MarketStatsValue,
+                                                 Data.DataStats.MarketStatsFlag,
                                                  Language.T("Market Statistics"));
                 SetupJournal();
                 PanelWorkspace.Invalidate(true);
@@ -898,5 +948,100 @@ namespace Forex_Strategy_Builder
             }
             toolStripMenuItem.Checked = true;
         }
+
+
+        /// <summary>
+        ///   Opens the strategy overview window
+        /// </summary>
+        protected override void MenuStrategyOverviewOnClick(object sender, EventArgs e)
+        {
+            var so = new Browser(Language.T("Strategy Overview"), OverviewFormatReport.GenerateHTMLOverview(Backtester, IsStrDescriptionRelevant()));
+            so.Show();
+        }
+
+        protected override void ShowFullBalanceChart()
+        {
+            if (!Data.IsData || !Data.IsResult) return;
+
+            var chart = new Chart(Backtester)
+            {
+                BarPixels = Configs.BalanceChartZoom,
+                ShowInfoPanel = Configs.BalanceChartInfoPanel,
+                ShowDynInfo = Configs.BalanceChartDynamicInfo,
+                ShowGrid = Configs.BalanceChartGrid,
+                ShowCross = Configs.BalanceChartCross,
+                ShowVolume = Configs.BalanceChartVolume,
+                ShowPositionLots = Configs.BalanceChartLots,
+                ShowOrders = Configs.BalanceChartEntryExitPoints,
+                ShowPositionPrice = Configs.BalanceChartCorrectedPositionPrice,
+                ShowBalanceEquity = Configs.BalanceChartBalanceEquityChart,
+                ShowFloatingPL = Configs.BalanceChartFloatingPLChart,
+                ShowIndicators = Configs.BalanceChartIndicators,
+                ShowAmbiguousBars = Configs.BalanceChartAmbiguousMark,
+                TrueCharts = Configs.BalanceChartTrueCharts,
+                ShowProtections = Configs.BalanceChartProtections
+            };
+
+            chart.ShowDialog();
+
+            Configs.BalanceChartZoom = chart.BarPixels;
+            Configs.BalanceChartInfoPanel = chart.ShowInfoPanel;
+            Configs.BalanceChartDynamicInfo = chart.ShowDynInfo;
+            Configs.BalanceChartGrid = chart.ShowGrid;
+            Configs.BalanceChartCross = chart.ShowCross;
+            Configs.BalanceChartVolume = chart.ShowVolume;
+            Configs.BalanceChartLots = chart.ShowPositionLots;
+            Configs.BalanceChartEntryExitPoints = chart.ShowOrders;
+            Configs.BalanceChartCorrectedPositionPrice = chart.ShowPositionPrice;
+            Configs.BalanceChartBalanceEquityChart = chart.ShowBalanceEquity;
+            Configs.BalanceChartFloatingPLChart = chart.ShowFloatingPL;
+            Configs.BalanceChartIndicators = chart.ShowIndicators;
+            Configs.BalanceChartAmbiguousMark = chart.ShowAmbiguousBars;
+            Configs.BalanceChartTrueCharts = chart.TrueCharts;
+            Configs.BalanceChartProtections = chart.ShowProtections;
+        }
+
+        protected override void ShowFullIndicatorChart()
+        {
+            if (!Data.IsData || !Data.IsResult) return;
+
+            var chart = new Chart(Backtester)
+            {
+                BarPixels = Configs.IndicatorChartZoom,
+                ShowInfoPanel = Configs.IndicatorChartInfoPanel,
+                ShowDynInfo = Configs.IndicatorChartDynamicInfo,
+                ShowGrid = Configs.IndicatorChartGrid,
+                ShowCross = Configs.IndicatorChartCross,
+                ShowVolume = Configs.IndicatorChartVolume,
+                ShowPositionLots = Configs.IndicatorChartLots,
+                ShowOrders = Configs.IndicatorChartEntryExitPoints,
+                ShowPositionPrice = Configs.IndicatorChartCorrectedPositionPrice,
+                ShowBalanceEquity = Configs.IndicatorChartBalanceEquityChart,
+                ShowFloatingPL = Configs.IndicatorChartFloatingPLChart,
+                ShowIndicators = Configs.IndicatorChartIndicators,
+                ShowAmbiguousBars = Configs.IndicatorChartAmbiguousMark,
+                TrueCharts = Configs.IndicatorChartTrueCharts,
+                ShowProtections = Configs.IndicatorChartProtections
+            };
+
+            chart.ShowDialog();
+
+            Configs.IndicatorChartZoom = chart.BarPixels;
+            Configs.IndicatorChartInfoPanel = chart.ShowInfoPanel;
+            Configs.IndicatorChartDynamicInfo = chart.ShowDynInfo;
+            Configs.IndicatorChartGrid = chart.ShowGrid;
+            Configs.IndicatorChartCross = chart.ShowCross;
+            Configs.IndicatorChartVolume = chart.ShowVolume;
+            Configs.IndicatorChartLots = chart.ShowPositionLots;
+            Configs.IndicatorChartEntryExitPoints = chart.ShowOrders;
+            Configs.IndicatorChartCorrectedPositionPrice = chart.ShowPositionPrice;
+            Configs.IndicatorChartBalanceEquityChart = chart.ShowBalanceEquity;
+            Configs.IndicatorChartFloatingPLChart = chart.ShowFloatingPL;
+            Configs.IndicatorChartIndicators = chart.ShowIndicators;
+            Configs.IndicatorChartAmbiguousMark = chart.ShowAmbiguousBars;
+            Configs.IndicatorChartTrueCharts = chart.TrueCharts;
+            Configs.IndicatorChartProtections = chart.ShowProtections;
+        }
+
     }
 }

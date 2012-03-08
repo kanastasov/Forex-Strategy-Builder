@@ -8,6 +8,7 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -117,8 +118,8 @@ namespace Forex_Strategy_Builder
         {
             var fibo = new Fibonacci(SlotTypes.Close);
             fibo.Calculate(SlotTypes.Close);
-            AtbxInputValues[0].Text = fibo.Component[5].Value[Data.Bars - 1].ToString(CultureInfo.InvariantCulture);
-            AtbxInputValues[1].Text = fibo.Component[1].Value[Data.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[0].Text = fibo.Component[5].Value[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[1].Text = fibo.Component[1].Value[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -256,7 +257,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
     }
 }

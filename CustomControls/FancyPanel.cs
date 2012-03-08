@@ -7,6 +7,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -54,7 +55,7 @@ namespace Forex_Strategy_Builder
             _caption = captionText;
             _colorCaptionBack = borderColor;
             _brushCaption = new SolidBrush(LayoutColors.ColorCaptionText);
-            _penBorder = new Pen(Data.GetGradientColor(borderColor, -LayoutColors.DepthCaption), Border);
+            _penBorder = new Pen(ColorMagic.GetGradientColor(borderColor, -LayoutColors.DepthCaption), Border);
 
             InitializeParameters();
         }
@@ -71,7 +72,7 @@ namespace Forex_Strategy_Builder
         {
             _colorCaptionBack = LayoutColors.ColorCaptionBack;
             _brushCaption = new SolidBrush(LayoutColors.ColorCaptionText);
-            _penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
+            _penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
         }
 
         /// <summary>
@@ -99,7 +100,7 @@ namespace Forex_Strategy_Builder
             Graphics g = e.Graphics;
 
             // Caption
-            Data.GradientPaint(g, _rectfCaption, _colorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, _rectfCaption, _colorCaptionBack, LayoutColors.DepthCaption);
             if (_showCaption)
                 g.DrawString(_caption, _fontCaption, _brushCaption, _rectfCaption, _stringFormatCaption);
 
@@ -110,7 +111,7 @@ namespace Forex_Strategy_Builder
 
             // Paint the panel background
             var rectClient = new RectangleF(Border, CaptionHeight, _width, _height);
-            Data.GradientPaint(g, rectClient, LayoutColors.ColorControlBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectClient, LayoutColors.ColorControlBack, LayoutColors.DepthControl);
         }
 
         /// <summary>

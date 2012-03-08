@@ -65,13 +65,17 @@ namespace Forex_Strategy_Builder
         private bool _oppSignalSet;
         private string _warningMessage = "";
 
+        private readonly Backtester _backtester;
+
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public IndicatorDialog(int slotNumb, SlotTypes slotType, bool isDefined)
+        public IndicatorDialog(int slotNumb, SlotTypes slotType, bool isDefined, Backtester backtester)
         {
             _slot = slotNumb;
             _slotType = slotType;
+            _backtester = backtester;
 
             if (slotType == SlotTypes.Open)
             {
@@ -283,12 +287,12 @@ namespace Forex_Strategy_Builder
             // ComboBoxindicator index selection.
             if (isDefined)
             {
-                TreeNode[] atrn = TrvIndicators.Nodes.Find(Data.Strategy.Slot[_slot].IndParam.IndicatorName, true);
+                TreeNode[] atrn = TrvIndicators.Nodes.Find(_backtester.Strategy.Slot[_slot].IndParam.IndicatorName, true);
                 TrvIndicators.SelectedNode = atrn[0];
-                UpdateFromIndicatorParam(Data.Strategy.Slot[_slot].IndParam);
+                UpdateFromIndicatorParam(_backtester.Strategy.Slot[_slot].IndParam);
                 SetLogicalGroup();
                 CalculateIndicator(false);
-                BalanceChart.SetChartData();
+                BalanceChart.SetChartData(_backtester);
                 BalanceChart.InitChart();
                 BalanceChart.Invalidate();
             }
@@ -309,11 +313,11 @@ namespace Forex_Strategy_Builder
                 TrvIndicatorsLoadIndicator();
             }
 
-            _oppSignalBehaviour = Data.Strategy.OppSignalAction;
+            _oppSignalBehaviour = _backtester.Strategy.OppSignalAction;
 
-            if (slotType == SlotTypes.Close && Data.Strategy.CloseFilters > 0)
-                for (int iSlot = Data.Strategy.CloseSlot + 1; iSlot < Data.Strategy.Slots; iSlot++)
-                    _closingConditions.Add(Data.Strategy.Slot[iSlot].Clone());
+            if (slotType == SlotTypes.Close && _backtester.Strategy.CloseFilters > 0)
+                for (int iSlot = _backtester.Strategy.CloseSlot + 1; iSlot < _backtester.Strategy.Slots; iSlot++)
+                    _closingConditions.Add(_backtester.Strategy.Slot[iSlot].Clone());
         }
 
         private FancyPanel PnlTreeViewBase { get; set; }
@@ -577,7 +581,7 @@ namespace Forex_Strategy_Builder
         private void SetLogicalGroup()
         {
             if (_slotType != SlotTypes.OpenFilter && _slotType != SlotTypes.CloseFilter) return;
-            string group = Data.Strategy.Slot[_slot].LogicalGroup;
+            string group = _backtester.Strategy.Slot[_slot].LogicalGroup;
             if (string.IsNullOrEmpty(@group))
                 SetDefaultGroup();
             else
@@ -611,7 +615,7 @@ namespace Forex_Strategy_Builder
 
             if (_slotType == SlotTypes.CloseFilter)
             {
-                int index = _slot - Data.Strategy.CloseSlot - 1;
+                int index = _slot - _backtester.Strategy.CloseSlot - 1;
                 CbxGroup.SelectedIndex = index;
             }
         }
@@ -768,7 +772,7 @@ namespace Forex_Strategy_Builder
         private void GroupChanged(object sender, EventArgs e)
         {
             if (_slotType == SlotTypes.OpenFilter || _slotType == SlotTypes.CloseFilter)
-                Data.Strategy.Slot[_slot].LogicalGroup = CbxGroup.Text;
+                _backtester.Strategy.Slot[_slot].LogicalGroup = CbxGroup.Text;
 
             ParamChanged(sender, e);
         }
@@ -788,7 +792,7 @@ namespace Forex_Strategy_Builder
             if (!_isChartRecalculation)
                 return;
 
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
         }
@@ -834,29 +838,29 @@ namespace Forex_Strategy_Builder
 
             if (bCalculateStrategy)
             {
-                //Sets Data.Strategy
-                Data.Strategy.Slot[_slot].IndicatorName = indicator.IndicatorName;
-                Data.Strategy.Slot[_slot].IndParam = indicator.IndParam;
-                Data.Strategy.Slot[_slot].Component = indicator.Component;
-                Data.Strategy.Slot[_slot].SeparatedChart = indicator.SeparatedChart;
-                Data.Strategy.Slot[_slot].SpecValue = indicator.SpecialValues;
-                Data.Strategy.Slot[_slot].MinValue = indicator.SeparatedChartMinValue;
-                Data.Strategy.Slot[_slot].MaxValue = indicator.SeparatedChartMaxValue;
-                Data.Strategy.Slot[_slot].IsDefined = true;
+                //Sets _backtester.Strategy
+                _backtester.Strategy.Slot[_slot].IndicatorName = indicator.IndicatorName;
+                _backtester.Strategy.Slot[_slot].IndParam = indicator.IndParam;
+                _backtester.Strategy.Slot[_slot].Component = indicator.Component;
+                _backtester.Strategy.Slot[_slot].SeparatedChart = indicator.SeparatedChart;
+                _backtester.Strategy.Slot[_slot].SpecValue = indicator.SpecialValues;
+                _backtester.Strategy.Slot[_slot].MinValue = indicator.SeparatedChartMinValue;
+                _backtester.Strategy.Slot[_slot].MaxValue = indicator.SeparatedChartMaxValue;
+                _backtester.Strategy.Slot[_slot].IsDefined = true;
 
                 // Search the indicators' components to determine Data.FirstBar
-                Data.FirstBar = Data.Strategy.SetFirstBar();
+                _backtester.Strategy.SetFirstBar();
 
                 // Check "Use previous bar value"
-                if (Data.Strategy.AdjustUsePreviousBarValue())
+                if (_backtester.Strategy.AdjustUsePreviousBarValue())
                 {
                     for (int i = 0; i < 2; i++)
                         if (indicator.IndParam.CheckParam[i].Caption == "Use previous bar value")
-                            AChbCheck[i].Checked = Data.Strategy.Slot[_slot].IndParam.CheckParam[i].Checked;
+                            AChbCheck[i].Checked = _backtester.Strategy.Slot[_slot].IndParam.CheckParam[i].Checked;
                 }
 
-                Backtester.Calculate();
-                Backtester.CalculateAccountStats();
+                _backtester.Calculate(_backtester.Strategy, Data.DataSet);
+                _backtester.CalculateAccountStats();
             }
 
             SetIndicatorNotification(indicator);
@@ -957,10 +961,10 @@ namespace Forex_Strategy_Builder
             bool isClosingFiltersAllowed = IndicatorStore.ClosingIndicatorsWithClosingFilters.Contains(_indicatorName);
 
             // Removes or recovers closing logic slots.
-            if (_slotType == SlotTypes.Close && !isClosingFiltersAllowed && Data.Strategy.CloseFilters > 0)
+            if (_slotType == SlotTypes.Close && !isClosingFiltersAllowed && _backtester.Strategy.CloseFilters > 0)
             {
                 // Removes all the closing logic conditions.
-                Data.Strategy.RemoveAllCloseFilters();
+                _backtester.Strategy.RemoveAllCloseFilters();
                 _closingSlotsRemoved = true;
             }
             else if (_slotType == SlotTypes.Close && isClosingFiltersAllowed && _closingSlotsRemoved)
@@ -968,8 +972,8 @@ namespace Forex_Strategy_Builder
                 foreach (IndicatorSlot inslot in _closingConditions)
                 {
                     // Recovers all the closing logic conditions.
-                    Data.Strategy.AddCloseFilter();
-                    Data.Strategy.Slot[Data.Strategy.Slots - 1] = inslot.Clone();
+                    _backtester.Strategy.AddCloseFilter();
+                    _backtester.Strategy.Slot[_backtester.Strategy.Slots - 1] = inslot.Clone();
                 }
                 _closingSlotsRemoved = false;
             }
@@ -985,13 +989,13 @@ namespace Forex_Strategy_Builder
                 _oppSignalBehaviour != OppositeDirSignalAction.Reverse)
             {
                 // Sets the strategy opposite signal to Reverse.
-                Data.Strategy.OppSignalAction = OppositeDirSignalAction.Reverse;
+                _backtester.Strategy.OppSignalAction = OppositeDirSignalAction.Reverse;
                 _oppSignalSet = true;
             }
             else if (_slotType == SlotTypes.Close && _indicatorName != "Close and Reverse" && _oppSignalSet)
             {
                 // Recovers the original opposite signal.
-                Data.Strategy.OppSignalAction = _oppSignalBehaviour;
+                _backtester.Strategy.OppSignalAction = _oppSignalBehaviour;
                 _oppSignalSet = false;
             }
         }

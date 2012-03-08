@@ -26,7 +26,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         private readonly List<string> _indicatorBlackList;
         private IndicatorSlot[] _aLockedEntryFilter; // Holds all locked entry filters.
         private IndicatorSlot[] _aLockedExitFilter; // Holds all locked exit filters.
-        private int _barOOS = Data.Bars - 1;
+        private int _barOOS;
         private int _bestBalance;
         private int _cycles;
         private bool _isEntryLocked; // Shows if the entry logic is locked
@@ -46,6 +46,34 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
 
         // Out of Sample
         private float _targetBalanceRatio = 1;
+
+        private string[] _strategyIndicatorsNames;
+
+        /// <summary>
+        /// Sets the indicator names
+        /// </summary>
+        private void SetStrategyIndicators()
+        {
+            _strategyIndicatorsNames = new string[_backtester.Strategy.Slots];
+            for (int i = 0; i < _backtester.Strategy.Slots; i++)
+                _strategyIndicatorsNames[i] = _backtester.Strategy.Slot[i].IndicatorName;
+        }
+
+        /// <summary>
+        /// It tells if the strategy description is relevant.
+        /// </summary>
+        private bool IsStrDescriptionRelevant()
+        {
+            if ( _backtester.Strategy.Slots == _strategyIndicatorsNames.Length)
+            {
+                for (int i = 0; i <  _backtester.Strategy.Slots; i++)
+                    if (_strategyIndicatorsNames[i] !=  _backtester.Strategy.Slot[i].IndicatorName)
+                        return false;
+                return true;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// BtnGenerate_Click
@@ -144,10 +172,11 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
 
             RestoreFromBest();
 
-            Backtester.Calculate();
-            Backtester.CalculateAccountStats();
+            _backtester.Calculate();
+            _backtester.CalculateAccountStats();
+            _backtester.Strategy.Description = GenerateDescription();
 
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
 
@@ -218,7 +247,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             if (ChbGenerateNewStrategy.Checked)
                 _bestBalance = 0;
             else
-                _bestBalance = (_isOOS ? Backtester.Balance(_barOOS) : Backtester.NetBalance);
+                _bestBalance = (_isOOS ? _backtester.Balance(_barOOS) : _backtester.NetBalance);
 
             _maxOpeningLogicSlots = ChbMaxOpeningLogicSlots.Checked
                                        ? (int) NUDMaxOpeningLogicSlots.Value
@@ -311,7 +340,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                     _exitFilterIndicators.Add(indicator);
 
             // Remove special cases
-            bool isPeriodDayOrWeek = Data.Period == DataPeriods.day || Data.Period == DataPeriods.week;
+            bool isPeriodDayOrWeek = _backtester.DataSet.Period == DataPeriods.day || _backtester.DataSet.Period == DataPeriods.week;
 
             if (_entryIndicators.Contains("Fibonacci"))
                 _entryIndicators.Remove("Fibonacci");
@@ -448,38 +477,33 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             bool isBetter = false;
             _cycles++;
 
-            Data.FirstBar = Data.Strategy.SetFirstBar();
-            Data.Strategy.AdjustUsePreviousBarValue();
+            _backtester.Strategy.SetFirstBar();
+            _backtester.Strategy.AdjustUsePreviousBarValue();
 
             // Sets default logical group for all slots that are open (not locked or linked).
-            foreach (IndicatorSlot slot in Data.Strategy.Slot)
+            foreach (IndicatorSlot slot in _backtester.Strategy.Slot)
                 if (slot.SlotStatus == StrategySlotStatus.Open)
-                    slot.LogicalGroup = Data.Strategy.GetDefaultGroup(slot.SlotNumber);
+                    slot.LogicalGroup = _backtester.Strategy.GetDefaultGroup(slot.SlotNumber);
 
 #if !DEBUG
             try
             {
 #endif
-            Backtester.Calculate();
+            _backtester.Calculate();
 
-            int balance = (_isOOS ? Backtester.Balance(_barOOS) : Backtester.NetBalance);
+            int balance = (_isOOS ? _backtester.Balance(_barOOS) : _backtester.NetBalance);
             bool isLimitationsOK = IsLimitationsFulfilled();
 
             if (isLimitationsOK)
             {
                 if (_bestBalance < balance ||
-                    (_bestBalance == balance && (isSaveEqualResult || Data.Strategy.Slots < _strategyBest.Slots)))
+                    (_bestBalance == balance && (isSaveEqualResult || _backtester.Strategy.Slots < _strategyBest.Slots)))
                 {
-                    _strategyBest = Data.Strategy.Clone();
-                    _strategyBest.PropertiesStatus = Data.Strategy.PropertiesStatus;
-                    for (int slot = 0; slot < Data.Strategy.Slots; slot++)
-                        _strategyBest.Slot[slot].SlotStatus = Data.Strategy.Slot[slot].SlotStatus;
+                    _strategyBest = _backtester.Strategy.Clone();
+                    _strategyBest.PropertiesStatus = _backtester.Strategy.PropertiesStatus;
+                    for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
+                        _strategyBest.Slot[slot].SlotStatus = _backtester.Strategy.Slot[slot].SlotStatus;
 
-                    string description = GenerateDescription();
-                    if (balance > _bestBalance)
-                        AddStrategyToGeneratorHistory(description);
-                    else
-                        UpdateStrategyInGeneratorHistory(description);
                     SetStrategyDescriptionButton();
 
                     _bestBalance = balance;
@@ -556,10 +580,10 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         /// </summary>
         private void RestoreFromBest()
         {
-            Data.Strategy = _strategyBest.Clone();
-            Data.Strategy.PropertiesStatus = _strategyBest.PropertiesStatus;
+            _backtester.Strategy = _strategyBest.Clone();
+            _backtester.Strategy.PropertiesStatus = _strategyBest.PropertiesStatus;
             for (int slot = 0; slot < _strategyBest.Slots; slot++)
-                Data.Strategy.Slot[slot].SlotStatus = _strategyBest.Slot[slot].SlotStatus;
+                _backtester.Strategy.Slot[slot].SlotStatus = _strategyBest.Slot[slot].SlotStatus;
 
             RecalculateSlots();
         }
@@ -571,40 +595,40 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         {
             // The calculated strategy has higher profit
             // or the same profit but lower number of slots
-            Backtester.CalculateAccountStats();
+            _backtester.CalculateAccountStats();
 
             // Limitation Max Ambiguous Bars
-            if (ChbAmbiguousBars.Checked && Backtester.AmbiguousBars > NUDAmbiguousBars.Value)
+            if (ChbAmbiguousBars.Checked && _backtester.AmbiguousBars > NUDAmbiguousBars.Value)
                 return false;
 
             // Limitation Max Equity Drawdown
             double maxEquityDrawdown = Configs.AccountInMoney
-                                           ? Backtester.MaxMoneyEquityDrawdown
-                                           : Backtester.MaxEquityDrawdown;
+                                           ? _backtester.MaxMoneyEquityDrawdown
+                                           : _backtester.MaxEquityDrawdown;
             if (ChbMaxDrawdown.Checked && maxEquityDrawdown > (double) NUDMaxDrawdown.Value)
                 return false;
 
             // Limitation Max Equity percent drawdown
-            if (ChbEquityPercent.Checked && Backtester.MoneyEquityPercentDrawdown > (double) NUDEquityPercent.Value)
+            if (ChbEquityPercent.Checked && _backtester.MoneyEquityPercentDrawdown > (double) NUDEquityPercent.Value)
                 return false;
 
             // Limitation Min Trades
-            if (ChbMinTrades.Checked && Backtester.ExecutedOrders < NUDMinTrades.Value)
+            if (ChbMinTrades.Checked && _backtester.ExecutedOrders < NUDMinTrades.Value)
                 return false;
 
             // Limitation Max Trades
-            if (ChbMaxTrades.Checked && Backtester.ExecutedOrders > NUDMaxTrades.Value)
+            if (ChbMaxTrades.Checked && _backtester.ExecutedOrders > NUDMaxTrades.Value)
                 return false;
 
             // Limitation Win / Loss ratio
-            if (ChbWinLossRatio.Checked && Backtester.WinLossRatio < (double) NUDWinLossRatio.Value)
+            if (ChbWinLossRatio.Checked && _backtester.WinLossRatio < (double) NUDWinLossRatio.Value)
                 return false;
 
             // OOS Pattern filter
             if (ChbOOSPatternFilter.Checked && ChbOutOfSample.Checked)
             {
-                int netBalance = Backtester.NetBalance;
-                int ooSbalance = Backtester.Balance(_barOOS);
+                int netBalance = _backtester.NetBalance;
+                int ooSbalance = _backtester.Balance(_barOOS);
                 var targetBalance = (int) (ooSbalance*_targetBalanceRatio);
                 var minBalance = (int) (targetBalance*(1 - NUDOOSPatternPercent.Value/100));
                 if (netBalance < ooSbalance || netBalance < minBalance)
@@ -619,11 +643,11 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
 
                 for (int i = 1; i <= checkPoints; i++)
                 {
-                    int firstBar = Data.FirstBar;
-                    int bar = Data.FirstBar + i*(Data.Bars - firstBar)/(checkPoints + 1);
-                    double netBalance = Backtester.NetMoneyBalance;
-                    double startBalance = Backtester.MoneyBalance(firstBar);
-                    double checkPointBalance = Backtester.MoneyBalance(bar);
+                    int firstBar = _backtester.Strategy.FirstBar;
+                    int bar = _backtester.Strategy.FirstBar + i * (_backtester.DataSet.Bars - firstBar) / (checkPoints + 1);
+                    double netBalance = _backtester.NetMoneyBalance;
+                    double startBalance = _backtester.MoneyBalance(firstBar);
+                    double checkPointBalance = _backtester.MoneyBalance(bar);
                     double targetBalance = startBalance + i*(netBalance - startBalance)/(checkPoints + 1);
                     double minBalance = targetBalance*(1 - maxPercentDeviation);
                     double maxBalance = targetBalance*(1 + maxPercentDeviation);
@@ -633,9 +657,9 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                     if (Configs.AdditionalStatistics)
                     {
                         // Long balance line
-                        netBalance = Backtester.NetLongMoneyBalance;
-                        checkPointBalance = Backtester.LongMoneyBalance(bar);
-                        startBalance = Backtester.LongMoneyBalance(firstBar);
+                        netBalance = _backtester.NetLongMoneyBalance;
+                        checkPointBalance = _backtester.LongMoneyBalance(bar);
+                        startBalance = _backtester.LongMoneyBalance(firstBar);
                         targetBalance = startBalance + i*(netBalance - startBalance)/(checkPoints + 1);
                         minBalance = targetBalance*(1 - maxPercentDeviation);
                         maxBalance = targetBalance*(1 + maxPercentDeviation);
@@ -643,9 +667,9 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                             return false;
 
                         // Short balance line
-                        netBalance = Backtester.NetShortMoneyBalance;
-                        checkPointBalance = Backtester.ShortMoneyBalance(bar);
-                        startBalance = Backtester.ShortMoneyBalance(firstBar);
+                        netBalance = _backtester.NetShortMoneyBalance;
+                        checkPointBalance = _backtester.ShortMoneyBalance(bar);
+                        startBalance = _backtester.ShortMoneyBalance(firstBar);
                         targetBalance = startBalance + i*(netBalance - startBalance)/(checkPoints + 1);
                         minBalance = targetBalance*(1 - maxPercentDeviation);
                         maxBalance = targetBalance*(1 + maxPercentDeviation);
@@ -668,11 +692,11 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
 
             int closeFilters = 0;
             if (_lockedExitSlot == null ||
-                _exitIndicatorsWithFilters.Contains(Data.Strategy.Slot[Data.Strategy.CloseSlot].IndicatorName))
+                _exitIndicatorsWithFilters.Contains(_backtester.Strategy.Slot[_backtester.Strategy.CloseSlot].IndicatorName))
                 closeFilters = _random.Next(_lockedExitFilters, _maxClosingLogicSlots + 1);
 
             // Create a strategy
-            Data.Strategy = new Strategy(openFilters, closeFilters)
+            _backtester.Strategy = new Strategy(openFilters, closeFilters)
                                 {
                                     StrategyName = "Generated",
                                     UseAccountPercentEntry = _strategyBest.UseAccountPercentEntry,
@@ -686,8 +710,8 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             int slot = 0;
             if (_lockedEntrySlot != null)
             {
-                Data.Strategy.Slot[slot] = _lockedEntrySlot.Clone();
-                if (Data.Strategy.Slot[slot].SlotStatus == StrategySlotStatus.Linked)
+                _backtester.Strategy.Slot[slot] = _lockedEntrySlot.Clone();
+                if (_backtester.Strategy.Slot[slot].SlotStatus == StrategySlotStatus.Linked)
                     GenerateIndicatorParameters(slot);
             }
             else
@@ -700,9 +724,9 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             for (int i = 0; i < _lockedEntryFilters; i++)
             {
                 slot++;
-                Data.Strategy.Slot[slot] = _aLockedEntryFilter[i].Clone();
-                Data.Strategy.Slot[slot].SlotNumber = slot;
-                if (Data.Strategy.Slot[slot].SlotStatus == StrategySlotStatus.Linked)
+                _backtester.Strategy.Slot[slot] = _aLockedEntryFilter[i].Clone();
+                _backtester.Strategy.Slot[slot].SlotNumber = slot;
+                if (_backtester.Strategy.Slot[slot].SlotStatus == StrategySlotStatus.Linked)
                     GenerateIndicatorParameters(slot);
             }
             for (int i = _lockedEntryFilters; i < openFilters; i++)
@@ -716,9 +740,9 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             if (_lockedExitSlot != null)
             {
                 slot++;
-                Data.Strategy.Slot[slot] = _lockedExitSlot.Clone();
-                Data.Strategy.Slot[slot].SlotNumber = slot;
-                if (Data.Strategy.Slot[slot].SlotStatus == StrategySlotStatus.Linked)
+                _backtester.Strategy.Slot[slot] = _lockedExitSlot.Clone();
+                _backtester.Strategy.Slot[slot].SlotNumber = slot;
+                if (_backtester.Strategy.Slot[slot].SlotStatus == StrategySlotStatus.Linked)
                     GenerateIndicatorParameters(slot);
             }
             else
@@ -729,14 +753,14 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             }
 
             // Exit filter slots
-            if (IndicatorStore.ClosingIndicatorsWithClosingFilters.Contains(Data.Strategy.Slot[Data.Strategy.CloseSlot].IndicatorName) && closeFilters > 0)
+            if (IndicatorStore.ClosingIndicatorsWithClosingFilters.Contains(_backtester.Strategy.Slot[_backtester.Strategy.CloseSlot].IndicatorName) && closeFilters > 0)
             {
                 for (int i = 0; i < _lockedExitFilters; i++)
                 {
                     slot++;
-                    Data.Strategy.Slot[slot] = _aLockedExitFilter[i].Clone();
-                    Data.Strategy.Slot[slot].SlotNumber = slot;
-                    if (Data.Strategy.Slot[slot].SlotStatus == StrategySlotStatus.Linked)
+                    _backtester.Strategy.Slot[slot] = _aLockedExitFilter[i].Clone();
+                    _backtester.Strategy.Slot[slot].SlotNumber = slot;
+                    if (_backtester.Strategy.Slot[slot].SlotStatus == StrategySlotStatus.Linked)
                         GenerateIndicatorParameters(slot);
                 }
                 for (int i = _lockedExitFilters; i < closeFilters; i++)
@@ -753,7 +777,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         /// </summary>
         private void GenerateIndicatorName(int slot)
         {
-            SlotTypes slotType = Data.Strategy.GetSlotType(slot);
+            SlotTypes slotType = _backtester.Strategy.GetSlotType(slot);
             string indicatorName;
 
             switch (slotType)
@@ -773,7 +797,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                 case SlotTypes.Close:
                     do
                     {
-                        indicatorName = Data.Strategy.CloseFilters > 0
+                        indicatorName = _backtester.Strategy.CloseFilters > 0
                             ? _exitIndicatorsWithFilters[_random.Next(_exitIndicatorsWithFilters.Count)]
                             : _exitIndicators[_random.Next(_exitIndicators.Count)];
                     } while (_indicatorBlackList.Contains(indicatorName));
@@ -789,7 +813,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                     break;
             }
 
-            Data.Strategy.Slot[slot].IndicatorName = indicatorName;
+            _backtester.Strategy.Slot[slot].IndicatorName = indicatorName;
         }
 
         /// <summary>
@@ -797,8 +821,8 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         /// </summary>
         private void GenerateIndicatorParameters(int slot)
         {
-            string indicatorName = Data.Strategy.Slot[slot].IndicatorName;
-            SlotTypes slotType = Data.Strategy.GetSlotType(slot);
+            string indicatorName = _backtester.Strategy.Slot[slot].IndicatorName;
+            SlotTypes slotType = _backtester.Strategy.GetSlotType(slot);
             Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, slotType);
 
             // List parameters
@@ -827,11 +851,12 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                             double minimum = num.Min;
                             double maximum = num.Max;
 
-                            if (maximum > Data.Bars/3.0 && ((num.Caption.ToLower()).Contains("period") ||
-                                                          (num.Caption.ToLower()).Contains("shift") ||
-                                                          (num.ToolTip.ToLower()).Contains("period")))
+                            if (maximum > _backtester.DataSet.Bars/3.0 && 
+                                ((num.Caption.ToLower()).Contains("period") ||
+                                (num.Caption.ToLower()).Contains("shift") ||
+                                (num.ToolTip.ToLower()).Contains("period")))
                             {
-                                maximum = Math.Max(minimum + step, Data.Bars/3.0);
+                                maximum = Math.Max(minimum + step, _backtester.DataSet.Bars/3.0);
                             }
 
                             double value = minimum + step*_random.Next((int) ((maximum - minimum)/step));
@@ -846,10 +871,10 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                 foreach (IndicatorComp comp in indicator.Component)
                     if (comp.FirstBar > firstBar)
                         firstBar = comp.FirstBar;
-            } while (firstBar > Data.Bars - 10);
+            } while (firstBar > _backtester.DataSet.Bars - 10);
 
-            //Set the Data.Strategy
-            IndicatorSlot indSlot = Data.Strategy.Slot[slot];
+            //Set the _backtester.Strategy
+            IndicatorSlot indSlot = _backtester.Strategy.Slot[slot];
             indSlot.IndicatorName = indicator.IndicatorName;
             indSlot.IndParam = indicator.IndParam;
             indSlot.Component = indicator.Component;
@@ -867,19 +892,19 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         {
             if (_strategyBest.PropertiesStatus == StrategySlotStatus.Locked)
             {
-                Data.Strategy.PropertiesStatus = _strategyBest.PropertiesStatus;
-                Data.Strategy.SameSignalAction = _strategyBest.SameSignalAction;
-                Data.Strategy.OppSignalAction = _strategyBest.OppSignalAction;
+                _backtester.Strategy.PropertiesStatus = _strategyBest.PropertiesStatus;
+                _backtester.Strategy.SameSignalAction = _strategyBest.SameSignalAction;
+                _backtester.Strategy.OppSignalAction = _strategyBest.OppSignalAction;
             }
             else
             {
-                Data.Strategy.SameSignalAction =
+                _backtester.Strategy.SameSignalAction =
                     (SameDirSignalAction) Enum.GetValues(typeof (SameDirSignalAction)).GetValue(_random.Next(3));
-                Data.Strategy.OppSignalAction =
+                _backtester.Strategy.OppSignalAction =
                     (OppositeDirSignalAction) Enum.GetValues(typeof (OppositeDirSignalAction)).GetValue(_random.Next(4));
 
-                if (Data.Strategy.Slot[Data.Strategy.CloseSlot].IndicatorName == "Close and Reverse")
-                    Data.Strategy.OppSignalAction = OppositeDirSignalAction.Reverse;
+                if (_backtester.Strategy.Slot[_backtester.Strategy.CloseSlot].IndicatorName == "Close and Reverse")
+                    _backtester.Strategy.OppSignalAction = OppositeDirSignalAction.Reverse;
             }
         }
 
@@ -890,25 +915,25 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         {
             if (ChbPreservPermSL.Checked || _strategyBest.PropertiesStatus == StrategySlotStatus.Locked)
             {
-                Data.Strategy.UsePermanentSL = _strategyBest.UsePermanentSL;
-                Data.Strategy.PermanentSLType = _strategyBest.PermanentSLType;
-                Data.Strategy.PermanentSL = _strategyBest.PermanentSL;
+                _backtester.Strategy.UsePermanentSL = _strategyBest.UsePermanentSL;
+                _backtester.Strategy.PermanentSLType = _strategyBest.PermanentSLType;
+                _backtester.Strategy.PermanentSL = _strategyBest.PermanentSL;
             }
             else
             {
                 bool usePermSL = _random.Next(100) > 30;
                 bool changePermSL = _random.Next(100) > 50;
-                Data.Strategy.UsePermanentSL = usePermSL;
-                Data.Strategy.PermanentSLType = PermanentProtectionType.Relative;
+                _backtester.Strategy.UsePermanentSL = usePermSL;
+                _backtester.Strategy.PermanentSLType = PermanentProtectionType.Relative;
                 if (usePermSL && changePermSL)
                 {
-                    int multiplier = Data.InstrProperties.IsFiveDigits ? 50 : 5;
-                    Data.Strategy.PermanentSL = multiplier*_random.Next(5, 50);
+                    int multiplier = _backtester.DataSet.InstrProperties.IsFiveDigits ? 50 : 5;
+                    _backtester.Strategy.PermanentSL = multiplier*_random.Next(5, 50);
                     //if (random.Next(100) > 80 &&
-                    //    (Data.Strategy.SameSignalAction == SameDirSignalAction.Add   || 
-                    //    Data.Strategy.SameSignalAction == SameDirSignalAction.Winner ||
-                    //    Data.Strategy.OppSignalAction == OppositeDirSignalAction.Reduce))
-                    //    Data.Strategy.PermanentSLType = PermanentProtectionType.Absolute;
+                    //    (_backtester.Strategy.SameSignalAction == SameDirSignalAction.Add   || 
+                    //    _backtester.Strategy.SameSignalAction == SameDirSignalAction.Winner ||
+                    //    _backtester.Strategy.OppSignalAction == OppositeDirSignalAction.Reduce))
+                    //    _backtester.Strategy.PermanentSLType = PermanentProtectionType.Absolute;
                 }
             }
         }
@@ -920,25 +945,25 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         {
             if (ChbPreservPermTP.Checked || _strategyBest.PropertiesStatus == StrategySlotStatus.Locked)
             {
-                Data.Strategy.UsePermanentTP = _strategyBest.UsePermanentTP;
-                Data.Strategy.PermanentTPType = _strategyBest.PermanentTPType;
-                Data.Strategy.PermanentTP = _strategyBest.PermanentTP;
+                _backtester.Strategy.UsePermanentTP = _strategyBest.UsePermanentTP;
+                _backtester.Strategy.PermanentTPType = _strategyBest.PermanentTPType;
+                _backtester.Strategy.PermanentTP = _strategyBest.PermanentTP;
             }
             else
             {
                 bool usePermTP = _random.Next(100) > 30;
                 bool changePermTP = _random.Next(100) > 50;
-                Data.Strategy.UsePermanentTP = usePermTP;
-                Data.Strategy.PermanentTPType = PermanentProtectionType.Relative;
+                _backtester.Strategy.UsePermanentTP = usePermTP;
+                _backtester.Strategy.PermanentTPType = PermanentProtectionType.Relative;
                 if (usePermTP && changePermTP)
                 {
-                    int multiplier = Data.InstrProperties.IsFiveDigits ? 50 : 5;
-                    Data.Strategy.PermanentTP = multiplier*_random.Next(5, 50);
+                    int multiplier = _backtester.DataSet.InstrProperties.IsFiveDigits ? 50 : 5;
+                    _backtester.Strategy.PermanentTP = multiplier*_random.Next(5, 50);
                     //if (random.Next(100) > 80 &&
-                    //    (Data.Strategy.SameSignalAction == SameDirSignalAction.Add    ||
-                    //    Data.Strategy.SameSignalAction  == SameDirSignalAction.Winner ||
-                    //    Data.Strategy.OppSignalAction   == OppositeDirSignalAction.Reduce))
-                    //    Data.Strategy.PermanentTPType = PermanentProtectionType.Absolute;
+                    //    (_backtester.Strategy.SameSignalAction == SameDirSignalAction.Add    ||
+                    //    _backtester.Strategy.SameSignalAction  == SameDirSignalAction.Winner ||
+                    //    _backtester.Strategy.OppSignalAction   == OppositeDirSignalAction.Reduce))
+                    //    _backtester.Strategy.PermanentTPType = PermanentProtectionType.Absolute;
                 }
             }
         }
@@ -950,18 +975,18 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         {
             if (ChbPreservBreakEven.Checked || _strategyBest.PropertiesStatus == StrategySlotStatus.Locked)
             {
-                Data.Strategy.UseBreakEven = _strategyBest.UseBreakEven;
-                Data.Strategy.BreakEven = _strategyBest.BreakEven;
+                _backtester.Strategy.UseBreakEven = _strategyBest.UseBreakEven;
+                _backtester.Strategy.BreakEven = _strategyBest.BreakEven;
             }
             else
             {
                 bool useBreakEven = _random.Next(100) > 30;
                 bool changeBreakEven = _random.Next(100) > 50;
-                Data.Strategy.UseBreakEven = useBreakEven;
+                _backtester.Strategy.UseBreakEven = useBreakEven;
                 if (useBreakEven && changeBreakEven)
                 {
-                    int multiplier = Data.InstrProperties.IsFiveDigits ? 50 : 5;
-                    Data.Strategy.BreakEven = multiplier*_random.Next(5, 50);
+                    int multiplier = _backtester.DataSet.InstrProperties.IsFiveDigits ? 50 : 5;
+                    _backtester.Strategy.BreakEven = multiplier*_random.Next(5, 50);
                 }
             }
         }
@@ -971,7 +996,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         /// </summary>
         private void RecalculateSlots()
         {
-            foreach (IndicatorSlot indSlot in Data.Strategy.Slot)
+            foreach (IndicatorSlot indSlot in _backtester.Strategy.Slot)
             {
                 string indicatorName = indSlot.IndicatorName;
                 SlotTypes slotType = indSlot.SlotType;
@@ -984,8 +1009,8 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                 indSlot.IsDefined = true;
             }
 
-            // Searches the indicators' components to determine the Data.FirstBar 
-            Data.FirstBar = Data.Strategy.SetFirstBar();
+            // Searches the indicators' components to determine the _backtester.Strategy.FirstBar 
+            _backtester.Strategy.SetFirstBar();
         }
     }
 }

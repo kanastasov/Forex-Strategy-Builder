@@ -8,6 +8,7 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -117,9 +118,9 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void InitParams()
         {
-            AtbxInputValues[0].Text = Data.High[Data.Bars - 1].ToString(CultureInfo.InvariantCulture);
-            AtbxInputValues[1].Text = Data.Close[Data.Bars - 1].ToString(CultureInfo.InvariantCulture);
-            AtbxInputValues[2].Text = Data.Low[Data.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[0].Text = Data.DataSet.High[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[1].Text = Data.DataSet.Close[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[2].Text = Data.DataSet.Low[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -260,7 +261,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
     }
 }

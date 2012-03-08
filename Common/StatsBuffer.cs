@@ -17,13 +17,13 @@ namespace Forex_Strategy_Builder.Common
         /// <summary>
         /// Forces the buffer to collect data.
         /// </summary>
-        public static void UpdateStatsBuffer()
+        public static void UpdateStatsBuffer(Backtester backtester)
         {
-            Strategy = Data.Strategy.Clone();
-            PositionsTotal = Backtester.PositionsTotal;
-            _session = Backtester.GetAllSessionsCopy();
-            _posCoord = Backtester.GetPosCoordinateCopy();
-            _ordCoord = Backtester.GetOrdCoordinateCopy();
+            Strategy = backtester.Strategy.Clone();
+            PositionsTotal = backtester.PositionsTotal;
+            _session = backtester.GetAllSessionsCopy();
+            _posCoord = backtester.GetPosCoordinateCopy();
+            _ordCoord = backtester.GetOrdCoordinateCopy();
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Forex_Strategy_Builder.Common
         /// </summary>
         public static int SummaryAmount(int bar)
         {
-            return (int)Math.Round(_session[bar].Summary.PosLots * Data.InstrProperties.LotSize);
+            return (int)Math.Round(_session[bar].Summary.PosLots * Data.DataSet.InstrProperties.LotSize);
         }
 
         /// <summary>

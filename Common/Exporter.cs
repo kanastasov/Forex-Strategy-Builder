@@ -13,6 +13,13 @@ namespace Forex_Strategy_Builder
 {
     public class Exporter
     {
+        private readonly Backtester _backtester;
+
+        public Exporter(Backtester backtester)
+        {
+            _backtester = backtester;
+        }
+
         /// <summary>
         /// Exports the data
         /// </summary>
@@ -21,18 +28,18 @@ namespace Forex_Strategy_Builder
             string ff = Data.FF; // Format modifier to print float numbers
             string df = Data.DF; // Format modifier to print date
             var sb = new StringBuilder();
-            for (int bar = 0; bar < Data.Bars; bar++)
+            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
             {
-                sb.Append(Data.Time[bar].ToString(df) + "\t");
-                sb.Append(Data.Time[bar].ToString("HH:mm") + "\t");
-                sb.Append(Data.Open[bar].ToString(ff) + "\t");
-                sb.Append(Data.High[bar].ToString(ff) + "\t");
-                sb.Append(Data.Low[bar].ToString(ff) + "\t");
-                sb.Append(Data.Close[bar].ToString(ff) + "\t");
-                sb.Append(Data.Volume[bar] + Environment.NewLine);
+                sb.Append(Data.DataSet.Time[bar].ToString(df) + "\t");
+                sb.Append(Data.DataSet.Time[bar].ToString("HH:mm") + "\t");
+                sb.Append(Data.DataSet.Open[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.High[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Low[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Close[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Volume[bar] + Environment.NewLine);
             }
 
-            string fileName = Data.Symbol + (int) Data.Period + ".csv";
+            string fileName = Data.Symbol + (int)Data.DataSet.Period + ".csv";
             SaveData(fileName, sb);
         }
 
@@ -52,10 +59,10 @@ namespace Forex_Strategy_Builder
             var sb = new StringBuilder();
 
             sb.Append("Forex Strategy Builder v" + Data.ProgramVersion + stage + Environment.NewLine);
-            sb.Append("Strategy name: " + Data.Strategy.StrategyName + Environment.NewLine);
+            sb.Append("Strategy name: " + _backtester.Strategy.StrategyName + Environment.NewLine);
             sb.Append("Exported on " + DateTime.Now + Environment.NewLine);
             sb.Append(Data.Symbol + " " + Data.PeriodString + Environment.NewLine);
-            sb.Append("Number of bars: " + Data.Bars + Environment.NewLine);
+            sb.Append("Number of bars: " + Data.DataSet.Bars + Environment.NewLine);
             sb.Append(Environment.NewLine);
 
             sb.Append("Date" + "\t");
@@ -66,18 +73,18 @@ namespace Forex_Strategy_Builder
             sb.Append("Close" + "\t");
             sb.Append("Volume" + Environment.NewLine);
 
-            for (int bar = 0; bar < Data.Bars; bar++)
+            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
             {
-                sb.Append(Data.Time[bar].ToString(df) + "\t");
-                sb.Append(Data.Time[bar].ToString("HH:mm") + "\t");
-                sb.Append(Data.Open[bar].ToString(ff) + "\t");
-                sb.Append(Data.High[bar].ToString(ff) + "\t");
-                sb.Append(Data.Low[bar].ToString(ff) + "\t");
-                sb.Append(Data.Close[bar].ToString(ff) + "\t");
-                sb.Append(Data.Volume[bar] + Environment.NewLine);
+                sb.Append(Data.DataSet.Time[bar].ToString(df) + "\t");
+                sb.Append(Data.DataSet.Time[bar].ToString("HH:mm") + "\t");
+                sb.Append(Data.DataSet.Open[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.High[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Low[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Close[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Volume[bar] + Environment.NewLine);
             }
 
-            string fileName = Data.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.Period.ToString();
+            string fileName = _backtester.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.DataSet.Period.ToString();
             SaveData(fileName, sb);
         }
 
@@ -97,17 +104,17 @@ namespace Forex_Strategy_Builder
             var sb = new StringBuilder();
 
             sb.Append("Forex Strategy Builder v" + Data.ProgramVersion + stage + Environment.NewLine);
-            sb.Append("Strategy name: " + Data.Strategy.StrategyName + Environment.NewLine);
+            sb.Append("Strategy name: " + _backtester.Strategy.StrategyName + Environment.NewLine);
             sb.Append("Exported on " + DateTime.Now + Environment.NewLine);
             sb.Append(Data.Symbol + " " + Data.PeriodString + Environment.NewLine);
-            sb.Append("Number of bars: " + Data.Bars);
+            sb.Append("Number of bars: " + Data.DataSet.Bars);
 
             sb.Append("\t\t\t\t\t\t\t\t");
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
                 string strSlotType = "";
-                switch (Data.Strategy.Slot[slot].SlotType)
+                switch (_backtester.Strategy.Slot[slot].SlotType)
                 {
                     case SlotTypes.Open:
                         strSlotType = "Opening point of the position";
@@ -124,7 +131,7 @@ namespace Forex_Strategy_Builder
                 }
 
                 sb.Append(strSlotType + "\t");
-                for (int i = 0; i < Data.Strategy.Slot[slot].Component.Length; i++)
+                for (int i = 0; i < _backtester.Strategy.Slot[slot].Component.Length; i++)
                     sb.Append("\t");
             }
             sb.Append(Environment.NewLine);
@@ -133,13 +140,13 @@ namespace Forex_Strategy_Builder
             // Names of the indicator components
             sb.Append("\t\t\t\t\t\t\t\t");
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
-                Indicator indicator = IndicatorStore.ConstructIndicator(Data.Strategy.Slot[slot].IndicatorName,
-                                                                        Data.Strategy.Slot[slot].SlotType);
+                Indicator indicator = IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                                        _backtester.Strategy.Slot[slot].SlotType);
 
                 sb.Append(indicator + "\t");
-                for (int i = 0; i < Data.Strategy.Slot[slot].Component.Length; i++)
+                for (int i = 0; i < _backtester.Strategy.Slot[slot].Component.Length; i++)
                     sb.Append("\t");
             }
             sb.Append(Environment.NewLine);
@@ -153,34 +160,34 @@ namespace Forex_Strategy_Builder
             sb.Append("Close" + "\t");
             sb.Append("Volume" + "\t");
 
-            for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
                 sb.Append("\t");
-                foreach (IndicatorComp comp in Data.Strategy.Slot[slot].Component)
+                foreach (IndicatorComp comp in _backtester.Strategy.Slot[slot].Component)
                     sb.Append(comp.CompName + "\t");
             }
             sb.Append(Environment.NewLine);
 
-            for (int bar = 0; bar < Data.Bars; bar++)
+            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
             {
-                sb.Append(Data.Time[bar].ToString(df) + "\t");
-                sb.Append(Data.Time[bar].ToString("HH:mm") + "\t");
-                sb.Append(Data.Open[bar].ToString(ff) + "\t");
-                sb.Append(Data.High[bar].ToString(ff) + "\t");
-                sb.Append(Data.Low[bar].ToString(ff) + "\t");
-                sb.Append(Data.Close[bar].ToString(ff) + "\t");
-                sb.Append(Data.Volume[bar] + "\t");
+                sb.Append(Data.DataSet.Time[bar].ToString(df) + "\t");
+                sb.Append(Data.DataSet.Time[bar].ToString("HH:mm") + "\t");
+                sb.Append(Data.DataSet.Open[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.High[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Low[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Close[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Volume[bar] + "\t");
 
-                for (int slot = 0; slot < Data.Strategy.Slots; slot++)
+                for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
                 {
                     sb.Append("\t");
-                    foreach (IndicatorComp comp in Data.Strategy.Slot[slot].Component)
+                    foreach (IndicatorComp comp in _backtester.Strategy.Slot[slot].Component)
                         sb.Append(comp.Value[bar] + "\t");
                 }
                 sb.Append(Environment.NewLine);
             }
 
-            string fileName = Data.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.Period;
+            string fileName = _backtester.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.DataSet.Period;
             SaveData(fileName, sb);
         }
 
@@ -200,7 +207,7 @@ namespace Forex_Strategy_Builder
             var sb = new StringBuilder();
 
             sb.Append("Forex Strategy Builder v" + Data.ProgramVersion + stage + Environment.NewLine);
-            sb.Append("Strategy name: " + Data.Strategy.StrategyName + Environment.NewLine);
+            sb.Append("Strategy name: " + _backtester.Strategy.StrategyName + Environment.NewLine);
             sb.Append("Exported on " + DateTime.Now + Environment.NewLine);
             sb.Append(Data.Symbol + " " + Data.PeriodString + "; Values in pips" + Environment.NewLine);
 
@@ -224,38 +231,38 @@ namespace Forex_Strategy_Builder
             sb.Append("Equity\t");
             sb.Append("Interpolation" + Environment.NewLine);
 
-            for (int bar = 0; bar < Data.Bars; bar++)
+            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
             {
                 sb.Append((bar + 1) + "\t");
-                sb.Append(Data.Time[bar].ToString(df) + "\t");
-                sb.Append(Data.Time[bar].ToString("HH:mm") + "\t");
-                sb.Append(Data.Open[bar].ToString(ff) + "\t");
-                sb.Append(Data.High[bar].ToString(ff) + "\t");
-                sb.Append(Data.Low[bar].ToString(ff) + "\t");
-                sb.Append(Data.Close[bar].ToString(ff) + "\t");
-                sb.Append(Data.Volume[bar] + "\t");
-                if (Backtester.IsPos(bar))
+                sb.Append(Data.DataSet.Time[bar].ToString(df) + "\t");
+                sb.Append(Data.DataSet.Time[bar].ToString("HH:mm") + "\t");
+                sb.Append(Data.DataSet.Open[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.High[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Low[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Close[bar].ToString(ff) + "\t");
+                sb.Append(Data.DataSet.Volume[bar] + "\t");
+                if (_backtester.IsPos(bar))
                 {
-                    sb.Append(Backtester.SummaryDir(bar) + "\t");
-                    sb.Append(Backtester.SummaryLots(bar) + "\t");
-                    sb.Append(Backtester.SummaryTrans(bar) + "\t");
-                    sb.Append(Backtester.SummaryPrice(bar).ToString(ff) + "\t");
-                    sb.Append(Backtester.ProfitLoss(bar) + "\t");
-                    sb.Append(Backtester.FloatingPL(bar) + "\t");
+                    sb.Append(_backtester.SummaryDir(bar) + "\t");
+                    sb.Append(_backtester.SummaryLots(bar) + "\t");
+                    sb.Append(_backtester.SummaryTrans(bar) + "\t");
+                    sb.Append(_backtester.SummaryPrice(bar).ToString(ff) + "\t");
+                    sb.Append(_backtester.ProfitLoss(bar) + "\t");
+                    sb.Append(_backtester.FloatingPL(bar) + "\t");
                 }
                 else
                 {
                     sb.Append("\t\t\t\t\t\t");
                 }
-                sb.Append(Backtester.ChargedSpread(bar) + "\t");
-                sb.Append(Backtester.ChargedRollOver(bar) + "\t");
-                sb.Append(Backtester.Balance(bar) + "\t");
-                sb.Append(Backtester.Equity(bar) + "\t");
-                sb.Append(Backtester.BackTestEvalToString(bar) + "\t");
+                sb.Append(_backtester.ChargedSpread(bar) + "\t");
+                sb.Append(_backtester.ChargedRollOver(bar) + "\t");
+                sb.Append(_backtester.Balance(bar) + "\t");
+                sb.Append(_backtester.Equity(bar) + "\t");
+                sb.Append(_backtester.BackTestEvalToString(bar) + "\t");
                 sb.Append(Environment.NewLine);
             }
 
-            string fileName = Data.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.Period.ToString();
+            string fileName = _backtester.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.DataSet.Period.ToString();
             SaveData(fileName, sb);
         }
 
@@ -274,7 +281,7 @@ namespace Forex_Strategy_Builder
             var sb = new StringBuilder();
 
             sb.Append("Forex Strategy Builder v" + Data.ProgramVersion + stage + Environment.NewLine);
-            sb.Append("Strategy name: " + Data.Strategy.StrategyName + Environment.NewLine);
+            sb.Append("Strategy name: " + _backtester.Strategy.StrategyName + Environment.NewLine);
             sb.Append("Exported on " + DateTime.Now + Environment.NewLine);
             sb.Append(Data.Symbol + " " + Data.PeriodString + "; Values in pips" + Environment.NewLine);
 
@@ -292,17 +299,17 @@ namespace Forex_Strategy_Builder
             sb.Append("Equity\t");
             sb.Append(Environment.NewLine);
 
-            for (int iPos = 0; iPos < Backtester.PositionsTotal; iPos++)
+            for (int iPos = 0; iPos < _backtester.PositionsTotal; iPos++)
             {
-                Position position = Backtester.PosFromNumb(iPos);
-                int bar = Backtester.PosCoordinates[iPos].Bar;
+                Position position = _backtester.PosFromNumb(iPos);
+                int bar = _backtester.PosCoordinates[iPos].Bar;
 
                 if (!showTransfers && position.Transaction == Transaction.Transfer)
                     continue;
 
                 sb.Append((position.PosNumb + 1) + "\t");
                 sb.Append((bar + 1) + "\t");
-                sb.Append(Data.Time[bar] + "\t");
+                sb.Append(Data.DataSet.Time[bar] + "\t");
                 sb.Append(position.PosDir + "\t");
                 sb.Append(position.PosLots + "\t");
                 sb.Append(position.Transaction + "\t");
@@ -315,7 +322,7 @@ namespace Forex_Strategy_Builder
                 sb.Append(Environment.NewLine);
             }
 
-            string fileName = Data.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.Period;
+            string fileName = _backtester.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.DataSet.Period;
             SaveData(fileName, sb);
         }
 
@@ -334,7 +341,7 @@ namespace Forex_Strategy_Builder
             var sb = new StringBuilder();
 
             sb.Append("Forex Strategy Builder v" + Data.ProgramVersion + stage + Environment.NewLine);
-            sb.Append("Strategy name: " + Data.Strategy.StrategyName + Environment.NewLine);
+            sb.Append("Strategy name: " + _backtester.Strategy.StrategyName + Environment.NewLine);
             sb.Append("Exported on " + DateTime.Now + Environment.NewLine);
             sb.Append(Data.Symbol + " " + Data.PeriodString + "; Values in " + Configs.AccountCurrency +
                       Environment.NewLine);
@@ -353,20 +360,20 @@ namespace Forex_Strategy_Builder
             sb.Append("Equity\t");
             sb.Append(Environment.NewLine);
 
-            for (int pos = 0; pos < Backtester.PositionsTotal; pos++)
+            for (int pos = 0; pos < _backtester.PositionsTotal; pos++)
             {
-                Position position = Backtester.PosFromNumb(pos);
-                int bar = Backtester.PosCoordinates[pos].Bar;
+                Position position = _backtester.PosFromNumb(pos);
+                int bar = _backtester.PosCoordinates[pos].Bar;
 
                 if (!showTransfers && position.Transaction == Transaction.Transfer)
                     continue;
 
                 sb.Append((position.PosNumb + 1) + "\t");
                 sb.Append((bar + 1) + "\t");
-                sb.Append(Data.Time[bar] + "\t");
+                sb.Append(Data.DataSet.Time[bar] + "\t");
                 sb.Append(position.PosDir + "\t");
                 sb.Append((position.PosDir == PosDirection.Long ? "" : "-") +
-                          (position.PosLots*Data.InstrProperties.LotSize) + "\t");
+                          (position.PosLots * Data.DataSet.InstrProperties.LotSize) + "\t");
                 sb.Append(position.Transaction + "\t");
                 sb.Append(position.FormOrdPrice.ToString(ff) + "\t");
                 sb.Append(position.PosPrice.ToString(ff) + "\t");
@@ -377,7 +384,7 @@ namespace Forex_Strategy_Builder
                 sb.Append(Environment.NewLine);
             }
 
-            string fileName = Data.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.Period;
+            string fileName = _backtester.Strategy.StrategyName + "-" + Data.Symbol + "-" + Data.DataSet.Period;
             SaveData(fileName, sb);
         }
 
@@ -396,7 +403,7 @@ namespace Forex_Strategy_Builder
             var sb = new StringBuilder();
 
             sb.Append("Forex Strategy Builder v" + Data.ProgramVersion + stage + Environment.NewLine);
-            sb.Append("Strategy name: " + Data.Strategy.StrategyName + Environment.NewLine);
+            sb.Append("Strategy name: " + _backtester.Strategy.StrategyName + Environment.NewLine);
             sb.Append("Exported on " + DateTime.Now + Environment.NewLine);
             sb.Append(Data.Symbol + " " + Data.PeriodString + Environment.NewLine);
             sb.Append("Histogram Data");
@@ -408,7 +415,7 @@ namespace Forex_Strategy_Builder
 
             sb.Append(s);
 
-            string fileName = Data.Strategy.StrategyName + "_HistogramData";
+            string fileName = _backtester.Strategy.StrategyName + "_HistogramData";
             SaveData(fileName, sb);
         }
 

@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -81,7 +82,7 @@ namespace Forex_Strategy_Builder
             _brushEvenRowBack = new SolidBrush(LayoutColors.ColorEvenRowBack);
             _brushRowText = new SolidBrush(LayoutColors.ColorControlText);
             _penLines = new Pen(LayoutColors.ColorJournalLines);
-            _penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
+            _penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
                                  Border);
 
             ButtonsColorBack = LayoutColors.ColorCaptionBack;
@@ -222,7 +223,7 @@ namespace Forex_Strategy_Builder
                 _journalData[row, 2] = Language.T(order.OrdType.ToString());
                 _journalData[row, 3] = Configs.AccountInMoney
                                            ? (order.OrdDir == OrderDirection.Sell ? "-" : "") +
-                                             (order.OrdLots*Data.InstrProperties.LotSize)
+                                             (order.OrdLots*Data.DataSet.InstrProperties.LotSize)
                                            : order.OrdLots.ToString(CultureInfo.InvariantCulture);
                 _journalData[row, 4] = order.OrdPrice.ToString(Data.FF);
                 _journalData[row, 5] = (order.OrdPrice2 > 0 ? order.OrdPrice2.ToString(Data.FF) : "-");
@@ -368,7 +369,7 @@ namespace Forex_Strategy_Builder
 
             // Caption background
             var rectfCaption = new RectangleF(0, 0, ClientSize.Width, 2*_rowHeight);
-            Data.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
 
             int hScrll = -HScrollBar.Value;
             //var size = new Size(ContextButtonLocation.X, _rowHeight);

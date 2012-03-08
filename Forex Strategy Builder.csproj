@@ -87,6 +87,8 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Backtester\BacktesterUtilities.cs" />
+    <Compile Include="Common\UserStatistics.cs" />
     <Compile Include="CustomControls\CloseButton.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -137,6 +139,10 @@
     <Compile Include="Enumerations\PositionPriceDependence.cs" />
     <Compile Include="Enumerations\PermanentProtectionType.cs" />
     <Compile Include="Enumerations\StrategySlotStatus.cs" />
+    <Compile Include="Interfaces\IDataSet.cs" />
+    <Compile Include="Market\DataSet.cs" />
+    <Compile Include="Market\DataStatistics.cs" />
+    <Compile Include="Strategy\ForumFormatReport.cs" />
     <Compile Include="UserInterface\SmallBalanceChartData.cs" />
     <Compile Include="Utils\ColorMagic.cs" />
     <Compile Include="Utils\FileIconExtractor.cs" />
@@ -437,7 +443,7 @@
     <Compile Include="Dialogs\StrategyProperties.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Strategy\StrategyReports.cs" />
+    <Compile Include="Strategy\OverviewFormatReport.cs" />
     <Compile Include="Backtester\WayPoint.cs" />
     <Compile Include="Dialogs\Scanner.cs">
       <SubType>Form</SubType>

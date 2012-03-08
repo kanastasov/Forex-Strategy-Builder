@@ -16,12 +16,12 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Gets or sets the Interpolation Method
         /// </summary>
-        public static InterpolationMethod InterpolationMethod { get; set; }
+        public InterpolationMethod InterpolationMethod { get; set; }
 
         /// <summary>
         /// Interpolation Method string.
         /// </summary>
-        public static String InterpolationMethodToString()
+        public String InterpolationMethodToString()
         {
             string method;
             switch (InterpolationMethod)
@@ -52,7 +52,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Interpolation Method string.
         /// </summary>
-        public static String InterpolationMethodShortToString()
+        public String InterpolationMethodShortToString()
         {
             string method;
             switch (InterpolationMethod)
@@ -83,17 +83,17 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Gets the position coordinates.
         /// </summary>
-        public static PositionCoordinates[] PosCoordinates { get { return _posCoord; } }
+        public PositionCoordinates[] PosCoordinates { get { return _posCoord; } }
 
         /// <summary>
         /// Gets the total number of the positions.
         /// </summary>
-        public static int PositionsTotal { get { return _totalPositions; } }
+        public int PositionsTotal { get { return _totalPositions; } }
 
         /// <summary>
         /// Number of the positions during de session.
         /// </summary>
-        public static int Positions(int bar)
+        public int Positions(int bar)
         {
             return _session[bar].Positions;
         }
@@ -101,7 +101,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Checks whether we have got a position. "Closed" is also a position.
         /// </summary>
-        public static bool IsPos(int bar)
+        public bool IsPos(int bar)
         {
             PosDirection dir = _session[bar].Summary.PosDir;
             return dir == PosDirection.Long
@@ -112,7 +112,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Checks whether we have a position.
         /// </summary>
-        private static bool IsOpenPos(int bar)
+        private bool IsOpenPos(int bar)
         {
             bool isPosition =
                 _session[bar].Summary.PosDir == PosDirection.Long ||
@@ -124,7 +124,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Last Position's number.
         /// </summary>
-        public static int SummaryPosNumb(int bar)
+        public int SummaryPosNumb(int bar)
         {
             return _session[bar].Summary.PosNumb;
         }
@@ -132,7 +132,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Last Position's order number.
         /// </summary>
-        public static int SummaryOrdNumb(int bar)
+        public int SummaryOrdNumb(int bar)
         {
             return _session[bar].Summary.FormOrdNumb;
         }
@@ -140,7 +140,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Position direction at the end of the bar
         /// </summary>
-        public static PosDirection SummaryDir(int bar)
+        public PosDirection SummaryDir(int bar)
         {
             return _session[bar].Summary.PosDir;
         }
@@ -148,7 +148,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Position lots at the end of the bar.
         /// </summary>
-        public static double SummaryLots(int bar)
+        public double SummaryLots(int bar)
         {
             return _session[bar].Summary.PosLots;
         }
@@ -156,15 +156,15 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Position amount at the end of the bar.
         /// </summary>
-        public static int SummaryAmount(int bar)
+        public int SummaryAmount(int bar)
         {
-            return (int)Math.Round(_session[bar].Summary.PosLots * InstrProperties.LotSize);
+            return (int)Math.Round(_session[bar].Summary.PosLots * DataSet.InstrProperties.LotSize);
         }
 
         /// <summary>
         /// The last transaction for the bar.
         /// </summary>
-        public static Transaction SummaryTrans(int bar)
+        public Transaction SummaryTrans(int bar)
         {
             return _session[bar].Summary.Transaction;
         }
@@ -172,7 +172,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Position price at the end of the bar.
         /// </summary>
-        public static double SummaryPrice(int bar)
+        public double SummaryPrice(int bar)
         {
             return _session[bar].Summary.PosPrice;
         }
@@ -180,7 +180,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the position Order Price at the end of the bar.
         /// </summary>
-        public static double SummaryOrdPrice(int bar)
+        public double SummaryOrdPrice(int bar)
         {
             return _session[bar].Summary.FormOrdPrice;
         }
@@ -188,7 +188,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the Absolute Permanent SL
         /// </summary>
-        public static double SummaryAbsoluteSL(int bar)
+        public double SummaryAbsoluteSL(int bar)
         {
             return _session[bar].Summary.AbsoluteSL;
         }
@@ -196,7 +196,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the Absolute Permanent TP
         /// </summary>
-        public static double SummaryAbsoluteTP(int bar)
+        public double SummaryAbsoluteTP(int bar)
         {
             return _session[bar].Summary.AbsoluteTP;
         }
@@ -204,7 +204,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the Required Margin at the end of the bar
         /// </summary>
-        public static double SummaryRequiredMargin(int bar)
+        public double SummaryRequiredMargin(int bar)
         {
             return _session[bar].Summary.RequiredMargin;
         }
@@ -212,7 +212,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the Free Margin at the end of the bar
         /// </summary>
-        public static double SummaryFreeMargin(int bar)
+        public double SummaryFreeMargin(int bar)
         {
             return _session[bar].Summary.FreeMargin;
         }
@@ -220,7 +220,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Position icon at the end of the bar
         /// </summary>
-        public static PositionIcons SummaryPositionIcon(int bar)
+        public PositionIcons SummaryPositionIcon(int bar)
         {
             return _session[bar].Summary.PositionIcon;
         }
@@ -228,7 +228,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The number of the position
         /// </summary>
-        public static int PosNumb(int bar, int pos)
+        public int PosNumb(int bar, int pos)
         {
             return _session[bar].Position[pos].PosNumb;
         }
@@ -236,7 +236,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position direction
         /// </summary>
-        public static PosDirection PosDir(int bar, int pos)
+        public PosDirection PosDir(int bar, int pos)
         {
             return _session[bar].Position[pos].PosDir;
         }
@@ -244,7 +244,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position lots
         /// </summary>
-        public static double PosLots(int bar, int pos)
+        public double PosLots(int bar, int pos)
         {
             return _session[bar].Position[pos].PosLots;
         }
@@ -252,15 +252,15 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position amount in currency
         /// </summary>
-        public static double PosAmount(int bar, int pos)
+        public double PosAmount(int bar, int pos)
         {
-            return _session[bar].Position[pos].PosLots * InstrProperties.LotSize;
+            return _session[bar].Position[pos].PosLots * DataSet.InstrProperties.LotSize;
         }
 
         /// <summary>
         /// The position forming order number
         /// </summary>
-        public static int PosOrdNumb(int bar, int pos)
+        public int PosOrdNumb(int bar, int pos)
         {
             return _session[bar].Position[pos].FormOrdNumb;
         }
@@ -268,7 +268,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position forming order price
         /// </summary>
-        public static double PosOrdPrice(int bar, int pos)
+        public double PosOrdPrice(int bar, int pos)
         {
             return _session[bar].Position[pos].FormOrdPrice;
         }
@@ -276,7 +276,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position Required Margin
         /// </summary>
-        public static double PosRequiredMargin(int bar, int pos)
+        public double PosRequiredMargin(int bar, int pos)
         {
             return _session[bar].Position[pos].RequiredMargin;
         }
@@ -284,7 +284,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position Free Margin
         /// </summary>
-        public static double PosFreeMargin(int bar, int pos)
+        public double PosFreeMargin(int bar, int pos)
         {
             return _session[bar].Position[pos].FreeMargin;
         }
@@ -292,7 +292,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position balance
         /// </summary>
-        public static double PosBalance(int bar, int pos)
+        public double PosBalance(int bar, int pos)
         {
             return _session[bar].Position[pos].Balance;
         }
@@ -300,7 +300,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position equity
         /// </summary>
-        public static double PosEquity(int bar, int pos)
+        public double PosEquity(int bar, int pos)
         {
             return _session[bar].Position[pos].Equity;
         }
@@ -308,7 +308,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position Profit Loss
         /// </summary>
-        public static double PosProfitLoss(int bar, int pos)
+        public double PosProfitLoss(int bar, int pos)
         {
             return _session[bar].Position[pos].ProfitLoss;
         }
@@ -316,7 +316,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position Floating P/L
         /// </summary>
-        public static double PosFloatingPL(int bar, int pos)
+        public double PosFloatingPL(int bar, int pos)
         {
             return _session[bar].Position[pos].FloatingPL;
         }
@@ -324,7 +324,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position Profit Loss in currency
         /// </summary>
-        public static double PosMoneyProfitLoss(int bar, int pos)
+        public double PosMoneyProfitLoss(int bar, int pos)
         {
             return _session[bar].Position[pos].MoneyProfitLoss;
         }
@@ -332,7 +332,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position Floating Profit Loss in currency
         /// </summary>
-        public static double PosMoneyFloatingPL(int bar, int pos)
+        public double PosMoneyFloatingPL(int bar, int pos)
         {
             return _session[bar].Position[pos].MoneyFloatingPL;
         }
@@ -340,7 +340,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position balance in currency
         /// </summary>
-        public static double PosMoneyBalance(int bar, int pos)
+        public double PosMoneyBalance(int bar, int pos)
         {
             return _session[bar].Position[pos].MoneyBalance;
         }
@@ -348,7 +348,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position equity in currency
         /// </summary>
-        public static double PosMoneyEquity(int bar, int pos)
+        public double PosMoneyEquity(int bar, int pos)
         {
             return _session[bar].Position[pos].MoneyEquity;
         }
@@ -356,7 +356,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position's corrected price
         /// </summary>
-        public static double PosPrice(int bar, int pos)
+        public double PosPrice(int bar, int pos)
         {
             return _session[bar].Position[pos].PosPrice;
         }
@@ -364,7 +364,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position's Transaction
         /// </summary>
-        public static Transaction PosTransaction(int bar, int pos)
+        public Transaction PosTransaction(int bar, int pos)
         {
             return _session[bar].Position[pos].Transaction;
         }
@@ -372,7 +372,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The position's Icon
         /// </summary>
-        public static PositionIcons PosIcon(int bar, int pos)
+        public PositionIcons PosIcon(int bar, int pos)
         {
             return _session[bar].Position[pos].PositionIcon;
         }
@@ -380,7 +380,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the position's Profit Loss in pips.
         /// </summary>
-        public static int ProfitLoss(int bar)
+        public int ProfitLoss(int bar)
         {
             return (int)Math.Round(_session[bar].Summary.ProfitLoss);
         }
@@ -388,7 +388,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the Floating Profit Loss at the end of the bar in pips
         /// </summary>
-        public static int FloatingPL(int bar)
+        public int FloatingPL(int bar)
         {
             return (int)Math.Round(_session[bar].Summary.FloatingPL);
         }
@@ -396,7 +396,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the account balance at the end of the bar in pips
         /// </summary>
-        public static int Balance(int bar)
+        public int Balance(int bar)
         {
             return (int)Math.Round(_session[bar].Summary.Balance);
         }
@@ -404,7 +404,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the equity at the end of the bar in pips
         /// </summary>
-        public static int Equity(int bar)
+        public int Equity(int bar)
         {
             return (int)Math.Round(_session[bar].Summary.Equity);
         }
@@ -412,7 +412,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the charged spread.
         /// </summary>
-        public static double ChargedSpread(int bar)
+        public double ChargedSpread(int bar)
         {
             return _session[bar].Summary.Spread;
         }
@@ -420,7 +420,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the charged rollover.
         /// </summary>
-        public static double ChargedRollOver(int bar)
+        public double ChargedRollOver(int bar)
         {
             return _session[bar].Summary.Rollover;
         }
@@ -428,7 +428,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the bar end Profit Loss in currency.
         /// </summary>
-        public static double MoneyProfitLoss(int bar)
+        public double MoneyProfitLoss(int bar)
         {
             return _session[bar].Summary.MoneyProfitLoss;
         }
@@ -436,7 +436,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the bar end Floating Profit Loss in currency
         /// </summary>
-        public static double MoneyFloatingPL(int bar)
+        public double MoneyFloatingPL(int bar)
         {
             return _session[bar].Summary.MoneyFloatingPL;
         }
@@ -444,7 +444,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the account balance in currency
         /// </summary>
-        public static double MoneyBalance(int bar)
+        public double MoneyBalance(int bar)
         {
             return _session[bar].Summary.MoneyBalance;
         }
@@ -452,7 +452,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the current bill in currency.
         /// </summary>
-        public static double MoneyEquity(int bar)
+        public double MoneyEquity(int bar)
         {
             return _session[bar].Summary.MoneyEquity;
         }
@@ -460,7 +460,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the charged spread in currency.
         /// </summary>
-        public static double MoneyChargedSpread(int bar)
+        public double MoneyChargedSpread(int bar)
         {
             return _session[bar].Summary.MoneySpread;
         }
@@ -468,7 +468,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the charged rollover in currency.
         /// </summary>
-        public static double MoneyChargedRollOver(int bar)
+        public double MoneyChargedRollOver(int bar)
         {
             return _session[bar].Summary.MoneyRollover;
         }
@@ -476,9 +476,9 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the backtest safety evaluation
         /// </summary>
-        public static string BackTestEvalToString(int bar)
+        public string BackTestEvalToString(int bar)
         {
-            return bar < FirstBar || _session[bar].BacktestEval == BacktestEval.None
+            return bar < Strategy.FirstBar || _session[bar].BacktestEval == BacktestEval.None
                        ? ""
                        : _session[bar].BacktestEval.ToString();
         }
@@ -486,7 +486,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the backtest safety evaluation
         /// </summary>
-        public static BacktestEval BackTestEval(int bar)
+        public BacktestEval BackTestEval(int bar)
         {
             return _session[bar].BacktestEval;
         }
@@ -494,7 +494,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the position with the required number
         /// </summary>
-        public static Position PosFromNumb(int posNumber)
+        public Position PosFromNumb(int posNumber)
         {
             if (posNumber < 0) posNumber = 0;
             return _session[_posCoord[posNumber].Bar].Position[_posCoord[posNumber].Pos];
@@ -503,12 +503,12 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Gets the total number of the orders
         /// </summary>
-        public static int OrdersTotal { get { return SentOrders; } }
+        public int OrdersTotal { get { return SentOrders; } }
 
         /// <summary>
         /// Returns the number of orders for the designated bar
         /// </summary>
-        public static int Orders(int bar)
+        public int Orders(int bar)
         {
             return _session[bar].Orders;
         }
@@ -516,7 +516,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the Order Number
         /// </summary>
-        public static int OrdNumb(int bar, int ord)
+        public int OrdNumb(int bar, int ord)
         {
             return _session[bar].Order[ord].OrdNumb;
         }
@@ -524,7 +524,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Returns the order with the corresponding number
         /// </summary>
-        public static Order OrdFromNumb(int ordNumber)
+        public Order OrdFromNumb(int ordNumber)
         {
             if (ordNumber < 0) ordNumber = 0;
             return _session[_ordCoord[ordNumber].Bar].Order[_ordCoord[ordNumber].Ord];
@@ -533,7 +533,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         ///  Way point
         /// </summary>
-        public static WayPoint WayPoint(int bar, int wayPointNumber)
+        public WayPoint WayPoint(int bar, int wayPointNumber)
         {
             return _session[bar].WayPoint[wayPointNumber];
         }
@@ -541,7 +541,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         ///  Bar's way points count.
         /// </summary>
-        public static int WayPoints(int bar)
+        public int WayPoints(int bar)
         {
             return _session[bar].WayPoints;
         }
@@ -549,10 +549,10 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Copies all sessions.
         /// </summary>
-        public static Session[] GetAllSessionsCopy()
+        public Session[] GetAllSessionsCopy()
         {
-            var sessions = new Session[Bars];
-            for (int bar = 0; bar < Bars; bar++)
+            var sessions = new Session[DataSet.Bars];
+            for (int bar = 0; bar < DataSet.Bars; bar++)
                 sessions[bar] = _session[bar].Copy();
             return sessions;
         }
@@ -560,7 +560,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Copies Position Coordinates.
         /// </summary>
-        public static PositionCoordinates[] GetPosCoordinateCopy()
+        public PositionCoordinates[] GetPosCoordinateCopy()
         {
             var posCoposinates = new PositionCoordinates[_posCoord.Length];
             for (int i = 0; i < _posCoord.Length; i++)
@@ -571,7 +571,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Copies Order Coordinates.
         /// </summary>
-        public static OrderCoordinates[] GetOrdCoordinateCopy()
+        public OrderCoordinates[] GetOrdCoordinateCopy()
         {
             var ordCoordinates = new OrderCoordinates[_ordCoord.Length];
             for (int i = 0; i < _ordCoord.Length; i++)

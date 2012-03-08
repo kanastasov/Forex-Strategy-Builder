@@ -8,6 +8,7 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder.Dialogs.Generator
 {
@@ -27,17 +28,17 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         /// <summary>
         /// Sets the chart parameters
         /// </summary>
-        public void InitSlot()
+        public void InitSlot(Backtester backtester)
         {
             int chartHeight = ClientSize.Height - 2*(Border + Space) + 1;
             var cahartWidth = (int) (1.5*chartHeight);
-            var microChart = new MicroBalanceChartImage(cahartWidth, chartHeight);
+            var microChart = new MicroBalanceChartImage(cahartWidth, chartHeight, backtester);
 
             _chart = microChart.Chart;
-            Balance = Configs.AccountInMoney ? (int) Math.Round(Backtester.NetMoneyBalance) : Backtester.NetBalance;
-            _profitPerDay = Configs.AccountInMoney ? Backtester.MoneyProfitPerDay : Backtester.ProfitPerDay;
-            _drawdown = Configs.AccountInMoney ? (int) Math.Round(Backtester.MaxMoneyDrawdown) : Backtester.MaxDrawdown;
-            _winLoss = Backtester.WinLossRatio;
+            Balance = Configs.AccountInMoney ? (int) Math.Round(backtester.NetMoneyBalance) : backtester.NetBalance;
+            _profitPerDay = Configs.AccountInMoney ? backtester.MoneyProfitPerDay : backtester.ProfitPerDay;
+            _drawdown = Configs.AccountInMoney ? (int) Math.Round(backtester.MaxMoneyDrawdown) : backtester.MaxDrawdown;
+            _winLoss = backtester.WinLossRatio;
         }
 
         /// <summary>
@@ -46,14 +47,13 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            var penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
-                                    Border);
+            var penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
             var penGlow = new Pen(LayoutColors.ColorWarningRowBack, 3);
             Brush brushFore = new SolidBrush(LayoutColors.ColorChartFore);
 
             // Paints the background by gradient
             var rectField = new RectangleF(1, 1, ClientSize.Width - 2, ClientSize.Height - 2);
-            Data.GradientPaint(g, rectField, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectField, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
 
             // Border
             g.DrawRectangle(penBorder, 1, 1, ClientSize.Width - 2, ClientSize.Height - 2);

@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Properties;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder.Dialogs.Optimizer
 {
@@ -85,7 +86,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             // Small Balance Chart
             BalanceChart.Parent = this;
             BalanceChart.BackColor = LayoutColors.ColorControlBack;
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(Backtester);
 
             // ProgressBar
             ProgressBar.Parent = this;
@@ -502,7 +503,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             var pnl = (Panel) sender;
             Graphics g = e.Graphics;
 
-            Data.GradientPaint(g, pnl.ClientRectangle, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, pnl.ClientRectangle, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
 
             Brush brush = new SolidBrush(pnl.ForeColor);
             var stringFormat = new StringFormat {Alignment = StringAlignment.Center};
@@ -522,7 +523,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         {
             var pnl = (Panel) sender;
             Graphics g = e.Graphics;
-            var penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
+            var penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption), Border);
 
             g.DrawLine(penBorder, 1, 0, 1, pnl.ClientSize.Height);
             g.DrawLine(penBorder, pnl.ClientSize.Width - Border + 1, 0, pnl.ClientSize.Width - Border + 1, pnl.ClientSize.Height);
@@ -535,12 +536,12 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private void NudOutOfSampleValueChanged(object sender, EventArgs e)
         {
             _isOOS = ChbOutOfSample.Checked;
-            _barOOS = Data.Bars - Data.Bars*(int) NUDOutOfSample.Value/100 - 1;
+            _barOOS = Data.DataSet.Bars - Data.DataSet.Bars*(int) NUDOutOfSample.Value/100 - 1;
 
             BalanceChart.OOSBar = _barOOS;
 
             if (!_isOOS) return;
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(Backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
         }
@@ -551,12 +552,12 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private void ChbOutOfSampleCheckedChanged(object sender, EventArgs e)
         {
             _isOOS = ChbOutOfSample.Checked;
-            _barOOS = Data.Bars - Data.Bars*(int) NUDOutOfSample.Value/100 - 1;
+            _barOOS = Data.DataSet.Bars - Data.DataSet.Bars*(int) NUDOutOfSample.Value/100 - 1;
 
             BalanceChart.IsOOS = _isOOS;
             BalanceChart.OOSBar = _barOOS;
 
-            BalanceChart.SetChartData();
+            BalanceChart.SetChartData(Backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
         }

@@ -35,8 +35,6 @@ namespace Forex_Strategy_Builder
             IndParam.ListParam[0].Text     = IndParam.ListParam[0].ItemList[IndParam.ListParam[0].Index];
             IndParam.ListParam[0].Enabled  = true;
             IndParam.ListParam[0].ToolTip  = "Logic of application of the indicator.";
-
-            return;
         }
 
         /// <summary>
@@ -44,9 +42,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public override void Calculate(SlotTypes slotType)
         {
-            Data.Strategy.OppSignalAction = OppositeDirSignalAction.Reverse;
-
-            return;
+            // Strategy.OppSignalAction = OppositeDirSignalAction.Reverse;
         }
 
         /// <summary>
@@ -56,8 +52,6 @@ namespace Forex_Strategy_Builder
         {
             ExitPointLongDescription  = "and open a new short one, at the entry price, when a sell entry signal arises";
             ExitPointShortDescription = "and open a new long one, at the entry price, when a buy entry signal arises";
-
-            return;
         }
 
         /// <summary>

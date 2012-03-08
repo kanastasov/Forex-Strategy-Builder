@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
@@ -90,7 +91,7 @@ namespace Forex_Strategy_Builder
             {
                 _posNumbers = StatsBuffer.PositionsTotal > 0 ? new int[StatsBuffer.PositionsTotal] : new int[1];
                 _positions = 0;
-                for (int bar = 0; bar < Data.Bars; bar++)
+                for (int bar = 0; bar < Data.DataSet.Bars; bar++)
                 {
                     for (int pos = 0; pos < StatsBuffer.Positions(bar); pos++)
                     {
@@ -159,7 +160,7 @@ namespace Forex_Strategy_Builder
             _brushWarningBack = new SolidBrush(LayoutColors.ColorWarningRowBack);
             _brushWarningText = new SolidBrush(LayoutColors.ColorWarningRowText);
             _penLines = new Pen(LayoutColors.ColorJournalLines);
-            _penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
+            _penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
                                  Border);
 
             ButtonsColorBack = LayoutColors.ColorCaptionBack;
@@ -310,7 +311,7 @@ namespace Forex_Strategy_Builder
 
                 string posAmount = Configs.AccountInMoney
                                        ? (position.PosDir == PosDirection.Short ? "-" : "") +
-                                         (position.PosLots*Data.InstrProperties.LotSize).ToString(
+                                         (position.PosLots*Data.DataSet.InstrProperties.LotSize).ToString(
                                              CultureInfo.InvariantCulture)
                                        : position.PosLots.ToString(CultureInfo.InvariantCulture);
 
@@ -325,7 +326,7 @@ namespace Forex_Strategy_Builder
                 int p = 0;
                 _journalData[row, p++] = (posNumber + 1).ToString(CultureInfo.InvariantCulture);
                 _journalData[row, p++] = (bar + 1).ToString(CultureInfo.InvariantCulture);
-                _journalData[row, p++] = Data.Time[bar].ToString(Data.DF) + Data.Time[bar].ToString(" HH:mm");
+                _journalData[row, p++] = Data.DataSet.Time[bar].ToString(Data.DF) + Data.DataSet.Time[bar].ToString(" HH:mm");
                 _journalData[row, p++] = Language.T(position.Transaction.ToString());
                 _journalData[row, p++] = Language.T(position.PosDir.ToString());
                 _journalData[row, p++] = posAmount;
@@ -485,7 +486,7 @@ namespace Forex_Strategy_Builder
 
             // Caption background
             var rectfCaption = new RectangleF(0, 0, ClientSize.Width, 2*_rowHeight);
-            Data.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
 
             // Print the journal caption
             string stringCaptionText = Language.T("Journal by Positions") +

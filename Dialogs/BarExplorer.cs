@@ -9,12 +9,14 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
 {
     internal sealed class BarExplorer : Form
     {
         private const int Border = 2;
+        private readonly Backtester _backtester;
         private readonly Brush _brushCaptionText;
         private readonly Brush _brushEvenRow;
         private readonly Brush _brushGridText;
@@ -53,13 +55,14 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Initialize the form and controls
         /// </summary>
-        public BarExplorer(int barNumber)
+        public BarExplorer(Backtester backtester, int barNumber)
         {
+            _backtester = backtester;
             _pnlChart = new Panel();
             _pnlInfo = new Panel();
             _toolTip = new ToolTip();
 
-            _barCurrent = barNumber < Data.FirstBar ? Data.FirstBar : barNumber;
+            _barCurrent = barNumber < _backtester.Strategy.FirstBar ? _backtester.Strategy.FirstBar : barNumber;
 
             Text = Language.T("Bar Explorer");
             BackColor = LayoutColors.ColorFormBack;
@@ -73,10 +76,10 @@ namespace Forex_Strategy_Builder
             _infoRowHeight = Math.Max(_fontInfo.Height, 18);
 
             _barInfo = Language.T("Bar") + ": " + (_barCurrent + 1) + " " +
-                       Data.Time[_barCurrent].ToString(Data.DF) + " " +
-                       Data.Time[_barCurrent].ToString("HH:mm") + "; " +
+                       Data.DataSet.Time[_barCurrent].ToString(Data.DF) + " " +
+                       Data.DataSet.Time[_barCurrent].ToString("HH:mm") + "; " +
                        Language.T("Interpolation method") + ": " +
-                       Backtester.InterpolationMethodToString();
+                       _backtester.InterpolationMethodToString();
 
             _pnlChart.Parent = this;
             _pnlChart.Paint += PnlChartPaint;
@@ -106,15 +109,15 @@ namespace Forex_Strategy_Builder
                 _toolTip.SetToolTip(BtnsNavigate[i], btnNavigateTips[i]);
             }
 
-            BtnsNavigate[0].Enabled = Backtester.AmbiguousBars > 0;
-            BtnsNavigate[1].Enabled = Backtester.PositionsTotal > 0;
-            BtnsNavigate[4].Enabled = Backtester.PositionsTotal > 0;
-            BtnsNavigate[5].Enabled = Backtester.AmbiguousBars > 0;
+            BtnsNavigate[0].Enabled = _backtester.AmbiguousBars > 0;
+            BtnsNavigate[1].Enabled = _backtester.PositionsTotal > 0;
+            BtnsNavigate[4].Enabled = _backtester.PositionsTotal > 0;
+            BtnsNavigate[5].Enabled = _backtester.AmbiguousBars > 0;
 
             NUDGo = new NumericUpDown {Parent = this, TextAlign = HorizontalAlignment.Center};
             NUDGo.BeginInit();
-            NUDGo.Minimum = Data.FirstBar + 1;
-            NUDGo.Maximum = Data.Bars;
+            NUDGo.Minimum = _backtester.Strategy.FirstBar + 1;
+            NUDGo.Maximum = Data.DataSet.Bars;
             NUDGo.Increment = 1;
             NUDGo.Value = _barCurrent + 1;
             NUDGo.KeyUp += BtnNavigateKeyUp;
@@ -148,17 +151,17 @@ namespace Forex_Strategy_Builder
             _penCross = new Pen(LayoutColors.ColorChartCross);
             _penBarBorder = new Pen(LayoutColors.ColorBarBorder);
 
-            _colorBarWight1 = Data.GetGradientColor(LayoutColors.ColorBarWhite, 30);
-            _colorBarWight2 = Data.GetGradientColor(LayoutColors.ColorBarWhite, -30);
-            _colorBarBlack1 = Data.GetGradientColor(LayoutColors.ColorBarBlack, 30);
-            _colorBarBlack2 = Data.GetGradientColor(LayoutColors.ColorBarBlack, -30);
+            _colorBarWight1 = ColorMagic.GetGradientColor(LayoutColors.ColorBarWhite, 30);
+            _colorBarWight2 = ColorMagic.GetGradientColor(LayoutColors.ColorBarWhite, -30);
+            _colorBarBlack1 = ColorMagic.GetGradientColor(LayoutColors.ColorBarBlack, 30);
+            _colorBarBlack2 = ColorMagic.GetGradientColor(LayoutColors.ColorBarBlack, -30);
 
-            _colorLongTrade1 = Data.GetGradientColor(LayoutColors.ColorTradeLong, 30);
-            _colorLongTrade2 = Data.GetGradientColor(LayoutColors.ColorTradeLong, -30);
-            _colorShortTrade1 = Data.GetGradientColor(LayoutColors.ColorTradeShort, 30);
-            _colorShortTrade2 = Data.GetGradientColor(LayoutColors.ColorTradeShort, -30);
-            _colorClosedTrade1 = Data.GetGradientColor(LayoutColors.ColorTradeClose, 30);
-            _colorClosedTrade2 = Data.GetGradientColor(LayoutColors.ColorTradeClose, -30);
+            _colorLongTrade1 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeLong, 30);
+            _colorLongTrade2 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeLong, -30);
+            _colorShortTrade1 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeShort, 30);
+            _colorShortTrade2 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeShort, -30);
+            _colorClosedTrade1 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeClose, 30);
+            _colorClosedTrade2 = ColorMagic.GetGradientColor(LayoutColors.ColorTradeClose, -30);
 
             SetJournalPoints();
         }
@@ -232,9 +235,9 @@ namespace Forex_Strategy_Builder
         {
             base.OnLoad(e);
             SetBtnNavigate();
-            for (int bar = Data.FirstBar; bar < Data.Bars; bar++)
-                if (Backtester.WayPoints(bar) > _maxWayPoints)
-                    _maxWayPoints = Backtester.WayPoints(bar);
+            for (int bar = _backtester.Strategy.FirstBar; bar < Data.DataSet.Bars; bar++)
+                if (_backtester.WayPoints(bar) > _maxWayPoints)
+                    _maxWayPoints = _backtester.WayPoints(bar);
 
             var btnHrzSpace = (int) (Data.HorizontalDLU*3);
             int clientSizeWidth = (Math.Max(_aiColumnX[_columns] + 2*btnHrzSpace, 550));
@@ -293,7 +296,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            Data.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(e.Graphics, ClientRectangle, LayoutColors.ColorFormBack, LayoutColors.DepthControl);
         }
 
         /// <summary>
@@ -338,34 +341,34 @@ namespace Forex_Strategy_Builder
             switch (sDir)
             {
                 case "< !":
-                    for (int i = _barCurrent - 1; i >= Data.FirstBar; i--)
-                        if (Backtester.BackTestEval(i) == BacktestEval.Ambiguous)
+                    for (int i = _barCurrent - 1; i >= _backtester.Strategy.FirstBar; i--)
+                        if (_backtester.BackTestEval(i) == BacktestEval.Ambiguous)
                         {
                             _barCurrent = i;
                             break;
                         }
                     break;
                 case "! >":
-                    for (int i = _barCurrent + 1; i < Data.Bars; i++)
-                        if (Backtester.BackTestEval(i) == BacktestEval.Ambiguous)
+                    for (int i = _barCurrent + 1; i < Data.DataSet.Bars; i++)
+                        if (_backtester.BackTestEval(i) == BacktestEval.Ambiguous)
                         {
                             _barCurrent = i;
                             break;
                         }
                     break;
                 case "<<":
-                    for (int i = _barCurrent - 1; i >= Data.FirstBar; i--)
-                        if (Backtester.SummaryTrans(i) != Transaction.Transfer &&
-                            Backtester.SummaryTrans(i) != Transaction.None)
+                    for (int i = _barCurrent - 1; i >= _backtester.Strategy.FirstBar; i--)
+                        if (_backtester.SummaryTrans(i) != Transaction.Transfer &&
+                            _backtester.SummaryTrans(i) != Transaction.None)
                         {
                             _barCurrent = i;
                             break;
                         }
                     break;
                 case ">>":
-                    for (int i = _barCurrent + 1; i < Data.Bars; i++)
-                        if (Backtester.SummaryTrans(i) != Transaction.Transfer &&
-                            Backtester.SummaryTrans(i) != Transaction.None)
+                    for (int i = _barCurrent + 1; i < Data.DataSet.Bars; i++)
+                        if (_backtester.SummaryTrans(i) != Transaction.Transfer &&
+                            _backtester.SummaryTrans(i) != Transaction.None)
                         {
                             _barCurrent = i;
                             break;
@@ -374,10 +377,10 @@ namespace Forex_Strategy_Builder
                 case "<max":
                     int maxWP = 0;
                     int maxBar = _barCurrent;
-                    for (int i = _barCurrent - 1; i >= Data.FirstBar; i--)
-                        if (Backtester.WayPoints(i) > maxWP)
+                    for (int i = _barCurrent - 1; i >= _backtester.Strategy.FirstBar; i--)
+                        if (_backtester.WayPoints(i) > maxWP)
                         {
-                            maxWP = Backtester.WayPoints(i);
+                            maxWP = _backtester.WayPoints(i);
                             maxBar = i;
                         }
                     _barCurrent = maxBar;
@@ -385,20 +388,20 @@ namespace Forex_Strategy_Builder
                 case ">max":
                     maxWP = 0;
                     maxBar = _barCurrent;
-                    for (int i = _barCurrent + 1; i < Data.Bars; i++)
-                        if (Backtester.WayPoints(i) > maxWP)
+                    for (int i = _barCurrent + 1; i < Data.DataSet.Bars; i++)
+                        if (_backtester.WayPoints(i) > maxWP)
                         {
-                            maxWP = Backtester.WayPoints(i);
+                            maxWP = _backtester.WayPoints(i);
                             maxBar = i;
                         }
                     _barCurrent = maxBar;
                     break;
                 case "<":
-                    if (_barCurrent > Data.FirstBar)
+                    if (_barCurrent > _backtester.Strategy.FirstBar)
                         _barCurrent--;
                     break;
                 case ">":
-                    if (_barCurrent < Data.Bars - 1)
+                    if (_barCurrent < Data.DataSet.Bars - 1)
                         _barCurrent++;
                     break;
                 case "Go":
@@ -409,10 +412,10 @@ namespace Forex_Strategy_Builder
             SetBtnNavigate();
 
             _barInfo = Language.T("Bar") + ": " + (_barCurrent + 1) +
-                       " " + Data.Time[_barCurrent].ToString(Data.DF) +
-                       " " + Data.Time[_barCurrent].ToString("HH:mm") + "; " +
+                       " " + Data.DataSet.Time[_barCurrent].ToString(Data.DF) +
+                       " " + Data.DataSet.Time[_barCurrent].ToString("HH:mm") + "; " +
                        Language.T("Interpolation method") + ": " +
-                       Backtester.InterpolationMethodToString();
+                       _backtester.InterpolationMethodToString();
 
             var rectPnlChart = new Rectangle(Border, _infoRowHeight, _pnlChart.ClientSize.Width - 2*Border,
                                              _pnlChart.ClientSize.Height - _infoRowHeight - Border);
@@ -431,11 +434,11 @@ namespace Forex_Strategy_Builder
         private void SetBtnNavigate()
         {
             // Buttons "Ambiguous"
-            if (Backtester.AmbiguousBars > 0)
+            if (_backtester.AmbiguousBars > 0)
             {
                 bool isButtonAmbiguous = false;
-                for (int i = Data.FirstBar; i < _barCurrent; i++)
-                    if (Backtester.BackTestEval(i) == BacktestEval.Ambiguous)
+                for (int i = _backtester.Strategy.FirstBar; i < _barCurrent; i++)
+                    if (_backtester.BackTestEval(i) == BacktestEval.Ambiguous)
                     {
                         isButtonAmbiguous = true;
                         break;
@@ -443,8 +446,8 @@ namespace Forex_Strategy_Builder
                 BtnsNavigate[0].Enabled = isButtonAmbiguous;
 
                 isButtonAmbiguous = false;
-                for (int i = _barCurrent + 1; i < Data.Bars; i++)
-                    if (Backtester.BackTestEval(i) == BacktestEval.Ambiguous)
+                for (int i = _barCurrent + 1; i < Data.DataSet.Bars; i++)
+                    if (_backtester.BackTestEval(i) == BacktestEval.Ambiguous)
                     {
                         isButtonAmbiguous = true;
                         break;
@@ -453,11 +456,11 @@ namespace Forex_Strategy_Builder
             }
 
             // Buttons "Deals"
-            if (Backtester.PositionsTotal > 0)
+            if (_backtester.PositionsTotal > 0)
             {
                 bool isButtonDeal = false;
-                for (int i = Data.FirstBar; i < _barCurrent; i++)
-                    if (Backtester.Positions(i) > 0)
+                for (int i = _backtester.Strategy.FirstBar; i < _barCurrent; i++)
+                    if (_backtester.Positions(i) > 0)
                     {
                         isButtonDeal = true;
                         break;
@@ -465,8 +468,8 @@ namespace Forex_Strategy_Builder
                 BtnsNavigate[1].Enabled = isButtonDeal;
 
                 isButtonDeal = false;
-                for (int i = _barCurrent + 1; i < Data.Bars; i++)
-                    if (Backtester.Positions(i) > 0)
+                for (int i = _barCurrent + 1; i < Data.DataSet.Bars; i++)
+                    if (_backtester.Positions(i) > 0)
                     {
                         isButtonDeal = true;
                         break;
@@ -474,8 +477,8 @@ namespace Forex_Strategy_Builder
                 BtnsNavigate[4].Enabled = isButtonDeal;
             }
 
-            BtnsNavigate[2].Enabled = _barCurrent > Data.FirstBar;
-            BtnsNavigate[3].Enabled = _barCurrent < Data.Bars - 1;
+            BtnsNavigate[2].Enabled = _barCurrent > _backtester.Strategy.FirstBar;
+            BtnsNavigate[3].Enabled = _barCurrent < Data.DataSet.Bars - 1;
 
             BtnsNavigate[0].ForeColor = BtnsNavigate[0].Enabled ? Color.Red : BtnsNavigate[2].ForeColor;
             BtnsNavigate[5].ForeColor = BtnsNavigate[5].Enabled ? Color.Red : BtnsNavigate[2].ForeColor;
@@ -498,7 +501,7 @@ namespace Forex_Strategy_Builder
             var pntStart = new PointF(0, 0);
             SizeF szfCaption = new Size(width, _infoRowHeight);
             var rectfCaption = new RectangleF(pntStart, szfCaption);
-            Data.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
 
             // Caption Text
             var stringFormat = new StringFormat
@@ -514,7 +517,7 @@ namespace Forex_Strategy_Builder
 
             // Paint the panel background
             var rectClient = new RectangleF(0, _infoRowHeight, pnl.ClientSize.Width, pnl.Height - _infoRowHeight);
-            Data.GradientPaint(g, rectClient, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
+            ColorMagic.GradientPaint(g, rectClient, LayoutColors.ColorChartBack, LayoutColors.DepthControl);
 
             // Paint bar info
             var rectBarInfo = new RectangleF(Border, _infoRowHeight + 1, pnl.ClientSize.Width - 2*Border, _infoRowHeight);
@@ -522,8 +525,8 @@ namespace Forex_Strategy_Builder
 
             // Searching the min and the max price and volume
             width = pnl.ClientSize.Width - 2*Border;
-            double maxPrice = Data.High[_barCurrent];
-            double minPrice = Data.Low[_barCurrent];
+            double maxPrice = Data.DataSet.High[_barCurrent];
+            double minPrice = Data.DataSet.Low[_barCurrent];
             const int space = 8;
             int spcRight = _szPrice.Width + 4;
             const int xLeft = Border + space;
@@ -536,37 +539,39 @@ namespace Forex_Strategy_Builder
 
             int pointLeft = x + barPixels + 30;
             int pointRight = xRight - 20;
-            int points = Backtester.WayPoints(_barCurrent);
+            int points = _backtester.WayPoints(_barCurrent);
             const int pointRadius = 3;
 
             // Grid
             var iCntLabels = (int) Math.Max((yBottom - yTop)/30d, 1);
-            double deltaPoint = (Data.InstrProperties.Digits == 5 || Data.InstrProperties.Digits == 3)
-                                    ? Data.InstrProperties.Point*100
-                                    : Data.InstrProperties.Point*10;
+            double deltaPoint = (Data.DataSet.InstrProperties.Digits == 5 || Data.DataSet.InstrProperties.Digits == 3)
+                                    ? Data.DataSet.InstrProperties.Point*100
+                                    : Data.DataSet.InstrProperties.Point*10;
             double delta =
-                Math.Max(Math.Round((maxPrice - minPrice)/iCntLabels, Data.InstrProperties.Point < 0.001 ? 3 : 1),
-                         deltaPoint);
+                Math.Max(
+                    Math.Round((maxPrice - minPrice)/iCntLabels, Data.DataSet.InstrProperties.Point < 0.001 ? 3 : 1),
+                    deltaPoint);
 
-            minPrice = Math.Round(minPrice, Data.InstrProperties.Point < 0.001f ? 3 : 1) - Data.InstrProperties.Point*10;
+            minPrice = Math.Round(minPrice, Data.DataSet.InstrProperties.Point < 0.001f ? 3 : 1) -
+                       Data.DataSet.InstrProperties.Point*10;
             minPrice -= delta;
             maxPrice += delta;
             iCntLabels = (int) Math.Ceiling((maxPrice - minPrice)/delta);
             maxPrice = minPrice + iCntLabels*delta;
 
             double scaleY = (yBottom - yTop)/(iCntLabels*delta);
-            var yOpen = (int) (yBottom - (Data.Open[_barCurrent] - minPrice)*scaleY);
-            var yHigh = (int) (yBottom - (Data.High[_barCurrent] - minPrice)*scaleY);
-            var yLow = (int) (yBottom - (Data.Low[_barCurrent] - minPrice)*scaleY);
-            var yClose = (int) (yBottom - (Data.Close[_barCurrent] - minPrice)*scaleY);
+            var yOpen = (int) (yBottom - (Data.DataSet.Open[_barCurrent] - minPrice)*scaleY);
+            var yHigh = (int) (yBottom - (Data.DataSet.High[_barCurrent] - minPrice)*scaleY);
+            var yLow = (int) (yBottom - (Data.DataSet.Low[_barCurrent] - minPrice)*scaleY);
+            var yClose = (int) (yBottom - (Data.DataSet.Close[_barCurrent] - minPrice)*scaleY);
 
             // Find the price distance
             double priceDistance = 0;
             for (int point = 1; point < points; point++)
             {
                 priceDistance +=
-                    Math.Abs(Backtester.WayPoint(_barCurrent, point).Price -
-                             Backtester.WayPoint(_barCurrent, point - 1).Price);
+                    Math.Abs(_backtester.WayPoint(_barCurrent, point).Price -
+                             _backtester.WayPoint(_barCurrent, point - 1).Price);
             }
             double dPriceForAPixel = (pointRight - pointLeft)/priceDistance;
 
@@ -577,8 +582,8 @@ namespace Forex_Strategy_Builder
             {
                 var iDistance =
                     (int)
-                    (Math.Abs(Backtester.WayPoint(_barCurrent, point).Price -
-                              Backtester.WayPoint(_barCurrent, point - 1).Price)*dPriceForAPixel);
+                    (Math.Abs(_backtester.WayPoint(_barCurrent, point).Price -
+                              _backtester.WayPoint(_barCurrent, point - 1).Price)*dPriceForAPixel);
                 aiPointX[point] = aiPointX[point - 1] + iDistance;
             }
             aiPointX[points - 1] = pointRight;
@@ -597,12 +602,12 @@ namespace Forex_Strategy_Builder
             var pntWay = new Point[points];
             for (int point = 0; point < points; point++)
             {
-                var pointY = (int) (yBottom - (Backtester.WayPoint(_barCurrent, point).Price - minPrice)*scaleY);
+                var pointY = (int) (yBottom - (_backtester.WayPoint(_barCurrent, point).Price - minPrice)*scaleY);
                 pntWay[point] = new Point(aiPointX[point], pointY);
             }
 
             // Horizontal grid and Price labels
-            for (double label = minPrice; label <= maxPrice + Data.InstrProperties.Point; label += delta)
+            for (double label = minPrice; label <= maxPrice + Data.DataSet.InstrProperties.Point; label += delta)
             {
                 var labelY = (int) (yBottom - (label - minPrice)*scaleY);
                 g.DrawString(label.ToString(Data.FF), Font, _brushGridText, xRight, labelY - Font.Height/2 - 1);
@@ -623,7 +628,9 @@ namespace Forex_Strategy_Builder
             // Bar Number
             string barNumber = (_barCurrent + 1).ToString(CultureInfo.InvariantCulture);
             int stringX = x + barPixels/2 - 1 - g.MeasureString(barNumber, Font).ToSize().Width/2;
-            Brush barBrush = Backtester.BackTestEval(_barCurrent) == BacktestEval.Ambiguous ? _brushRed : _brushGridText;
+            Brush barBrush = _backtester.BackTestEval(_barCurrent) == BacktestEval.Ambiguous
+                                 ? _brushRed
+                                 : _brushGridText;
             g.DrawString(barNumber, Font, barBrush, stringX, yBottom + 4);
 
             // Draw the bar
@@ -648,14 +655,14 @@ namespace Forex_Strategy_Builder
             }
 
             // Draw cancelled orders
-            for (int orderIndex = 0; orderIndex < Backtester.Orders(_barCurrent); orderIndex++)
+            for (int orderIndex = 0; orderIndex < _backtester.Orders(_barCurrent); orderIndex++)
             {
-                int ordNumber = Backtester.OrdNumb(_barCurrent, orderIndex);
-                Order order = Backtester.OrdFromNumb(ordNumber);
+                int ordNumber = _backtester.OrdNumb(_barCurrent, orderIndex);
+                Order order = _backtester.OrdFromNumb(ordNumber);
                 if (order.OrdStatus != OrderStatus.Cancelled)
                     continue;
 
-                if (order.OrdPrice > Data.High[_barCurrent] || order.OrdPrice < Data.Low[_barCurrent])
+                if (order.OrdPrice > Data.DataSet.High[_barCurrent] || order.OrdPrice < Data.DataSet.Low[_barCurrent])
                     continue;
 
                 int d = barPixels/2 - 1;
@@ -681,20 +688,20 @@ namespace Forex_Strategy_Builder
             }
 
             // Draw the deals on the bar
-            for (int pos = 0; pos < Backtester.Positions(_barCurrent); pos++)
+            for (int pos = 0; pos < _backtester.Positions(_barCurrent); pos++)
             {
-                if (Backtester.PosTransaction(_barCurrent, pos) == Transaction.Transfer)
+                if (_backtester.PosTransaction(_barCurrent, pos) == Transaction.Transfer)
                     continue;
 
-                var yDeal = (int) (yBottom - (Backtester.PosOrdPrice(_barCurrent, pos) - minPrice)*scaleY);
+                var yDeal = (int) (yBottom - (_backtester.PosOrdPrice(_barCurrent, pos) - minPrice)*scaleY);
 
-                if (Backtester.PosDir(_barCurrent, pos) == PosDirection.Long ||
-                    Backtester.PosDir(_barCurrent, pos) == PosDirection.Short)
+                if (_backtester.PosDir(_barCurrent, pos) == PosDirection.Long ||
+                    _backtester.PosDir(_barCurrent, pos) == PosDirection.Short)
                 {
                     int d = barPixels/2 - 1;
                     int x1 = x + d;
                     int x2 = x + barPixels - 2;
-                    if (Backtester.OrdFromNumb(Backtester.PosOrdNumb(_barCurrent, pos)).OrdDir == OrderDirection.Buy)
+                    if (_backtester.OrdFromNumb(_backtester.PosOrdNumb(_barCurrent, pos)).OrdDir == OrderDirection.Buy)
                     {
                         // Buy
                         var pen = new Pen(LayoutColors.ColorTradeLong, 2);
@@ -713,7 +720,7 @@ namespace Forex_Strategy_Builder
                         g.DrawLine(pen, x2, yDeal + d, x2, yDeal + d/2 + 1);
                     }
                 }
-                else if (Backtester.PosDir(_barCurrent, pos) == PosDirection.Closed)
+                else if (_backtester.PosDir(_barCurrent, pos) == PosDirection.Closed)
                 {
                     // Close position
                     int d = barPixels/2 - 1;
@@ -729,13 +736,13 @@ namespace Forex_Strategy_Builder
             // Draw position lots
             for (int point = 0; point < points; point++)
             {
-                int posNumber = Backtester.WayPoint(_barCurrent, point).PosNumb;
+                int posNumber = _backtester.WayPoint(_barCurrent, point).PosNumb;
                 if (posNumber == -1) continue;
 
-                Position position = Backtester.PosFromNumb(posNumber);
+                Position position = _backtester.PosFromNumb(posNumber);
                 double posLots = position.PosLots;
                 PosDirection posDirection = position.PosDir;
-                WayPointType wpType = Backtester.WayPoint(_barCurrent, point).WPType;
+                WayPointType wpType = _backtester.WayPoint(_barCurrent, point).WPType;
 
                 var hight = (int) (Math.Max(posLots*2, 2));
                 int lenght = barPixels;
@@ -833,7 +840,7 @@ namespace Forex_Strategy_Builder
             // Draw O, H, L, C labels
             for (int point = 0; point < points; point++)
             {
-                WayPointType wpType = Backtester.WayPoint(_barCurrent, point).WPType;
+                WayPointType wpType = _backtester.WayPoint(_barCurrent, point).WPType;
                 if (wpType != WayPointType.Open && wpType != WayPointType.High &&
                     wpType != WayPointType.Low && wpType != WayPointType.Close)
                     continue;
@@ -865,15 +872,15 @@ namespace Forex_Strategy_Builder
             // Draw the deals on the route
             for (int point = 0; point < points; point++)
             {
-                int posNumber = Backtester.WayPoint(_barCurrent, point).PosNumb;
-                int ordNumber = Backtester.WayPoint(_barCurrent, point).OrdNumb;
+                int posNumber = _backtester.WayPoint(_barCurrent, point).PosNumb;
+                int ordNumber = _backtester.WayPoint(_barCurrent, point).OrdNumb;
 
                 if (posNumber < 0 || ordNumber < 0)
                     continue;
 
-                PosDirection posDirection = Backtester.PosFromNumb(posNumber).PosDir;
-                OrderDirection ordDirection = Backtester.OrdFromNumb(ordNumber).OrdDir;
-                WayPointType wpType = Backtester.WayPoint(_barCurrent, point).WPType;
+                PosDirection posDirection = _backtester.PosFromNumb(posNumber).PosDir;
+                OrderDirection ordDirection = _backtester.OrdFromNumb(ordNumber).OrdDir;
+                WayPointType wpType = _backtester.WayPoint(_barCurrent, point).WPType;
 
                 if (wpType == WayPointType.None || wpType == WayPointType.Open || wpType == WayPointType.High ||
                     wpType == WayPointType.Low || wpType == WayPointType.Close)
@@ -931,7 +938,7 @@ namespace Forex_Strategy_Builder
             g.DrawLine(_penAxes, xLeft, yBottom, xRight, yBottom);
 
             // Border
-            var penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
+            var penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
                                     Border);
             g.DrawLine(penBorder, 1, _infoRowHeight, 1, pnl.ClientSize.Height);
             g.DrawLine(penBorder, pnl.ClientSize.Width - Border + 1, _infoRowHeight, pnl.ClientSize.Width - Border + 1,
@@ -966,7 +973,7 @@ namespace Forex_Strategy_Builder
             var pntStart = new PointF(0, 0);
             SizeF szfCaption = new Size(pnl.ClientSize.Width, 2*_infoRowHeight);
             var rectfCaption = new RectangleF(pntStart, szfCaption);
-            Data.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
+            ColorMagic.GradientPaint(g, rectfCaption, LayoutColors.ColorCaptionBack, LayoutColors.DepthCaption);
 
             // Caption Text
             var stringFormat = new StringFormat
@@ -993,7 +1000,7 @@ namespace Forex_Strategy_Builder
 
             Brush brush = new SolidBrush(LayoutColors.ColorControlText);
 
-            for (int pnt = 0; pnt < Backtester.WayPoints(_barCurrent); pnt++)
+            for (int pnt = 0; pnt < _backtester.WayPoints(_barCurrent); pnt++)
             {
                 int y = (pnt + 2)*_infoRowHeight;
                 var point = new Point(_aiX[0], y);
@@ -1002,16 +1009,16 @@ namespace Forex_Strategy_Builder
                 if (Math.Abs(pnt%2f - 0) > 0.00001)
                     g.FillRectangle(_brushEvenRow, new Rectangle(point, size));
 
-                int positionNumber = Backtester.WayPoint(_barCurrent, pnt).PosNumb;
-                WayPointType wpType = Backtester.WayPoint(_barCurrent, pnt).WPType;
-                PosDirection posDirection = Backtester.PosFromNumb(positionNumber).PosDir;
-                double posLots = Backtester.PosFromNumb(positionNumber).PosLots;
-                int ordNumber = Backtester.WayPoint(_barCurrent, pnt).OrdNumb;
+                int positionNumber = _backtester.WayPoint(_barCurrent, pnt).PosNumb;
+                WayPointType wpType = _backtester.WayPoint(_barCurrent, pnt).WPType;
+                PosDirection posDirection = _backtester.PosFromNumb(positionNumber).PosDir;
+                double posLots = _backtester.PosFromNumb(positionNumber).PosLots;
+                int ordNumber = _backtester.WayPoint(_barCurrent, pnt).OrdNumb;
 
                 g.DrawString((pnt + 1).ToString(CultureInfo.InvariantCulture), _fontInfo, brush, (_aiX[0] + _aiX[1])/2f,
                              y, sf);
                 g.DrawString(Language.T(WayPoint.WPTypeToString(wpType)), _fontInfo, brush, _aiX[1] + 2, y);
-                g.DrawString(Backtester.WayPoint(_barCurrent, pnt).Price.ToString(ff), _fontInfo, brush,
+                g.DrawString(_backtester.WayPoint(_barCurrent, pnt).Price.ToString(ff), _fontInfo, brush,
                              (_aiX[3] + _aiX[2])/2f, y, sf);
 
                 if (positionNumber > -1)
@@ -1036,7 +1043,7 @@ namespace Forex_Strategy_Builder
                 g.DrawLine(penLine, _aiX[i], 2*_infoRowHeight, _aiX[i], ClientSize.Height - Border);
 
             // Border
-            var penBorder = new Pen(Data.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
+            var penBorder = new Pen(ColorMagic.GetGradientColor(LayoutColors.ColorCaptionBack, -LayoutColors.DepthCaption),
                                     Border);
             g.DrawLine(penBorder, 1, 2*_infoRowHeight, 1, pnl.ClientSize.Height);
             g.DrawLine(penBorder, pnl.ClientSize.Width - Border + 1, 2*_infoRowHeight, pnl.ClientSize.Width - Border + 1,
