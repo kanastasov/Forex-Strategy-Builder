@@ -7,18 +7,20 @@
 
 using System;
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
     /// <summary>
-    /// Vidya Moving Average Indicator 
+    /// Vidya Moving Average Indicator
     /// </summary>
     public class Moving_Average : Indicator
     {
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Moving_Average(SlotTypes slotType)
+        public Moving_Average(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName   = "Vidya Moving Average";
@@ -171,7 +173,7 @@ namespace Forex_Strategy_Builder
 
                 Component[1] = new IndicatorComp();
                 Component[1].Value = new double[Bars];
-                
+
                 for (int iBar = 2; iBar < Bars; iBar++)
                 {   // Covers the cases when the price can pass through the MA without a signal
                     double dValue   = adMA[iBar - iPrvs];     // Current value
@@ -373,7 +375,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public override string ToString()
         {
-            string sString = IndicatorName + 
+            string sString = IndicatorName +
                 (IndParam.CheckParam[0].Checked ? "* (" : " (") +
                 IndParam.ListParam[2].Text         + ", " + // Price
                 IndParam.NumParam[0].ValueToString + ", " + // MA period

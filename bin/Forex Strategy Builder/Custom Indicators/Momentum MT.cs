@@ -7,6 +7,7 @@
 
 using System;
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -18,7 +19,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Momentum_MT(SlotTypes slotType)
+        public Momentum_MT(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName   = "Momentum MT";
@@ -70,7 +72,7 @@ namespace Forex_Strategy_Builder
             IndParam.NumParam[0].Max     = 200;
             IndParam.NumParam[0].Enabled = true;
             IndParam.NumParam[0].ToolTip = "The period of Momentum.";
- 
+
             IndParam.NumParam[1].Caption = "Additional smoothing";
             IndParam.NumParam[1].Value   = 0;
             IndParam.NumParam[1].Min     = 0;
