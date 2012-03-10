@@ -231,7 +231,7 @@ namespace Forex_Strategy_Builder
             }
             else
             {
-                _backtester.Calculate();
+                _backtester.Scan();
                 ShowScanningResult();
                 ProgressBar.Value = 100;
                 BtnClose.Focus();
