@@ -48,7 +48,16 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         /// </summary>
         public Optimizer(Backtester backtester)
         {
-            _backtester = backtester;
+            _backtester = new Backtester
+            {
+                Strategy = backtester.Strategy.Clone(),
+                DataSet = backtester.DataSet,
+                DataStats = backtester.DataStats,
+                IsData = true
+            };
+            _backtester.Calculate();
+            _backtester.CalculateAccountStats();
+            _backtester.IsResult = true;
             _barOOS = _backtester.DataSet.Bars - 1;
 
             Icon = Data.Icon;
@@ -120,6 +129,11 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private NumericUpDown NUDOutOfSample { get; set; }
 
         private Form FormFSB { get; set; }
+
+        public Strategy Strategy
+        {
+            get { return _backtester.Strategy; }
+        }
 
         public Form SetParrentForm
         {

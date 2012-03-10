@@ -104,12 +104,13 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
 
             // Button Accept
             BtnAccept.Parent = this;
-            BtnAccept.Name = "btnAccept";
+            BtnAccept.Name = "Accept";
             BtnAccept.Text = Language.T("Accept");
             BtnAccept.TabIndex = 1;
             BtnAccept.Enabled = false;
             BtnAccept.DialogResult = DialogResult.OK;
             BtnAccept.UseVisualStyleBackColor = true;
+            BtnAccept.Click += BtnAcceptOnClick;
 
             // Button Cancel
             BtnCancel.Parent = this;
@@ -117,6 +118,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             BtnCancel.TabIndex = 2;
             BtnCancel.DialogResult = DialogResult.Cancel;
             BtnCancel.UseVisualStyleBackColor = true;
+            BtnCancel.Click += BtnCancelOnClick;
 
             // BackGroundWorker
             BgWorker = new BackgroundWorker {WorkerReportsProgress = true, WorkerSupportsCancellation = true};
@@ -717,5 +719,16 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             _isReset = true;
             Close();
         }
+
+        private void BtnAcceptOnClick(object sender, EventArgs eventArgs)
+        {
+            Close();
+        }
+
+        private void BtnCancelOnClick(object sender, EventArgs eventArgs)
+        {
+            Close();
+        }
+
     }
 }

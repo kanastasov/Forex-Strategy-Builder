@@ -1230,27 +1230,29 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowOptimizer()
         {
+
+            var optimizer = new Optimizer(Backtester) {SetParrentForm = this};
+            optimizer.Closed += OptimizerOnClosed;
+            optimizer.Show();
+            UserStatistics.OptimizerStarts++;
+        }
+
+        private void OptimizerOnClosed(object sender, EventArgs e)
+        {
+            var optimizer = sender as Optimizer;
+            if (optimizer == null) return;
+            if (optimizer.DialogResult != DialogResult.OK) return;
+
             // Put the Strategy into the Undo Stack
             Data.StackStrategy.Push(Backtester.Strategy.Clone());
 
-            var optimizer = new Optimizer(Backtester) {SetParrentForm = this};
-            optimizer.ShowDialog();
+            // We accept the generated strategy
+            Backtester.Strategy = optimizer.Strategy.Clone();
 
-            if (optimizer.DialogResult == DialogResult.OK)
-            {
-                // We accept the optimized strategy
-                Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
-                Data.IsStrategyChanged = true;
-                RepaintStrategyLayout();
-                Calculate(true);
-            }
-            else
-            {
-                // If we cancel the optimizing, we return the original strategy.
-                UndoStrategy();
-            }
-
-            UserStatistics.OptimizerStarts++;
+            Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
+            Data.IsStrategyChanged = true;
+            RepaintStrategyLayout();
+            Calculate(true);
         }
 
         /// <summary>
