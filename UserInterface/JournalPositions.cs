@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
+using Forex_Strategy_Builder.Interfaces;
 using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
@@ -35,12 +36,15 @@ namespace Forex_Strategy_Builder
         private int _visibalWidth; // The visible part width of the panel
         private HScrollBar HScrollBar { get; set; }
         private VScrollBar VScrollBar { get; set; }
+        private readonly IDataSet _dataSet;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public JournalPositions()
+        public JournalPositions(IDataSet dataSet)
         {
+            _dataSet = dataSet;
+
             InitializeJournal();
             SetUpJournal();
         }
@@ -144,9 +148,6 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void UpdateJournalData()
         {
-            if (!Data.IsResult)
-                return;
-
             _journalData = new string[_positions,_columns];
             _positionIcons = new Image[_shownPos];
 
@@ -159,11 +160,11 @@ namespace Forex_Strategy_Builder
                 _journalData[row, 2] = Language.T(StatsBuffer.PosDir(SelectedBar, pos).ToString());
                 _journalData[row, 3] = Configs.AccountInMoney
                                  ? (StatsBuffer.PosDir(SelectedBar, pos) == PosDirection.Short ? "-" : "") +
-                                    (StatsBuffer.PosLots(SelectedBar, pos)*Data.DataSet.InstrProperties.LotSize)
+                                    (StatsBuffer.PosLots(SelectedBar, pos)*_dataSet.InstrProperties.LotSize)
                                  : StatsBuffer.PosLots(SelectedBar, pos).ToString(CultureInfo.InvariantCulture);
                 _journalData[row, 4] = (StatsBuffer.PosOrdNumb(SelectedBar, pos) + 1).ToString(CultureInfo.InvariantCulture);
-                _journalData[row, 5] = StatsBuffer.PosOrdPrice(SelectedBar, pos).ToString(Data.FF);
-                _journalData[row, 6] = StatsBuffer.PosPrice(SelectedBar, pos).ToString(Data.FF);
+                _journalData[row, 5] = StatsBuffer.PosOrdPrice(SelectedBar, pos).ToString(_dataSet.FF);
+                _journalData[row, 6] = StatsBuffer.PosPrice(SelectedBar, pos).ToString(_dataSet.FF);
 
                 // Profit Loss
                 if (StatsBuffer.PosTransaction(SelectedBar, pos) == Transaction.Close ||
@@ -202,7 +203,9 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void SetSizes()
         {
-            _positions = Data.IsResult ? StatsBuffer.Positions(SelectedBar) : 0;
+            if (!StatsBuffer.IsBufferReady) return;
+
+            _positions = StatsBuffer.Positions(SelectedBar);
             _rows = ClientSize.Height > 2 * _rowHeight + Border ? (ClientSize.Height - 2 * _rowHeight - Border) / _rowHeight : 0;
 
             if (_positions == 0)

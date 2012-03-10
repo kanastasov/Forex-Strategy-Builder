@@ -22,8 +22,10 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Constructor
         /// </summary>
-        public FibonacciLevelsCalculator()
+        public FibonacciLevelsCalculator(Backtester backtester)
         {
+            _backtester = backtester;
+
             PnlInput = new FancyPanel(Language.T("Input Values"));
             PnlOutput = new FancyPanel(Language.T("Output Values"));
 
@@ -104,6 +106,7 @@ namespace Forex_Strategy_Builder
             AlblOutputValues[4].Font = new Font(font.FontFamily, font.Size, FontStyle.Bold);
         }
 
+        private readonly Backtester _backtester;
         private FancyPanel PnlInput { get; set; }
         private FancyPanel PnlOutput { get; set; }
         private Label[] AlblInputNames { get; set; }
@@ -116,10 +119,10 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void InitParams()
         {
-            var fibo = new Fibonacci(SlotTypes.Close);
+            var fibo = new Fibonacci(_backtester.DataSet, SlotTypes.Close);
             fibo.Calculate(SlotTypes.Close);
-            AtbxInputValues[0].Text = fibo.Component[5].Value[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
-            AtbxInputValues[1].Text = fibo.Component[1].Value[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[0].Text = fibo.Component[5].Value[_backtester.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[1].Text = fibo.Component[1].Value[_backtester.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>

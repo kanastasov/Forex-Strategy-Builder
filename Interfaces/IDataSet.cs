@@ -37,5 +37,8 @@ namespace Forex_Strategy_Builder.Interfaces
         bool IsTickData { get; set; }
         long Ticks { get; set; }
         double[][] TickData { get; set; }
+
+        string PeriodString { get; }
+        string FF { get; }
     }
 }

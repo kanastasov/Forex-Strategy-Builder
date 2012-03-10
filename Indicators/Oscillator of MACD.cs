@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Oscillator_of_MACD(SlotTypes slotType)
+        public Oscillator_of_MACD(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Oscillator of MACD";
@@ -133,7 +135,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public override void Calculate(SlotTypes slotType)
         {
-            MACD MACD1 = new MACD(slotType);
+            MACD MACD1 = new MACD(DataSet, slotType);
             MACD1.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             MACD1.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             MACD1.IndParam.ListParam[3].Index = IndParam.ListParam[3].Index;
@@ -143,7 +145,7 @@ namespace Forex_Strategy_Builder
             MACD1.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;
             MACD1.Calculate(slotType);
 
-            MACD MACD2 = new MACD(slotType);
+            MACD MACD2 = new MACD(DataSet, slotType);
             MACD2.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             MACD2.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             MACD2.IndParam.ListParam[3].Index = IndParam.ListParam[3].Index;

@@ -17,12 +17,15 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
     public sealed partial class OverOptimization : FancyPanel
     {
         private readonly BackgroundWorker _bgWorker;
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Public constructor.
         /// </summary>
-        public OverOptimization(string caption) : base(caption)
+        public OverOptimization(Backtester backtester, string caption) : base(caption)
         {
+            _backtester = backtester;
+
             LblIntro = new Label();
             LblDeviation = new Label();
             LblParams = new Label();

@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Oscillator_of_ROC(SlotTypes slotType)
+        public Oscillator_of_ROC(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Oscillator of ROC";
@@ -105,14 +107,14 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            Rate_of_Change ROC1 = new Rate_of_Change(slotType);
+            Rate_of_Change ROC1 = new Rate_of_Change(DataSet, slotType);
             ROC1.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             ROC1.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             ROC1.IndParam.NumParam[0].Value  = IndParam.NumParam[0].Value;
             ROC1.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;
             ROC1.Calculate(slotType);
 
-            Rate_of_Change ROC2 = new Rate_of_Change(slotType);
+            Rate_of_Change ROC2 = new Rate_of_Change(DataSet, slotType);
             ROC2.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             ROC2.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             ROC2.IndParam.NumParam[0].Value  = IndParam.NumParam[1].Value;

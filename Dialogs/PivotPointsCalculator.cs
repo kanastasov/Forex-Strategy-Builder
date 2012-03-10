@@ -15,12 +15,14 @@ namespace Forex_Strategy_Builder
     internal sealed class PivotPointsCalculator : Form
     {
         private readonly Color _colorText;
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public PivotPointsCalculator()
+        public PivotPointsCalculator(Backtester backtester)
         {
+            _backtester = backtester;
             PnlInput = new FancyPanel(Language.T("Input Values"));
             PnlOutput = new FancyPanel(Language.T("Output Values"));
 
@@ -118,9 +120,9 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void InitParams()
         {
-            AtbxInputValues[0].Text = Data.DataSet.High[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
-            AtbxInputValues[1].Text = Data.DataSet.Close[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
-            AtbxInputValues[2].Text = Data.DataSet.Low[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[0].Text = _backtester.DataSet.High[_backtester.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[1].Text = _backtester.DataSet.Close[_backtester.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
+            AtbxInputValues[2].Text = _backtester.DataSet.Low[_backtester.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>

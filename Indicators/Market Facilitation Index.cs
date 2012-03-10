@@ -5,6 +5,8 @@
 // This code or any part of it cannot be used in other applications without a permission.
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
+using Forex_Strategy_Builder.Interfaces;
+
 namespace Forex_Strategy_Builder
 {
     /// <summary>
@@ -15,7 +17,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Market_Facilitation_Index(SlotTypes slotType)
+        public Market_Facilitation_Index(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Market Facilitation Index";

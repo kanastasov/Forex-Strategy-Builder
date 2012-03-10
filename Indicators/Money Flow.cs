@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Money_Flow(SlotTypes slotType)
+        public Money_Flow(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Money Flow";

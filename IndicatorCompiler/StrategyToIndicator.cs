@@ -15,30 +15,31 @@ namespace Forex_Strategy_Builder
 {
     public static class StrategyToIndicator
     {
-        private static Backtester Backtester { get; set; }
+        private static Backtester _backtester;
 
-        public static void ExportStrategyToIndicator()
+        public static void ExportStrategyToIndicator(Backtester backtester)
         {
+            _backtester = backtester;
             var sbLong = new StringBuilder();
             var sbShort = new StringBuilder();
 
-            for (int bar = Backtester.Strategy.FirstBar; bar < Data.DataSet.Bars; bar++)
-                for (int pos = 0; pos < Backtester.Positions(bar); pos++)
+            for (int bar = _backtester.Strategy.FirstBar; bar < _backtester.DataSet.Bars; bar++)
+                for (int pos = 0; pos < _backtester.Positions(bar); pos++)
                 {
-                    if (Backtester.PosDir(bar, pos) == PosDirection.Long)
-                        sbLong.AppendLine("				\"" + Data.DataSet.Time[bar] + "\",");
+                    if (_backtester.PosDir(bar, pos) == PosDirection.Long)
+                        sbLong.AppendLine("				\"" + _backtester.DataSet.Time[bar] + "\",");
 
-                    if (Backtester.PosDir(bar, pos) == PosDirection.Short)
-                        sbShort.AppendLine("				\"" + Data.DataSet.Time[bar] + "\",");
+                    if (_backtester.PosDir(bar, pos) == PosDirection.Short)
+                        sbShort.AppendLine("				\"" + _backtester.DataSet.Time[bar] + "\",");
                 }
 
             string strategy = Resources.StrategyToIndicator;
             strategy = strategy.Replace("#MODIFIED#", DateTime.Now.ToString(CultureInfo.InvariantCulture));
-            strategy = strategy.Replace("#INSTRUMENT#", Data.Symbol);
-            strategy = strategy.Replace("#BASEPERIOD#", Data.DataPeriodToString(Data.DataSet.Period));
-            strategy = strategy.Replace("#STARTDATE#", Data.DataSet.Time[Backtester.Strategy.FirstBar].ToString(CultureInfo.InvariantCulture));
-            strategy = strategy.Replace("#ENDDATE#", Data.DataSet.Time[Data.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture));
-            strategy = strategy.Replace("#PERIODMINUTES#", ((int) Data.DataSet.Period).ToString(CultureInfo.InvariantCulture));
+            strategy = strategy.Replace("#INSTRUMENT#", _backtester.DataSet.Symbol);
+            strategy = strategy.Replace("#BASEPERIOD#", Data.DataPeriodToString(_backtester.DataSet.Period));
+            strategy = strategy.Replace("#STARTDATE#", _backtester.DataSet.Time[_backtester.Strategy.FirstBar].ToString(CultureInfo.InvariantCulture));
+            strategy = strategy.Replace("#ENDDATE#", _backtester.DataSet.Time[_backtester.DataSet.Bars - 1].ToString(CultureInfo.InvariantCulture));
+            strategy = strategy.Replace("#PERIODMINUTES#", ((int) _backtester.DataSet.Period).ToString(CultureInfo.InvariantCulture));
             strategy = strategy.Replace("#LISTLONG#", sbLong.ToString());
             strategy = strategy.Replace("#LISTSHORT#", sbShort.ToString());
 

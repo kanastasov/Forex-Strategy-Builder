@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Constructor
         /// </summary>
-        public Ross_Hook(SlotTypes slotType)
+        public Ross_Hook(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName = "Ross Hook";

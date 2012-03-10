@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Oscillator_of_ATR(SlotTypes slotType)
+        public Oscillator_of_ATR(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName   = "Oscillator of ATR";
@@ -97,13 +99,13 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            Average_True_Range ATR1 = new Average_True_Range(slotType);
+            Average_True_Range ATR1 = new Average_True_Range(DataSet, slotType);
             ATR1.IndParam.ListParam[1].Index    = IndParam.ListParam[1].Index;
             ATR1.IndParam.NumParam[0].Value     = IndParam.NumParam[0].Value;
             ATR1.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;
             ATR1.Calculate(slotType);
 
-            Average_True_Range ATR2 = new Average_True_Range(slotType);
+            Average_True_Range ATR2 = new Average_True_Range(DataSet, slotType);
             ATR2.IndParam.ListParam[1].Index    = IndParam.ListParam[1].Index;
             ATR2.IndParam.NumParam[0].Value     = IndParam.NumParam[1].Value;
             ATR2.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;

@@ -17,6 +17,8 @@ namespace Forex_Strategy_Builder
 {
     internal sealed class Comparator : Form
     {
+
+        private readonly Backtester _backtester;
         private readonly BackgroundWorker _bgWorker;
         private readonly Brush _brushRandArea;
         private readonly int _countMethods;
@@ -46,8 +48,10 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Initialize the form and controls
         /// </summary>
-        public Comparator()
+        public Comparator(Backtester backtester)
         {
+            _backtester = backtester;
+
             PnlOptions = new Panel();
             PnlChart = new Panel();
             ProgressBar = new ProgressBar();
@@ -155,8 +159,6 @@ namespace Forex_Strategy_Builder
 
             Configs.TradeUntilMarginCall = false;
         }
-
-        private Backtester Backtester { get; set; }
 
         private Panel PnlOptions { get; set; }
         private CheckBox[] AchboxMethods { get; set; }
@@ -367,13 +369,13 @@ namespace Forex_Strategy_Builder
                 return -1;
             }
 
-            _afBalance = new float[Data.DataSet.Bars - Backtester.Strategy.FirstBar];
-            _afMethods = new float[_countMethods,Data.DataSet.Bars - Backtester.Strategy.FirstBar];
+            _afBalance = new float[_backtester.DataSet.Bars - _backtester.Strategy.FirstBar];
+            _afMethods = new float[_countMethods,_backtester.DataSet.Bars - _backtester.Strategy.FirstBar];
             if (_isRandom)
             {
-                _afRandoms = new float[randomLines,Data.DataSet.Bars - Backtester.Strategy.FirstBar];
-                _afMinRandom = new float[Data.DataSet.Bars - Backtester.Strategy.FirstBar];
-                _afMaxRandom = new float[Data.DataSet.Bars - Backtester.Strategy.FirstBar];
+                _afRandoms = new float[randomLines,_backtester.DataSet.Bars - _backtester.Strategy.FirstBar];
+                _afMinRandom = new float[_backtester.DataSet.Bars - _backtester.Strategy.FirstBar];
+                _afMaxRandom = new float[_backtester.DataSet.Bars - _backtester.Strategy.FirstBar];
             }
 
             // Progress parameters
@@ -396,15 +398,15 @@ namespace Forex_Strategy_Builder
                     {
                         if (worker.CancellationPending) return -1;
 
-                        Backtester.InterpolationMethod = method;
+                        _backtester.InterpolationMethod = method;
                         //Backtester.Calculate();
 
                         if (Configs.AccountInMoney)
-                            for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
-                                _afRandoms[r, iBar] = (float) Backtester.MoneyBalance(iBar + Backtester.Strategy.FirstBar);
+                            for (int bar = 0; bar < _backtester.DataSet.Bars - _backtester.Strategy.FirstBar; bar++)
+                                _afRandoms[r, bar] = (float) _backtester.MoneyBalance(bar + _backtester.Strategy.FirstBar);
                         else
-                            for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
-                                _afRandoms[r, iBar] = Backtester.Balance(iBar + Backtester.Strategy.FirstBar);
+                            for (int bar = 0; bar < _backtester.DataSet.Bars - _backtester.Strategy.FirstBar; bar++)
+                                _afRandoms[r, bar] = _backtester.Balance(bar + _backtester.Strategy.FirstBar);
 
 
                         // Report progress as a percentage of the total task.
@@ -418,21 +420,21 @@ namespace Forex_Strategy_Builder
                         }
                     }
 
-                    for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
+                    for (int bar = 0; bar < _backtester.DataSet.Bars - _backtester.Strategy.FirstBar; bar++)
                     {
                         float randomSum = 0;
                         float minRandom = float.MaxValue;
                         float maxRandom = float.MinValue;
                         for (int r = 0; r < randomLines; r++)
                         {
-                            float value = _afRandoms[r, iBar];
+                            float value = _afRandoms[r, bar];
                             randomSum += value;
                             minRandom = value < minRandom ? value : minRandom;
                             maxRandom = value > maxRandom ? value : maxRandom;
                         }
-                        _afMethods[m, iBar] = randomSum/randomLines;
-                        _afMinRandom[iBar] = minRandom;
-                        _afMaxRandom[iBar] = maxRandom;
+                        _afMethods[m, bar] = randomSum/randomLines;
+                        _afMinRandom[bar] = minRandom;
+                        _afMaxRandom[bar] = maxRandom;
                         _minimumRandom = minRandom < _minimumRandom ? minRandom : _minimumRandom;
                         _maximumRandom = maxRandom > _maximumRandom ? maxRandom : _maximumRandom;
                     }
@@ -449,15 +451,15 @@ namespace Forex_Strategy_Builder
                 }
                 else
                 {
-                    Backtester.InterpolationMethod = method;
-                    //Backtester.Calculate();
+                    _backtester.InterpolationMethod = method;
+                    _backtester.Calculate();
 
                     if (Configs.AccountInMoney)
-                        for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
-                            _afMethods[m, iBar] = (float) Backtester.MoneyBalance(iBar + Backtester.Strategy.FirstBar);
+                        for (int iBar = 0; iBar < _backtester.DataSet.Bars - _backtester.Strategy.FirstBar; iBar++)
+                            _afMethods[m, iBar] = (float) _backtester.MoneyBalance(iBar + _backtester.Strategy.FirstBar);
                     else
-                        for (int iBar = 0; iBar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; iBar++)
-                            _afMethods[m, iBar] = Backtester.Balance(iBar + Backtester.Strategy.FirstBar);
+                        for (int iBar = 0; iBar < _backtester.DataSet.Bars - _backtester.Strategy.FirstBar; iBar++)
+                            _afMethods[m, iBar] = _backtester.Balance(iBar + _backtester.Strategy.FirstBar);
 
                     // Report progress as a percentage of the total task.
                     computedCycles++;
@@ -472,7 +474,7 @@ namespace Forex_Strategy_Builder
             }
 
             // Calculates the average balance, Min and Max
-            for (int bar = 0; bar < Data.DataSet.Bars - Backtester.Strategy.FirstBar; bar++)
+            for (int bar = 0; bar < _backtester.DataSet.Bars - _backtester.Strategy.FirstBar; bar++)
             {
                 float sum = 0;
                 for (int m = 0; m < _countMethods; m++)
@@ -627,7 +629,7 @@ namespace Forex_Strategy_Builder
 
             if (!_isPaintChart)
             {
-                if (Backtester.AmbiguousBars == 0)
+                if (_backtester.AmbiguousBars == 0)
                 {
                     string sNote = Language.T("The Comparator is useful when the backtest shows ambiguous bars!");
                     var rectfNote = new RectangleF(0, 30, pnl.ClientSize.Width, Font.Height);
@@ -637,7 +639,7 @@ namespace Forex_Strategy_Builder
                 return;
             }
 
-            int bars = Data.DataSet.Bars - Backtester.Strategy.FirstBar;
+            int bars = _backtester.DataSet.Bars - _backtester.Strategy.FirstBar;
             int max = (int) Math.Max(_maximum, _maximumRandom) + 1;
             int min = (int) Math.Min(_minimum, _minimumRandom) - 1;
             min = (int) Math.Floor(min/10f)*10;
@@ -758,30 +760,30 @@ namespace Forex_Strategy_Builder
 
             // Scanning note
             var fontNote = new Font(Font.FontFamily, Font.Size - 1);
-            if (Configs.Autoscan && !Data.DataSet.IsIntrabarData)
+            if (Configs.Autoscan && !_backtester.DataSet.IsIntrabarData)
                 g.DrawString(Language.T("Load intrabar data"), fontNote, Brushes.Red, border + space, fCaptionHeight - 2);
-            else if (Backtester.IsScanPerformed)
+            else if (_backtester.IsScanPerformed)
                 g.DrawString(Language.T("Scanned") + " MQ " + ModelingQuality.ToString("N2") + "%", fontNote,
                              Brushes.LimeGreen, border + space, fCaptionHeight - 2);
 
             // Scanned bars
-            if (Data.DataSet.IntraBars != null && Data.DataSet.IsIntrabarData && Backtester.IsScanPerformed)
+            if (_backtester.DataSet.IntraBars != null && _backtester.DataSet.IsIntrabarData && _backtester.IsScanPerformed)
             {
                 g.DrawLine(new Pen(LayoutColors.ColorChartFore), border + space - 1, yBottom, border + space - 1,
                            yBottom + 8);
-                DataPeriods dataPeriod = Data.DataSet.Period;
-                Color color = Data.PeriodColor[Data.DataSet.Period];
-                int iFromBar = Backtester.Strategy.FirstBar;
-                for (int bar = Backtester.Strategy.FirstBar; bar < Data.DataSet.Bars; bar++)
+                DataPeriods dataPeriod = _backtester.DataSet.Period;
+                Color color = Data.PeriodColor[_backtester.DataSet.Period];
+                int iFromBar = _backtester.Strategy.FirstBar;
+                for (int bar = _backtester.Strategy.FirstBar; bar < _backtester.DataSet.Bars; bar++)
                 {
-                    if (Data.DataSet.IntraBarsPeriods[bar] != dataPeriod || bar == Data.DataSet.Bars - 1)
+                    if (_backtester.DataSet.IntraBarsPeriods[bar] != dataPeriod || bar == _backtester.DataSet.Bars - 1)
                     {
-                        int xStart = (int) ((iFromBar - Backtester.Strategy.FirstBar)*fScaleX) + border + space;
-                        int xEnd = (int) ((bar - Backtester.Strategy.FirstBar)*fScaleX) + border + space;
+                        int xStart = (int) ((iFromBar - _backtester.Strategy.FirstBar)*fScaleX) + border + space;
+                        int xEnd = (int) ((bar - _backtester.Strategy.FirstBar)*fScaleX) + border + space;
                         iFromBar = bar;
-                        dataPeriod = Data.DataSet.IntraBarsPeriods[bar];
+                        dataPeriod = _backtester.DataSet.IntraBarsPeriods[bar];
                         ColorMagic.GradientPaint(g, new RectangleF(xStart, yBottom + 3, xEnd - xStart + 2, 5), color, 60);
-                        color = Data.PeriodColor[Data.DataSet.IntraBarsPeriods[bar]];
+                        color = Data.PeriodColor[_backtester.DataSet.IntraBarsPeriods[bar]];
                     }
                 }
             }
@@ -794,29 +796,29 @@ namespace Forex_Strategy_Builder
         {
             get
             {
-                if (!Backtester.IsScanPerformed)
+                if (!_backtester.IsScanPerformed)
                     return 0;
 
                 int startGen = 0;
 
-                for (int i = 0; i < Data.DataSet.Bars; i++)
-                    if (Data.DataSet.IntraBarsPeriods[i] < Data.DataSet.Period)
+                for (int i = 0; i < _backtester.DataSet.Bars; i++)
+                    if (_backtester.DataSet.IntraBarsPeriods[i] < _backtester.DataSet.Period)
                     {
                         startGen = i;
                         break;
                     }
 
-                int startGenM1 = Data.DataSet.Bars - 1;
+                int startGenM1 = _backtester.DataSet.Bars - 1;
 
-                for (int i = 0; i < Data.DataSet.Bars; i++)
-                    if (Data.DataSet.IntraBarsPeriods[i] == DataPeriods.min1)
+                for (int i = 0; i < _backtester.DataSet.Bars; i++)
+                    if (_backtester.DataSet.IntraBarsPeriods[i] == DataPeriods.min1)
                     {
                         startGenM1 = i;
                         break;
                     }
 
-                double modellingQuality = (0.25 * (startGen - Backtester.Strategy.FirstBar) + 0.5 * (startGenM1 - startGen) +
-                                           0.9 * (Data.DataSet.Bars - startGenM1)) / (Data.DataSet.Bars - Backtester.Strategy.FirstBar) * 100;
+                double modellingQuality = (0.25 * (startGen - _backtester.Strategy.FirstBar) + 0.5 * (startGenM1 - startGen) +
+                                           0.9 * (_backtester.DataSet.Bars - startGenM1)) / (_backtester.DataSet.Bars - _backtester.Strategy.FirstBar) * 100;
 
                 return modellingQuality;
             }

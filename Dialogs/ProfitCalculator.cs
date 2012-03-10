@@ -20,13 +20,14 @@ namespace Forex_Strategy_Builder
         private readonly Color _colorText;
 
         private string _symbol;
-        private Backtester Backtester { get; set; }
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public ProfitCalculator()
+        public ProfitCalculator(Backtester backtester)
         {
+            _backtester = backtester;
             PnlInput = new FancyPanel(Language.T("Input Values"));
             PnlOutput = new FancyPanel(Language.T("Output Values"));
 
@@ -59,7 +60,7 @@ namespace Forex_Strategy_Builder
             // Input Names
             var asInputNames = new[]
                                    {
-                                       Data.DataSet.InstrProperties.Symbol,
+                                       _backtester.DataSet.InstrProperties.Symbol,
                                        Language.T("Direction"),
                                        Language.T("Number of lots"),
                                        Language.T("Entry price"),
@@ -99,7 +100,7 @@ namespace Forex_Strategy_Builder
             NUDLots.Maximum = 100;
             NUDLots.Increment = 0.01M;
             NUDLots.DecimalPlaces = 2;
-            NUDLots.Value = (decimal)Backtester.Strategy.EntryLots;
+            NUDLots.Value = (decimal)_backtester.Strategy.EntryLots;
             NUDLots.EndInit();
 
             // NumericUpDown Entry Price
@@ -262,7 +263,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void TimerTick(object sender, EventArgs e)
         {
-            if (_symbol == Data.DataSet.InstrProperties.Symbol) return;
+            if (_symbol == _backtester.DataSet.InstrProperties.Symbol) return;
             InitParams();
             InitParams();
         }
@@ -272,27 +273,27 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void InitParams()
         {
-            _symbol = Data.DataSet.InstrProperties.Symbol;
+            _symbol = _backtester.DataSet.InstrProperties.Symbol;
 
             AlblInputNames[0].Text = _symbol;
-            LblLotSize.Text = Data.DataSet.InstrProperties.LotSize.ToString(CultureInfo.InvariantCulture);
+            LblLotSize.Text = _backtester.DataSet.InstrProperties.LotSize.ToString(CultureInfo.InvariantCulture);
 
             // NumericUpDown Entry Price
             NUDEntryPrice.BeginInit();
-            NUDEntryPrice.DecimalPlaces = Data.DataSet.InstrProperties.Digits;
-            NUDEntryPrice.Minimum = (decimal)(Data.DataStats.MinPrice * 0.7);
-            NUDEntryPrice.Maximum = (decimal)(Data.DataStats.MaxPrice * 1.3);
-            NUDEntryPrice.Increment = (decimal) Data.DataSet.InstrProperties.Point;
-            NUDEntryPrice.Value = (decimal)Data.DataSet.Close[Data.DataSet.Bars - 1];
+            NUDEntryPrice.DecimalPlaces = _backtester.DataSet.InstrProperties.Digits;
+            NUDEntryPrice.Minimum = (decimal)(_backtester.DataStats.MinPrice * 0.7);
+            NUDEntryPrice.Maximum = (decimal)(_backtester.DataStats.MaxPrice * 1.3);
+            NUDEntryPrice.Increment = (decimal) _backtester.DataSet.InstrProperties.Point;
+            NUDEntryPrice.Value = (decimal)_backtester.DataSet.Close[_backtester.DataSet.Bars - 1];
             NUDEntryPrice.EndInit();
 
             // NumericUpDown Exit Price
             NUDExitPrice.BeginInit();
-            NUDExitPrice.DecimalPlaces = Data.DataSet.InstrProperties.Digits;
-            NUDExitPrice.Minimum = (decimal)(Data.DataStats.MinPrice * 0.7);
-            NUDExitPrice.Maximum = (decimal)(Data.DataStats.MaxPrice * 1.3);
-            NUDExitPrice.Increment = (decimal) Data.DataSet.InstrProperties.Point;
-            NUDExitPrice.Value = (decimal)(Data.DataSet.Close[Data.DataSet.Bars - 1] + 100 * Data.DataSet.InstrProperties.Point);
+            NUDExitPrice.DecimalPlaces = _backtester.DataSet.InstrProperties.Digits;
+            NUDExitPrice.Minimum = (decimal)(_backtester.DataStats.MinPrice * 0.7);
+            NUDExitPrice.Maximum = (decimal)(_backtester.DataStats.MaxPrice * 1.3);
+            NUDExitPrice.Increment = (decimal) _backtester.DataSet.InstrProperties.Point;
+            NUDExitPrice.Value = (decimal)(_backtester.DataSet.Close[_backtester.DataSet.Bars - 1] + 100 * _backtester.DataSet.InstrProperties.Point);
             NUDExitPrice.EndInit();
 
             Calculate();
@@ -313,44 +314,44 @@ namespace Forex_Strategy_Builder
         {
             bool isLong = (CbxDirection.SelectedIndex == 0);
             PosDirection posDir = isLong ? PosDirection.Long : PosDirection.Short;
-            int lotSize = Data.DataSet.InstrProperties.LotSize;
+            int lotSize = _backtester.DataSet.InstrProperties.LotSize;
             var lots = (double) NUDLots.Value;
             var entryPrice = (double) NUDEntryPrice.Value;
             var exitPrice = (double) NUDExitPrice.Value;
             var daysRollover = (int) NUDDays.Value;
-            double point = Data.DataSet.InstrProperties.Point;
+            double point = _backtester.DataSet.InstrProperties.Point;
             string unit = " " + Configs.AccountCurrency;
             double entryValue = lots*lotSize*entryPrice;
             double exitValue = lots*lotSize*exitPrice;
 
             // Required margin
             double requiredMargin = (lots*lotSize/Configs.Leverage)*
-                                    (entryPrice/Backtester.AccountExchangeRate(entryPrice));
+                                    (entryPrice/_backtester.AccountExchangeRate(entryPrice));
             AlblOutputValues[0].Text = requiredMargin.ToString("F2") + unit;
 
             // Gross Profit
             double grossProfit = (isLong ? exitValue - entryValue : entryValue - exitValue)/
-                                 Backtester.AccountExchangeRate(exitPrice);
+                                 _backtester.AccountExchangeRate(exitPrice);
             AlblOutputValues[1].Text = grossProfit.ToString("F2") + unit;
 
             // Spread
-            double spread = Data.DataSet.InstrProperties.Spread*point*lots*lotSize/Backtester.AccountExchangeRate(exitPrice);
+            double spread = _backtester.DataSet.InstrProperties.Spread*point*lots*lotSize/_backtester.AccountExchangeRate(exitPrice);
             AlblOutputValues[2].Text = spread.ToString("F2") + unit;
 
             // Entry Commission
-            double entryCommission = Backtester.CommissionInMoney(lots, entryPrice, false);
+            double entryCommission = _backtester.CommissionInMoney(lots, entryPrice, false);
             AlblOutputValues[3].Text = entryCommission.ToString("F2") + unit;
 
             // Exit Commission
-            double exitCommission = Backtester.CommissionInMoney(lots, exitPrice, true);
+            double exitCommission = _backtester.CommissionInMoney(lots, exitPrice, true);
             AlblOutputValues[4].Text = exitCommission.ToString("F2") + unit;
 
             // Rollover
-            double rollover = Backtester.RolloverInMoney(posDir, lots, daysRollover, exitPrice);
+            double rollover = _backtester.RolloverInMoney(posDir, lots, daysRollover, exitPrice);
             AlblOutputValues[5].Text = rollover.ToString("F2") + unit;
 
             // Slippage
-            double slippage = Data.DataSet.InstrProperties.Slippage*point*lots*lotSize/Backtester.AccountExchangeRate(exitPrice);
+            double slippage = _backtester.DataSet.InstrProperties.Slippage*point*lots*lotSize/_backtester.AccountExchangeRate(exitPrice);
             AlblOutputValues[6].Text = slippage.ToString("F2") + unit;
 
             // Net Profit

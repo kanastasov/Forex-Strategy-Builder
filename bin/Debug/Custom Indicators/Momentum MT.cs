@@ -7,6 +7,7 @@
 
 using System;
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -18,7 +19,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Momentum_MT(SlotTypes slotType)
+        public Momentum_MT(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName   = "Momentum MT";

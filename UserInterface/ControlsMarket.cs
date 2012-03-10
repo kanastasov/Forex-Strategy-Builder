@@ -99,7 +99,7 @@ namespace Forex_Strategy_Builder
                                     };
 
             // Small Indicator Chart
-            IndicatorChart = new SmallIndicatorChart
+            IndicatorChart = new SmallIndicatorChart(Backtester.DataSet)
                                 {
                                     Parent = _marketChartsBase,
                                     Cursor = Cursors.Hand,
@@ -114,7 +114,7 @@ namespace Forex_Strategy_Builder
             toolTip.SetToolTip(IndicatorChart, Language.T("Click to view the full chart."));
 
             // Small Histogram Chart
-            HistogramChart = new SmallHistogramChart
+            HistogramChart = new SmallHistogramChart(Backtester.DataSet)
                                 {
                                     Parent = _marketChartsBase,
                                     Dock = DockStyle.Fill,

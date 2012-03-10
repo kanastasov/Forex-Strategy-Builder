@@ -39,5 +39,18 @@ namespace Forex_Strategy_Builder.Market
         public bool IsTickData { get; set; }
         public long Ticks { get; set; }
         public double[][] TickData { get; set; }
+
+        public string PeriodString
+        {
+            get { return Data.DataPeriodToString(Period); }
+        }
+
+        /// <summary>
+        /// Gets the number format.
+        /// </summary>
+        public string FF
+        {
+            get { return "F" + InstrProperties.Digits; }
+        }
     }
 }

@@ -15,11 +15,15 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
 {
     public sealed class Analyzer : Form
     {
+        private readonly Backtester _backtester;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public Analyzer(string menuItem)
+        public Analyzer(Backtester backtester, string menuItem)
         {
+            _backtester = backtester;
+
             Text = Language.T("Strategy Analyzer");
             MaximizeBox = false;
             Icon = Data.Icon;
@@ -212,7 +216,7 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
 
         private void SetPanelOverOptimization()
         {
-            PnlOverOptimization = new OverOptimization(Language.T("Over-optimization Report"))
+            PnlOverOptimization = new OverOptimization(_backtester, Language.T("Over-optimization Report"))
                                       {Parent = this, Visible = true};
         }
 

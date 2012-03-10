@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Oscillator_of_BBP(SlotTypes slotType)
+        public Oscillator_of_BBP(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Oscillator of BBP";
@@ -97,13 +99,13 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            Bulls_Bears_Power BBP1 = new Bulls_Bears_Power(slotType);
+            Bulls_Bears_Power BBP1 = new Bulls_Bears_Power(DataSet, slotType);
             BBP1.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             BBP1.IndParam.NumParam[0].Value = IndParam.NumParam[0].Value;
             BBP1.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;
             BBP1.Calculate(slotType);
 
-            Bulls_Bears_Power BBP2 = new Bulls_Bears_Power(slotType);
+            Bulls_Bears_Power BBP2 = new Bulls_Bears_Power(DataSet, slotType);
             BBP2.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             BBP2.IndParam.NumParam[0].Value = IndParam.NumParam[1].Value;
             BBP2.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;

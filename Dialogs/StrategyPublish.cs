@@ -50,7 +50,7 @@ namespace Forex_Strategy_Builder
             TxboxBBCode.AcceptsReturn = true;
             TxboxBBCode.AcceptsTab = true;
             TxboxBBCode.ScrollBars = ScrollBars.Vertical;
-            TxboxBBCode.KeyDown += TxboxBBCode_KeyDown;
+            TxboxBBCode.KeyDown += TxboxBBCodeKeyDown;
             TxboxBBCode.Text = description;
 
             // LblInformation
@@ -139,7 +139,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Accept Ctrl-A
         /// </summary>
-        private void TxboxBBCode_KeyDown(object sender, KeyEventArgs e)
+        private void TxboxBBCodeKeyDown(object sender, KeyEventArgs e)
         {
             if (!e.Control || (e.KeyCode != Keys.A)) return;
             ((TextBox) sender).SelectAll();

@@ -23,12 +23,14 @@ namespace Forex_Strategy_Builder
         private readonly Font _fontCaption;
         private readonly ToolTip _toolTip = new ToolTip();
         private InstrumentProperties _instrPropSelectedInstrument;
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public InstrumentEditor()
+        public InstrumentEditor(Backtester backtester)
         {
+            _backtester = backtester;
             PnlInstruments = new FancyPanel(Language.T("Instruments"));
             PnlProperties = new FancyPanel(Language.T("Instrument Properties"));
             PnlAddInstrument = new FancyPanel(Language.T("Add an Instrument"));
@@ -595,7 +597,7 @@ namespace Forex_Strategy_Builder
             ClientSize = new Size(6*buttonWidth + 11*btnHrzSpace + 4, 540);
 
             LbxInstruments.SelectedValueChanged += LbxInstrumentsSelectedValueChanged;
-            LbxInstruments.SelectedIndex = LbxInstruments.Items.IndexOf(Data.Symbol);
+            LbxInstruments.SelectedIndex = LbxInstruments.Items.IndexOf(_backtester.DataSet.Symbol);
 
             BtnClose.Focus();
         }
@@ -1063,7 +1065,7 @@ namespace Forex_Strategy_Builder
 
             if (symbol == "EURUSD" || symbol == "GBPUSD" ||
                 symbol == "USDCHF" || symbol == "USDJPY" ||
-                symbol == Data.Symbol)
+                symbol == _backtester.DataSet.Symbol)
             {
                 MessageBox.Show(
                     Language.T("You cannot delete this instrument!"),

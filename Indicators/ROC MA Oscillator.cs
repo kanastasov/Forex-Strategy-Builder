@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public ROC_MA_Oscillator(SlotTypes slotType)
+        public ROC_MA_Oscillator(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "ROC MA Oscillator";
@@ -113,7 +115,7 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            Rate_of_Change ROC1 = new Rate_of_Change(slotType);
+            Rate_of_Change ROC1 = new Rate_of_Change(DataSet, slotType);
             ROC1.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             ROC1.IndParam.ListParam[2].Index = IndParam.ListParam[3].Index;
             ROC1.IndParam.NumParam[0].Value = IndParam.NumParam[0].Value;

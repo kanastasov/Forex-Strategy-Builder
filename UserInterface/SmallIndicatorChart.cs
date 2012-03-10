@@ -10,6 +10,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Interfaces;
 using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
@@ -82,11 +83,15 @@ namespace Forex_Strategy_Builder
         private int _yTop;
         private int[] _yVolume;
 
+        private readonly IDataSet _dataSet;
+
         /// <summary>
         /// Public constructor
         /// </summary>
-        public SmallIndicatorChart()
+        public SmallIndicatorChart(IDataSet dataSet)
         {
+            _dataSet = dataSet;
+
             Padding = new Padding(Border, 0, Border, Border);
 
             // Horizontal scroll bar
@@ -122,7 +127,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public void InitChart()
         {
-            if (!Data.IsData || !Data.IsResult) return;
+            if (!StatsBuffer.IsBufferReady) return;
 
             _chartBarWidth = 2;
             _xLeft = Space;
@@ -130,15 +135,15 @@ namespace Forex_Strategy_Builder
             _chartWidth = _xRight - _xLeft;
 
             _chartBars = _chartWidth/_chartBarWidth;
-            _chartBars = Math.Min(_chartBars, Data.DataSet.Bars - StatsBuffer.FirstBar);
+            _chartBars = Math.Min(_chartBars, _dataSet.Bars - StatsBuffer.FirstBar);
 
             _isValueChangedAktive = false;
             _scrollBar.Minimum = Math.Max(StatsBuffer.FirstBar, 0);
-            _scrollBar.Maximum = Math.Max(Data.DataSet.Bars - 1, 1);
+            _scrollBar.Maximum = Math.Max(_dataSet.Bars - 1, 1);
             _scrollBar.LargeChange = Math.Max(_chartBars, 1);
 
-            _chartFirstBar = Math.Max(StatsBuffer.FirstBar, Data.DataSet.Bars - _chartBars);
-            _chartFirstBar = Math.Min(_chartFirstBar, Data.DataSet.Bars - 1);
+            _chartFirstBar = Math.Max(StatsBuffer.FirstBar, _dataSet.Bars - _chartBars);
+            _chartFirstBar = Math.Min(_chartFirstBar, _dataSet.Bars - 1);
             _chartFirstBar = Math.Max(_chartFirstBar, 1);
             _chartLastBar = Math.Max(_chartFirstBar + _chartBars - 1, _chartFirstBar);
 
@@ -175,7 +180,7 @@ namespace Forex_Strategy_Builder
                                            FormatFlags = StringFormatFlags.NoWrap
                                        };
 
-            if (!Data.IsData || !Data.IsResult || Data.DataSet.Bars <= StatsBuffer.FirstBar) return;
+            if (_dataSet.Bars <= StatsBuffer.FirstBar) return;
 
             _xLeft = Space;
             _xRight = ClientSize.Width - Space;
@@ -207,14 +212,14 @@ namespace Forex_Strategy_Builder
 
             for (int bar = _chartFirstBar; bar <= _chartLastBar; bar++)
             {
-                if (Data.DataSet.High[bar] > _maxPrice) _maxPrice = Data.DataSet.High[bar];
-                if (Data.DataSet.Low[bar] < _minPrice) _minPrice = Data.DataSet.Low[bar];
-                if (Data.DataSet.Volume[bar] > _maxVolume) _maxVolume = Data.DataSet.Volume[bar];
+                if (_dataSet.High[bar] > _maxPrice) _maxPrice = _dataSet.High[bar];
+                if (_dataSet.Low[bar] < _minPrice) _minPrice = _dataSet.Low[bar];
+                if (_dataSet.Volume[bar] > _maxVolume) _maxVolume = _dataSet.Volume[bar];
             }
-            _minPrice = Math.Round(_minPrice, Data.DataSet.InstrProperties.Point < 0.001 ? 3 : 1) -
-                        Data.DataSet.InstrProperties.Point*10;
-            _maxPrice = Math.Round(_maxPrice, Data.DataSet.InstrProperties.Point < 0.001 ? 3 : 1) +
-                        Data.DataSet.InstrProperties.Point*10;
+            _minPrice = Math.Round(_minPrice, _dataSet.InstrProperties.Point < 0.001 ? 3 : 1) -
+                        _dataSet.InstrProperties.Point*10;
+            _maxPrice = Math.Round(_maxPrice, _dataSet.InstrProperties.Point < 0.001 ? 3 : 1) +
+                        _dataSet.InstrProperties.Point*10;
             _scaleY = (_yPriceBottom - _yTop)/(_maxPrice - _minPrice);
             _scaleYVol = _maxVolume > 0 ? ((_yPriceBottom - _yTop)/8d)/_maxVolume : 0d;
 
@@ -232,11 +237,11 @@ namespace Forex_Strategy_Builder
             for (int bar = _chartFirstBar; bar <= _chartLastBar; bar++)
             {
                 _x[index] = (bar - _chartFirstBar)*_chartBarWidth + _xLeft;
-                _yOpen[index] = (int)(_yPriceBottom - (Data.DataSet.Open[bar] - _minPrice) * _scaleY);
-                _yHigh[index] = (int)(_yPriceBottom - (Data.DataSet.High[bar] - _minPrice) * _scaleY);
-                _yLow[index] = (int)(_yPriceBottom - (Data.DataSet.Low[bar] - _minPrice) * _scaleY);
-                _yClose[index] = (int)(_yPriceBottom - (Data.DataSet.Close[bar] - _minPrice) * _scaleY);
-                _yVolume[index] = (int)(_yPriceBottom - Data.DataSet.Volume[bar] * _scaleYVol);
+                _yOpen[index] = (int)(_yPriceBottom - (_dataSet.Open[bar] - _minPrice) * _scaleY);
+                _yHigh[index] = (int)(_yPriceBottom - (_dataSet.High[bar] - _minPrice) * _scaleY);
+                _yLow[index] = (int)(_yPriceBottom - (_dataSet.Low[bar] - _minPrice) * _scaleY);
+                _yClose[index] = (int)(_yPriceBottom - (_dataSet.Close[bar] - _minPrice) * _scaleY);
+                _yVolume[index] = (int)(_yPriceBottom - _dataSet.Volume[bar] * _scaleYVol);
 
                 // Draw position lots
                 if (StatsBuffer.IsPos(bar))
@@ -444,7 +449,7 @@ namespace Forex_Strategy_Builder
             g.DrawLine(_penBorder, ClientSize.Width - Border + 1, _captionHeight, ClientSize.Width - Border + 1, ClientSize.Height);
             g.DrawLine(_penBorder, 0, ClientSize.Height - Border + 1, ClientSize.Width, ClientSize.Height - Border + 1);
 
-            if (!Data.IsData || !Data.IsResult || Data.DataSet.Bars <= StatsBuffer.FirstBar) return;
+            if (_dataSet.Bars <= StatsBuffer.FirstBar) return;
 
             // Limits the drawing into the chart area only
             g.SetClip(new Rectangle(_xLeft, _yTop, _xRight - _xLeft, _yPriceBottom - _yTop));
@@ -547,22 +552,22 @@ namespace Forex_Strategy_Builder
         {
             base.OnMouseMove(e);
 
-            if (!_isShowDynamicInfo || !Data.IsData || !Data.IsResult || Data.DataSet.Bars < StatsBuffer.FirstBar) return;
+            if (!_isShowDynamicInfo || _dataSet.Bars < StatsBuffer.FirstBar) return;
 
             int currentBar = (e.X - Space)/_chartBarWidth;
             currentBar = Math.Max(0, currentBar);
             currentBar = Math.Min(_chartBars - 1, currentBar);
 
-            int bar = Math.Min(Data.DataSet.Bars - 1, _chartFirstBar + currentBar);
+            int bar = Math.Min(_dataSet.Bars - 1, _chartFirstBar + currentBar);
 
             CurrentBarInfo = string.Format("{0} {1} O:{2} H:{3} L:{4} C:{5} V:{6}",
-                                           Data.DataSet.Time[bar].ToString(Data.DF),
-                                           Data.DataSet.Time[bar].ToString("HH:mm"),
-                                           Data.DataSet.Open[bar].ToString(Data.FF),
-                                           Data.DataSet.High[bar].ToString(Data.FF),
-                                           Data.DataSet.Low[bar].ToString(Data.FF),
-                                           Data.DataSet.Close[bar].ToString(Data.FF),
-                                           Data.DataSet.Volume[bar]);
+                                           _dataSet.Time[bar].ToString(Data.DF),
+                                           _dataSet.Time[bar].ToString("HH:mm"),
+                                           _dataSet.Open[bar].ToString(_dataSet.FF),
+                                           _dataSet.High[bar].ToString(_dataSet.FF),
+                                           _dataSet.Low[bar].ToString(_dataSet.FF),
+                                           _dataSet.Close[bar].ToString(_dataSet.FF),
+                                           _dataSet.Volume[bar]);
         }
 
         /// <summary>

@@ -5,6 +5,7 @@
 // This code or any part of it cannot be used in other applications without a permission.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -16,7 +17,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public DateFilter(SlotTypes slotType)
+        public DateFilter(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName = "Date Filter";

@@ -13,6 +13,7 @@ using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.Dialogs.Generator;
 using Forex_Strategy_Builder.Dialogs.Optimizer;
+using Forex_Strategy_Builder.Interfaces;
 using Forex_Strategy_Builder.Market;
 
 namespace Forex_Strategy_Builder
@@ -54,10 +55,6 @@ namespace Forex_Strategy_Builder
             FormClosing += ActionsFormClosing;
             Application.Idle += ApplicationIdle;
 
-            Backtester = new Backtester {Strategy = Strategy.GenerateNew()};
-            Backtester.Strategy.StrategyName = "New.xml";
-            Data.DataSet.InstrProperties = Instruments.InstrumentList[Backtester.Strategy.Symbol].Clone();
-
             PrepareInstruments();
             PrepareCustomIndicators();
             ProvideStrategy();
@@ -83,10 +80,10 @@ namespace Forex_Strategy_Builder
             if (Configs.LoadCustomIndicators)
             {
                 UpdateStatusLabel("Loading custom indicators...");
-                CustomIndicators.LoadCustomIndicators();
+                CustomIndicators.LoadCustomIndicators(Backtester.DataSet);
             }
             else
-                IndicatorStore.CombineAllIndicators();
+                IndicatorStore.CombineAllIndicators(Backtester.DataSet);
         }
 
         private void ProvideStrategy()
@@ -101,14 +98,14 @@ namespace Forex_Strategy_Builder
                     lastStrategy = Configs.LastStrategy;
                 else
                 {
-                    string sPath = Path.Combine(Data.ProgramDir, Data.DefaultStrategyDir);
-                    lastStrategy = Path.Combine(sPath, Configs.LastStrategy);
+                    string path = Path.Combine(Data.ProgramDir, Data.DefaultStrategyDir);
+                    lastStrategy = Path.Combine(path, Configs.LastStrategy);
                 }
                 if (File.Exists(lastStrategy))
                     strategyPath = lastStrategy;
             }
 
-            if (OpenStrategy(strategyPath) == 0)
+            if (OpenStrategy(strategyPath))
             {
                 AfterStrategyOpening(false);
             }
@@ -230,7 +227,7 @@ namespace Forex_Strategy_Builder
             {
                 StatsBuffer.UpdateStatsBuffer(Backtester);
 
-                Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + "* - " + Data.ProgramName;
+                Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
                 Data.IsStrategyChanged = true;
                 RebuildStrategyLayout();
                 BalanceChart.SetChartData(Backtester);
@@ -268,7 +265,7 @@ namespace Forex_Strategy_Builder
             {
                 StatsBuffer.UpdateStatsBuffer(Backtester);
 
-                Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + "* - " + Data.ProgramName;
+                Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
                 Data.IsStrategyChanged = true;
                 IndicatorChart.InitChart();
                 IndicatorChart.Invalidate();
@@ -300,7 +297,7 @@ namespace Forex_Strategy_Builder
             Data.StackStrategy.Push(Backtester.Strategy.Clone());
             Backtester.Strategy.MoveFilterUpwards(iSlotToMove);
 
-            Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + "* - " + Data.ProgramName;
+            Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
             Data.IsStrategyChanged = true;
             RebuildStrategyLayout();
             Calculate(true);
@@ -314,7 +311,7 @@ namespace Forex_Strategy_Builder
             Data.StackStrategy.Push(Backtester.Strategy.Clone());
             Backtester.Strategy.MoveFilterDownwards(iSlotToMove);
 
-            Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + "* - " + Data.ProgramName;
+            Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
             Data.IsStrategyChanged = true;
             RebuildStrategyLayout();
             Calculate(true);
@@ -328,7 +325,7 @@ namespace Forex_Strategy_Builder
             Data.StackStrategy.Push(Backtester.Strategy.Clone());
             Backtester.Strategy.DuplicateFilter(slotToDuplicate);
 
-            Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + "* - " + Data.ProgramName;
+            Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
             Data.IsStrategyChanged = true;
             RebuildStrategyLayout();
             Calculate(true);
@@ -360,7 +357,7 @@ namespace Forex_Strategy_Builder
         /// <param name="slotNumber">Slot to remove</param>
         private void RemoveSlot(int slotNumber)
         {
-            Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + "* - " + Data.ProgramName;
+            Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
             Data.IsStrategyChanged = true;
 
             Data.StackStrategy.Push(Backtester.Strategy.Clone());
@@ -377,7 +374,7 @@ namespace Forex_Strategy_Builder
         {
             if (Data.StackStrategy.Count <= 1)
             {
-                Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + " - " + Data.ProgramName;
+                Text = Backtester.Strategy.StrategyName + " - " + Data.ProgramName;
                 Data.IsStrategyChanged = false;
             }
 
@@ -421,7 +418,7 @@ namespace Forex_Strategy_Builder
             else
             {
                 Data.AutoUsePrvBarValue = true;
-                Backtester.Strategy.AdjustUsePreviousBarValue();
+                Backtester.Strategy.AdjustUsePreviousBarValue(Backtester.DataSet);
                 RepaintStrategyLayout();
                 Calculate(true);
             }
@@ -470,29 +467,33 @@ namespace Forex_Strategy_Builder
 
             if (instrument.Bars > 0 && loadDataResult == 0)
             {
-                Data.DataSet.InstrProperties = instrProperties.Clone();
+                Backtester.DataSet.InstrProperties = instrProperties.Clone();
+                int bars = instrument.Bars;
+                Backtester.DataSet.Bars = bars;
+                Backtester.DataSet.Period = dataPeriod;
+                Backtester.DataSet.Time = new DateTime[bars];
+                Backtester.DataSet.Open = new double[bars];
+                Backtester.DataSet.High = new double[bars];
+                Backtester.DataSet.Low = new double[bars];
+                Backtester.DataSet.Close = new double[bars];
+                Backtester.DataSet.Volume = new int[bars];
 
-                Data.DataSet.Bars = instrument.Bars;
-                Data.DataSet.Period = dataPeriod;
-                Data.DataSet.Time = new DateTime[Data.DataSet.Bars];
-                Data.DataSet.Open = new double[Data.DataSet.Bars];
-                Data.DataSet.High = new double[Data.DataSet.Bars];
-                Data.DataSet.Low = new double[Data.DataSet.Bars];
-                Data.DataSet.Close = new double[Data.DataSet.Bars];
-                Data.DataSet.Volume = new int[Data.DataSet.Bars];
-
-                for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+                for (int bar = 0; bar < bars; bar++)
                 {
-                    Data.DataSet.Open[bar] = instrument.Open(bar);
-                    Data.DataSet.High[bar] = instrument.High(bar);
-                    Data.DataSet.Low[bar] = instrument.Low(bar);
-                    Data.DataSet.Close[bar] = instrument.Close(bar);
-                    Data.DataSet.Time[bar] = instrument.Time(bar);
-                    Data.DataSet.Volume[bar] = instrument.Volume(bar);
+                    Backtester.DataSet.Open[bar] = instrument.Open(bar);
+                    Backtester.DataSet.High[bar] = instrument.High(bar);
+                    Backtester.DataSet.Low[bar] = instrument.Low(bar);
+                    Backtester.DataSet.Close[bar] = instrument.Close(bar);
+                    Backtester.DataSet.Time[bar] = instrument.Time(bar);
+                    Backtester.DataSet.Volume[bar] = instrument.Volume(bar);
                 }
 
-                Data.DataStats = new DataStatistics
+                Backtester.DataStats = new DataStatistics
                                      {
+                                         Symbol = instrument.Symbol,
+                                         Period = dataPeriod,
+                                         Bars = bars,
+                                         Beginning = instrument.Time(0),
                                          Update = instrument.Update,
                                          MinPrice = instrument.MinPrice,
                                          MaxPrice = instrument.MaxPrice,
@@ -505,19 +506,21 @@ namespace Forex_Strategy_Builder
                                          MaxCloseOpen = instrument.MaxCloseOpen,
                                          DataCut = instrument.Cut
                                      };
-                Data.DataSet.IsIntrabarData = false;
-                Data.DataSet.IsTickData = false;
-                Data.IsData = true;
-                Data.IsResult = false;
-
-                // Configs.SetAccountExchangeRate();
+                Backtester.DataSet.IsIntrabarData = false;
+                Backtester.DataSet.IsTickData = false;
+                Backtester.IsData = true;
+                Backtester.IsResult = false;
 
                 CheckLoadedData();
-                Data.DataStats.GenerateMarketStats();
-                InfoPanelMarketStatistics.Update(Data.DataStats.MarketStatsParam, Data.DataStats.MarketStatsValue,
-                                                 Data.DataStats.MarketStatsFlag, Language.T("Market Statistics"));
-                InfoPanelAccountStatistics.Update(Backtester.AccountStatsParam, Backtester.AccountStatsValue,
-                                                  Backtester.AccountStatsFlags, Language.T("Account Statistics"));
+                Backtester.DataStats.GenerateMarketStats();
+                InfoPanelMarketStatistics.Update(Backtester.DataStats.MarketStatsParam,
+                                                 Backtester.DataStats.MarketStatsValue,
+                                                 Backtester.DataStats.MarketStatsFlag,
+                                                 Language.T("Market Statistics"));
+                InfoPanelAccountStatistics.Update(Backtester.AccountStatsParam,
+                                                  Backtester.AccountStatsValue,
+                                                  Backtester.AccountStatsFlags,
+                                                  Language.T("Account Statistics"));
             }
             else if (loadDataResult == -1)
             {
@@ -559,9 +562,9 @@ namespace Forex_Strategy_Builder
             int maxConsecutiveBar = 0;
             int consecutiveBars = 0;
             int lastBar = 0;
-            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+            for (int bar = 0; bar < Backtester.DataSet.Bars; bar++)
             {
-                if (Math.Abs(Data.DataSet.Open[bar] - Data.DataSet.Close[bar]) < Data.DataSet.InstrProperties.Point)
+                if (Math.Abs(Backtester.DataSet.Open[bar] - Backtester.DataSet.Close[bar]) < Backtester.DataSet.InstrProperties.Point)
                 {
                     if (lastBar == bar - 1 || lastBar == 0)
                     {
@@ -584,28 +587,28 @@ namespace Forex_Strategy_Builder
             if (maxConsecutiveBars > 10)
             {
                 errorMessage += Language.T("Defective till bar number:") + " " + (maxConsecutiveBar + 1) + " - " +
-                                Data.DataSet.Time[maxConsecutiveBar].ToString(CultureInfo.InvariantCulture) +
+                                Backtester.DataSet.Time[maxConsecutiveBar].ToString(CultureInfo.InvariantCulture) +
                                 Environment.NewLine +
                                 Language.T("You can try to cut it using \"Data Horizon\".") + Environment.NewLine +
                                 Language.T("You can try also \"Cut Off Bad Data\".");
             }
 
-            if (Data.DataSet.Bars < 300)
+            if (Backtester.DataSet.Bars < 300)
             {
                 errorMessage += Language.T("Contains less than 300 bars!") + Environment.NewLine +
                                 Language.T("Check your data file or the limits in \"Data Horizon\".");
             }
 
-            if (Data.DataStats.DaysOff > 5 && Data.DataSet.Period != DataPeriods.week)
+            if (Backtester.DataStats.DaysOff > 5 && Backtester.DataSet.Period != DataPeriods.week)
             {
-                errorMessage += Language.T("Maximum days off") + " " + Data.DataStats.DaysOff + Environment.NewLine +
+                errorMessage += Language.T("Maximum days off") + " " + Backtester.DataStats.DaysOff + Environment.NewLine +
                                 Language.T("The data is probably incomplete!") + Environment.NewLine +
                                 Language.T("You can try also \"Cut Off Bad Data\".");
             }
 
             if (errorMessage != "")
             {
-                errorMessage = Language.T("Market") + " " + Data.Symbol + " " + Data.DataPeriodToString(Data.DataSet.Period) +
+                errorMessage = Language.T("Market") + " " + Backtester.DataSet.Symbol + " " + Data.DataPeriodToString(Backtester.DataSet.Period) +
                                Environment.NewLine + errorMessage;
                 MessageBox.Show(errorMessage, Language.T("Data File Loading"), MessageBoxButtons.OK,
                                 MessageBoxIcon.Exclamation);
@@ -618,11 +621,14 @@ namespace Forex_Strategy_Builder
         private void OpenFile()
         {
             DialogResult dialogResult = WhetherSaveChangedStrategy();
-
-            if (dialogResult == DialogResult.Yes)
-                SaveStrategy();
-            else if (dialogResult == DialogResult.Cancel)
-                return;
+            switch (dialogResult)
+            {
+                case DialogResult.Yes:
+                    SaveStrategy();
+                    break;
+                case DialogResult.Cancel:
+                    return;
+            }
 
             var opendlg = new OpenFileDialog
                               {
@@ -650,19 +656,20 @@ namespace Forex_Strategy_Builder
         private void NewStrategy()
         {
             DialogResult dialogResult = WhetherSaveChangedStrategy();
-
-            if (dialogResult == DialogResult.Yes)
-                SaveStrategy();
-            else if (dialogResult == DialogResult.Cancel)
-                return;
+            switch (dialogResult)
+            {
+                case DialogResult.Yes:
+                    SaveStrategy();
+                    break;
+                case DialogResult.Cancel:
+                    return;
+            }
 
             Data.StrategyDir = Path.Combine(Data.ProgramDir, Data.DefaultStrategyDir);
 
-            if (OpenStrategy(Path.Combine(Data.StrategyDir, "New.xml")) == 0)
-            {
-                AfterStrategyOpening(false);
-                Calculate(false);
-            }
+            if (!OpenStrategy(Path.Combine(Data.StrategyDir, "New.xml"))) return;
+            AfterStrategyOpening(false);
+            Calculate(false);
         }
 
         /// <summary>
@@ -686,22 +693,25 @@ namespace Forex_Strategy_Builder
             {
                 // Save the current strategy
                 DialogResult dialogResult = WhetherSaveChangedStrategy();
-
-                if (dialogResult == DialogResult.Yes)
-                    SaveStrategy();
-                else if (dialogResult == DialogResult.Cancel)
-                    return;
+                switch (dialogResult)
+                {
+                    case DialogResult.Yes:
+                        SaveStrategy();
+                        break;
+                    case DialogResult.Cancel:
+                        return;
+                }
             }
 
             // Reload all the custom indicators
-            CustomIndicators.LoadCustomIndicators();
+            CustomIndicators.LoadCustomIndicators(Backtester.DataSet);
 
             if (strategyHasCustomIndicator)
             {
                 // Load and calculate a new strategy
                 Data.StrategyDir = Path.Combine(Data.ProgramDir, Data.DefaultStrategyDir);
 
-                if (OpenStrategy(Path.Combine(Data.StrategyDir, "New.xml")) == 0)
+                if (OpenStrategy(Path.Combine(Data.StrategyDir, "New.xml")))
                 {
                     AfterStrategyOpening(false);
                     Calculate(false);
@@ -712,30 +722,32 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Reads the strategy from a file.
         /// </summary>
-        /// <returns>0 - success.</returns>
-        private int OpenStrategy(string strategyFilePath)
+        /// <returns>true - success.</returns>
+        private bool OpenStrategy(string strategyFilePath)
         {
             try
             {
+                bool isLoaded = false;
+
                 if (File.Exists(strategyFilePath))
                 {
-                    var strategy = Strategy.Load(strategyFilePath);
+                    Strategy strategy = StrategyIO.Load(strategyFilePath, Backtester.DataSet);
                     if (strategy != null)
                     {
-                        // Successfully opening
                         Backtester.Strategy = strategy;
                         Backtester.Strategy.StrategyName = Path.GetFileNameWithoutExtension(strategyFilePath);
                         Data.StrategyDir = Path.GetDirectoryName(strategyFilePath);
-                        Backtester.Strategy.StrategyName = Path.GetFileName(strategyFilePath);
                         if (Backtester.Strategy.OpenFilters > Configs.MaxEntryFilters)
                             Configs.MaxEntryFilters = Backtester.Strategy.OpenFilters;
                         if (Backtester.Strategy.CloseFilters > Configs.MaxExitFilters)
                             Configs.MaxExitFilters = Backtester.Strategy.CloseFilters;
+                        isLoaded = true;
                     }
                 }
-                else
+
+                if(!isLoaded)
                 {
-                    Backtester.Strategy = Strategy.GenerateNew();
+                    Backtester.Strategy = Strategy.GenerateNew(Backtester.DataSet);
                     Data.LoadedSavedStrategy = "";
                     Text = Data.ProgramName;
                 }
@@ -751,16 +763,16 @@ namespace Forex_Strategy_Builder
             }
             catch
             {
-                Backtester.Strategy = Strategy.GenerateNew();
+                Backtester.Strategy = Strategy.GenerateNew(Backtester.DataSet);
                 string message = Language.T("The strategy could not be loaded correctly!");
                 MessageBox.Show(message, Language.T("Strategy Loading"), MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 Data.LoadedSavedStrategy = "";
                 Text = Data.ProgramName;
                 RebuildStrategyLayout();
-                return 1;
+                return false;
             }
 
-            return 0;
+            return true;
         }
 
         /// <summary>
@@ -768,7 +780,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void SaveStrategy()
         {
-            if (Backtester.Strategy.StrategyName == "New.xml")
+            if (Backtester.Strategy.StrategyName == "New")
             {
                 SaveAsStrategy();
             }
@@ -776,8 +788,10 @@ namespace Forex_Strategy_Builder
             {
                 try
                 {
-                    Backtester.Strategy.Save(Backtester.Strategy.StrategyPath);
-                    Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + " - " + Data.ProgramName;
+                    Backtester.Strategy.Symbol = Backtester.DataSet.Symbol;
+                    Backtester.Strategy.DataPeriod = Backtester.DataSet.Period;
+                    StrategyIO.Save(Backtester.Strategy, Backtester.Strategy.StrategyPath);
+                    Text = Backtester.Strategy.StrategyName + " - " + Data.ProgramName;
                     Data.IsStrategyChanged = false;
                     Data.LoadedSavedStrategy = Backtester.Strategy.StrategyPath;
                     UserStatistics.SavedStrategies++;
@@ -794,8 +808,8 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void SaveAsStrategy()
         {
-            //Creates a dialog form SaveFileDialog
-            var savedlg = new SaveFileDialog
+            // Creates a dialog form SaveFileDialog
+            var saveFileDialog = new SaveFileDialog
                               {
                                   InitialDirectory = Data.StrategyDir,
                                   FileName = Path.GetFileName(Backtester.Strategy.StrategyName),
@@ -805,13 +819,15 @@ namespace Forex_Strategy_Builder
                               };
 
 
-            if (savedlg.ShowDialog() != DialogResult.OK) return;
+            if (saveFileDialog.ShowDialog() != DialogResult.OK) return;
             try
             {
-                Backtester.Strategy.StrategyName = Path.GetFileName(savedlg.FileName);
-                Data.StrategyDir = Path.GetDirectoryName(savedlg.FileName);
-                Backtester.Strategy.Save(savedlg.FileName);
-                Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + " - " + Data.ProgramName;
+                Backtester.Strategy.Symbol = Backtester.DataSet.Symbol;
+                Backtester.Strategy.DataPeriod = Backtester.DataSet.Period;
+                Backtester.Strategy.StrategyName = Path.GetFileNameWithoutExtension(saveFileDialog.FileName);
+                Data.StrategyDir = Path.GetDirectoryName(saveFileDialog.FileName);
+                StrategyIO.Save(Backtester.Strategy, saveFileDialog.FileName);
+                Text = Backtester.Strategy.StrategyName + " - " + Data.ProgramName;
                 Data.IsStrategyChanged = false;
                 Data.LoadedSavedStrategy = Backtester.Strategy.StrategyPath;
                 UserStatistics.SavedStrategies++;
@@ -828,7 +844,7 @@ namespace Forex_Strategy_Builder
         /// <param name="recalcIndicators">true - to recalculate all the indicators.</param>
         private void Calculate(bool recalcIndicators)
         {
-            bool isUPBVChanged = Backtester.Strategy.AdjustUsePreviousBarValue();
+            bool isUPBVChanged = Backtester.Strategy.AdjustUsePreviousBarValue(Backtester.DataSet);
 
             // Calculates the indicators by slots if it's necessary
             if (recalcIndicators)
@@ -836,7 +852,7 @@ namespace Forex_Strategy_Builder
                 {
                     string indicatorName = indSlot.IndicatorName;
                     SlotTypes slotType = indSlot.SlotType;
-                    Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, slotType);
+                    Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, Backtester.DataSet, slotType);
 
                     indicator.IndParam = indSlot.IndParam;
 
@@ -856,10 +872,10 @@ namespace Forex_Strategy_Builder
             Backtester.Strategy.SetFirstBar();
 
             // Calculates the backtest
-            Backtester.Calculate(Backtester.Strategy, Data.DataSet);
+            Backtester.Calculate(Backtester.Strategy, Backtester.DataSet);
             Backtester.CalculateAccountStats();
 
-            Data.IsResult = true;
+            Backtester.IsResult = true;
             StatsBuffer.UpdateStatsBuffer(Backtester);
 
             if (isUPBVChanged) RebuildStrategyLayout();
@@ -883,8 +899,8 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void SetMarket(string symbol, DataPeriods dataPeriod)
         {
-            Data.DataSet.InstrProperties = Instruments.InstrumentList[symbol].Clone();
-            Data.DataSet.Period = dataPeriod;
+            Backtester.DataSet.InstrProperties = Instruments.InstrumentList[symbol].Clone();
+            Backtester.DataSet.Period = dataPeriod;
 
             _isDiscardSelectedIndexChange = true;
             ComboBoxSymbol.SelectedIndex = ComboBoxSymbol.Items.IndexOf(symbol);
@@ -925,26 +941,26 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void EditTradingCharges()
         {
-            var tradingCharges = new TradingCharges
+            var tradingCharges = new TradingCharges(Backtester)
                                      {
-                                         Spread = Data.DataSet.InstrProperties.Spread,
-                                         SwapLong = Data.DataSet.InstrProperties.SwapLong,
-                                         SwapShort = Data.DataSet.InstrProperties.SwapShort,
-                                         Commission = Data.DataSet.InstrProperties.Commission,
-                                         Slippage = Data.DataSet.InstrProperties.Slippage
+                                         Spread = Backtester.DataSet.InstrProperties.Spread,
+                                         SwapLong = Backtester.DataSet.InstrProperties.SwapLong,
+                                         SwapShort = Backtester.DataSet.InstrProperties.SwapShort,
+                                         Commission = Backtester.DataSet.InstrProperties.Commission,
+                                         Slippage = Backtester.DataSet.InstrProperties.Slippage
                                      };
 
             tradingCharges.ShowDialog();
 
             if (tradingCharges.DialogResult == DialogResult.OK)
             {
-                Data.DataSet.InstrProperties.Spread = tradingCharges.Spread;
-                Data.DataSet.InstrProperties.SwapLong = tradingCharges.SwapLong;
-                Data.DataSet.InstrProperties.SwapShort = tradingCharges.SwapShort;
-                Data.DataSet.InstrProperties.Commission = tradingCharges.Commission;
-                Data.DataSet.InstrProperties.Slippage = tradingCharges.Slippage;
+                Backtester.DataSet.InstrProperties.Spread = tradingCharges.Spread;
+                Backtester.DataSet.InstrProperties.SwapLong = tradingCharges.SwapLong;
+                Backtester.DataSet.InstrProperties.SwapShort = tradingCharges.SwapShort;
+                Backtester.DataSet.InstrProperties.Commission = tradingCharges.Commission;
+                Backtester.DataSet.InstrProperties.Slippage = tradingCharges.Slippage;
 
-                Instruments.InstrumentList[Data.DataSet.InstrProperties.Symbol] = Data.DataSet.InstrProperties.Clone();
+                Instruments.InstrumentList[Backtester.DataSet.InstrProperties.Symbol] = Backtester.DataSet.InstrProperties.Clone();
 
                 Calculate(false);
 
@@ -960,20 +976,17 @@ namespace Forex_Strategy_Builder
         /// <param name="isMessage">To show the message or not</param>
         private void AfterStrategyOpening(bool isMessage)
         {
-            if (Backtester.Strategy.Symbol != Data.Symbol || Backtester.Strategy.DataPeriod != Data.DataSet.Period)
+            if (Backtester.Strategy.Symbol != Backtester.DataSet.Symbol || Backtester.Strategy.DataPeriod != Backtester.DataSet.Period)
             {
                 bool toReload = true;
 
                 if (isMessage)
                 {
-                    DialogResult result = MessageBox.Show(
-                        Language.T("The loaded strategy has been designed for a different market!") +
-                        Environment.NewLine + Environment.NewLine +
-                        Backtester.Strategy.Symbol + " " + Data.DataPeriodToString(Backtester.Strategy.DataPeriod) +
-                        Environment.NewLine + Environment.NewLine +
-                        Language.T("Do you want to load this market data?"),
-                        Backtester.Strategy.StrategyName, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
+                    string message = Language.T("The loaded strategy has been designed for a different market!") +
+                                     Environment.NewLine + Environment.NewLine + Backtester.Strategy.Symbol + " " +
+                                     Data.DataPeriodToString(Backtester.Strategy.DataPeriod) + Environment.NewLine +
+                                     Environment.NewLine + Language.T("Do you want to load this market data?");
+                    DialogResult result = MessageBox.Show(message, Backtester.Strategy.StrategyName, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     toReload = (result == DialogResult.Yes);
                 }
 
@@ -981,17 +994,15 @@ namespace Forex_Strategy_Builder
                 {
                     if (!Instruments.InstrumentList.ContainsKey(Backtester.Strategy.Symbol))
                     {
-                        MessageBox.Show(
-                            Language.T("There is no information for this market!") +
-                            Environment.NewLine + Environment.NewLine +
-                            Backtester.Strategy.Symbol + " " + Data.DataPeriodToString(Backtester.Strategy.DataPeriod),
-                            Backtester.Strategy.StrategyName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-
+                        string message = Language.T("There is no information for this market!") +
+                                         Environment.NewLine + Environment.NewLine + Backtester.Strategy.Symbol + " " +
+                                         Data.DataPeriodToString(Backtester.Strategy.DataPeriod);
+                        MessageBox.Show(message, Backtester.Strategy.StrategyName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         return;
                     }
 
-                    string symbol = Data.Symbol;
-                    DataPeriods dataPeriod = Data.DataSet.Period;
+                    string symbol = Backtester.DataSet.Symbol;
+                    DataPeriods dataPeriod = Backtester.DataSet.Period;
 
                     SetMarket(Backtester.Strategy.Symbol, Backtester.Strategy.DataPeriod);
 
@@ -1006,7 +1017,7 @@ namespace Forex_Strategy_Builder
                     }
                 }
             }
-            else if (!Data.DataSet.IsIntrabarData)
+            else if (!Backtester.DataSet.IsIntrabarData)
             {
                 PrepareScannerCompactMode();
             }
@@ -1017,7 +1028,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void PrepareScannerCompactMode()
         {
-            if (!Configs.Autoscan || (Data.DataSet.Period == DataPeriods.min1 && !Configs.UseTickData)) return;
+            if (!Configs.Autoscan || (Backtester.DataSet.Period == DataPeriods.min1 && !Configs.UseTickData)) return;
             ComboBoxSymbol.Enabled = false;
             ComboBoxPeriod.Enabled = false;
 
@@ -1032,7 +1043,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void LoadIntrabarData(object sender, DoWorkEventArgs e)
         {
-            var scanner = new Scanner {CompactMode = true};
+            var scanner = new Scanner(Backtester) {CompactMode = true};
             scanner.ShowDialog();
         }
 
@@ -1052,7 +1063,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void PublishStrategy()
         {
-            var publisher = new StrategyPublish(ForumFormatReport.GetReport(Backtester, IsStrDescriptionRelevant()));
+            var publisher = new StrategyPublish(StrategyFormatForum.FormatPost(Backtester, IsStrDescriptionRelevant()));
             publisher.Show();
         }
 
@@ -1061,13 +1072,13 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowAccountSettings()
         {
-            var accountSettings = new AccountSettings
+            var accountSettings = new AccountSettings(Backtester)
                                       {
                                           AccountCurrency = Configs.AccountCurrency,
                                           InitialAccount = Configs.InitialAccount,
                                           Leverage = Configs.Leverage,
-                                          RateToUSD = Data.DataSet.InstrProperties.RateToUSD,
-                                          RateToEUR = Data.DataSet.InstrProperties.RateToEUR
+                                          RateToUSD = Backtester.DataSet.InstrProperties.RateToUSD,
+                                          RateToEUR = Backtester.DataSet.InstrProperties.RateToEUR
                                       };
 
             accountSettings.SetParams();
@@ -1076,10 +1087,10 @@ namespace Forex_Strategy_Builder
             Configs.AccountCurrency = accountSettings.AccountCurrency;
             Configs.InitialAccount = accountSettings.InitialAccount;
             Configs.Leverage = accountSettings.Leverage;
-            Data.DataSet.InstrProperties.RateToUSD = accountSettings.RateToUSD;
-            Data.DataSet.InstrProperties.RateToEUR = accountSettings.RateToEUR;
+            Backtester.DataSet.InstrProperties.RateToUSD = accountSettings.RateToUSD;
+            Backtester.DataSet.InstrProperties.RateToEUR = accountSettings.RateToEUR;
 
-            Instruments.InstrumentList[Data.DataSet.InstrProperties.Symbol] = Data.DataSet.InstrProperties.Clone();
+            Instruments.InstrumentList[Backtester.DataSet.InstrProperties.Symbol] = Backtester.DataSet.InstrProperties.Clone();
             Calculate(false);
         }
 
@@ -1088,7 +1099,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowScanner()
         {
-            var scanner = new Scanner();
+            var scanner = new Scanner(Backtester);
             scanner.ShowDialog();
 
             StatsBuffer.UpdateStatsBuffer(Backtester);
@@ -1113,10 +1124,10 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void Scan()
         {
-            if (!Data.DataSet.IsIntrabarData)
+            if (!Backtester.DataSet.IsIntrabarData)
                 ShowScanner();
             else
-                Backtester.Scan(Backtester.Strategy, Data.DataSet);
+                Backtester.Scan(Backtester.Strategy, Backtester.DataSet);
 
             StatsBuffer.UpdateStatsBuffer(Backtester);
 
@@ -1155,7 +1166,6 @@ namespace Forex_Strategy_Builder
 
             // We accept the generated strategy
             Backtester.Strategy = generator.Strategy.Clone();
-            Backtester.Strategy.StrategyName = Backtester.Strategy.StrategyName + ".xml";
             string orginalDescription = generator.StrategyOriginalDescription;
 
             Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
@@ -1211,7 +1221,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowOverview()
         {
-            var browser = new Browser(Language.T("Strategy Overview"), OverviewFormatReport.GenerateHTMLOverview(Backtester, IsStrDescriptionRelevant()));
+            var browser = new Browser(Language.T("Strategy Overview"), StrategyFormatOverview.FormatOverview(Backtester, IsStrDescriptionRelevant()));
             browser.Show();
         }
 
@@ -1223,13 +1233,13 @@ namespace Forex_Strategy_Builder
             // Put the Strategy into the Undo Stack
             Data.StackStrategy.Push(Backtester.Strategy.Clone());
 
-            var optimizer = new Optimizer {SetParrentForm = this};
+            var optimizer = new Optimizer(Backtester) {SetParrentForm = this};
             optimizer.ShowDialog();
 
             if (optimizer.DialogResult == DialogResult.OK)
             {
                 // We accept the optimized strategy
-                Text = Path.GetFileNameWithoutExtension(Backtester.Strategy.StrategyName) + "* - " + Data.ProgramName;
+                Text = Backtester.Strategy.StrategyName + "* - " + Data.ProgramName;
                 Data.IsStrategyChanged = true;
                 RepaintStrategyLayout();
                 Calculate(true);
@@ -1251,7 +1261,7 @@ namespace Forex_Strategy_Builder
             // Save the original method to return it later
             InterpolationMethod interpMethodOriginal = Backtester.InterpolationMethod;
 
-            var comparator = new Comparator();
+            var comparator = new Comparator(Backtester);
             comparator.ShowDialog();
 
             // Returns the original method
@@ -1273,8 +1283,11 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void DataHorizon()
         {
-            var horizon = new DataHorizon(Configs.MaxBars, Configs.DataStartTime, Configs.DataEndTime,
-                                           Configs.UseStartTime, Configs.UseEndTime);
+            var horizon = new DataHorizon(Configs.MaxBars,
+                                          Configs.DataStartTime,
+                                          Configs.DataEndTime,
+                                          Configs.UseStartTime,
+                                          Configs.UseEndTime);
             horizon.ShowDialog();
 
             if (horizon.DialogResult != DialogResult.OK) return;
@@ -1294,7 +1307,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowInstrumentEditor()
         {
-            var instrEditor = new InstrumentEditor();
+            var instrEditor = new InstrumentEditor(Backtester);
             instrEditor.ShowDialog();
 
             if (instrEditor.NeedReset)
@@ -1304,12 +1317,12 @@ namespace Forex_Strategy_Builder
                 ComboBoxSymbol.Items.Clear();
                 foreach (string symbol in Instruments.SymbolList)
                     ComboBoxSymbol.Items.Add(symbol);
-                ComboBoxSymbol.SelectedIndex = ComboBoxSymbol.Items.IndexOf(Data.Symbol);
+                ComboBoxSymbol.SelectedIndex = ComboBoxSymbol.Items.IndexOf(Backtester.DataSet.Symbol);
 
                 _isDiscardSelectedIndexChange = false;
             }
 
-            Data.DataSet.InstrProperties = Instruments.InstrumentList[Data.DataSet.InstrProperties.Symbol].Clone();
+            Backtester.DataSet.InstrProperties = Instruments.InstrumentList[Backtester.DataSet.InstrProperties.Symbol].Clone();
             SetInstrumentDataStatusBar();
             Calculate(false);
         }
@@ -1343,26 +1356,26 @@ namespace Forex_Strategy_Builder
         private void SetInstrumentDataStatusBar()
         {
             string swapUnit = "p";
-            if (Data.DataSet.InstrProperties.SwapType == CommissionType.money)
+            if (Backtester.DataSet.InstrProperties.SwapType == CommissionType.money)
                 swapUnit = "m";
-            else if (Data.DataSet.InstrProperties.SwapType == CommissionType.percents)
+            else if (Backtester.DataSet.InstrProperties.SwapType == CommissionType.percents)
                 swapUnit = "%";
 
             string commUnit = "p";
-            if (Data.DataSet.InstrProperties.CommissionType == CommissionType.money)
+            if (Backtester.DataSet.InstrProperties.CommissionType == CommissionType.money)
                 commUnit = "m";
-            else if (Data.DataSet.InstrProperties.CommissionType == CommissionType.percents)
+            else if (Backtester.DataSet.InstrProperties.CommissionType == CommissionType.percents)
                 commUnit = "%";
 
             StatusLabelInstrument =
-                Data.Symbol + " " +
-                Data.PeriodString + " (" +
-                Data.DataSet.InstrProperties.Spread + ", " +
-                Data.DataSet.InstrProperties.SwapLong.ToString("F2") + swapUnit + ", " +
-                Data.DataSet.InstrProperties.SwapShort.ToString("F2") + swapUnit + ", " +
-                Data.DataSet.InstrProperties.Commission.ToString("F2") + commUnit + ", " +
-                Data.DataSet.InstrProperties.Slippage + ")" +
-                (Data.DataStats.DataCut ? " - " + Language.T("Cut") : "") +
+                Backtester.DataSet.Symbol + " " +
+                Backtester.DataSet.PeriodString + " (" +
+                Backtester.DataSet.InstrProperties.Spread + ", " +
+                Backtester.DataSet.InstrProperties.SwapLong.ToString("F2") + swapUnit + ", " +
+                Backtester.DataSet.InstrProperties.SwapShort.ToString("F2") + swapUnit + ", " +
+                Backtester.DataSet.InstrProperties.Commission.ToString("F2") + commUnit + ", " +
+                Backtester.DataSet.InstrProperties.Slippage + ")" +
+                (Backtester.DataStats.DataCut ? " - " + Language.T("Cut") : "") +
                 (Configs.FillInDataGaps ? " - " + Language.T("No Gaps") : "") +
                 (Configs.CheckData ? "" : " - " + Language.T("Unchecked"));
         }

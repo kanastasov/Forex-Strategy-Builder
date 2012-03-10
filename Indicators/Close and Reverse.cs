@@ -5,6 +5,8 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 // This code or any part of it cannot be used in other applications without a permission.
 
+using Forex_Strategy_Builder.Interfaces;
+
 namespace Forex_Strategy_Builder
 {
     /// <summary>
@@ -15,7 +17,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Close_and_Reverse(SlotTypes slotType)
+        public Close_and_Reverse(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName = "Close and Reverse";

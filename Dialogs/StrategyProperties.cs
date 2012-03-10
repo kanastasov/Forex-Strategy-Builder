@@ -61,7 +61,7 @@ namespace Forex_Strategy_Builder
             PnlAveraging = new FancyPanel(Language.T("Handling of Additional Entry Signals"), LayoutColors.ColorSlotCaptionBackAveraging);
             PnlAmounts = new FancyPanel(Language.T("Trading Size"), LayoutColors.ColorSlotCaptionBackAveraging);
             PnlProtection = new FancyPanel(Language.T("Permanent Protection"), LayoutColors.ColorSlotCaptionBackAveraging);
-            BalanceChart = new SmallBalanceChart();
+            BalanceChart = new SmallBalanceChart(_backtester.DataSet);
 
             LblPercent1 = new Label();
             LblPercent2 = new Label();
@@ -316,7 +316,7 @@ namespace Forex_Strategy_Builder
             NUDPermaSL.Minimum = 5;
             NUDPermaSL.Maximum = 5000;
             NUDPermaSL.Increment = 1;
-            NUDPermaSL.Value = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            NUDPermaSL.Value = _backtester.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             NUDPermaSL.TextAlign = HorizontalAlignment.Center;
             NUDPermaSL.EndInit();
 
@@ -346,7 +346,7 @@ namespace Forex_Strategy_Builder
             NUDPermaTP.Minimum = 5;
             NUDPermaTP.Maximum = 5000;
             NUDPermaTP.Increment = 1;
-            NUDPermaTP.Value = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            NUDPermaTP.Value = _backtester.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             NUDPermaTP.TextAlign = HorizontalAlignment.Center;
             NUDPermaTP.EndInit();
 
@@ -367,7 +367,7 @@ namespace Forex_Strategy_Builder
             NUDBreakEven.Minimum = 5;
             NUDBreakEven.Maximum = 5000;
             NUDBreakEven.Increment = 1;
-            NUDBreakEven.Value = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            NUDBreakEven.Value = _backtester.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             NUDBreakEven.TextAlign = HorizontalAlignment.Center;
             NUDBreakEven.EndInit();
 
@@ -573,13 +573,13 @@ namespace Forex_Strategy_Builder
                 : OppositeDirSignalAction.Nothing;
 
             _backtester.Strategy.UsePermanentSL = false;
-            _backtester.Strategy.PermanentSL = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            _backtester.Strategy.PermanentSL = _backtester.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             _backtester.Strategy.PermanentSLType = PermanentProtectionType.Relative;
             _backtester.Strategy.UsePermanentTP = false;
-            _backtester.Strategy.PermanentTP = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            _backtester.Strategy.PermanentTP = _backtester.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             _backtester.Strategy.PermanentTPType = PermanentProtectionType.Relative;
             _backtester.Strategy.UseBreakEven = false;
-            _backtester.Strategy.BreakEven = Data.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
+            _backtester.Strategy.BreakEven = _backtester.DataSet.InstrProperties.IsFiveDigits ? 1000 : 100;
             _backtester.Strategy.UseAccountPercentEntry = false;
             _backtester.Strategy.MaxOpenLots = 20;
             _backtester.Strategy.EntryLots = 1;
@@ -727,7 +727,7 @@ namespace Forex_Strategy_Builder
 
         private void CalculateStrategy()
         {
-            _backtester.Calculate(_backtester.Strategy, Data.DataSet);
+            _backtester.Calculate(_backtester.Strategy, _backtester.DataSet);
             _backtester.CalculateAccountStats();
         }
 

@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2009 Miroslav Popov - All rights reserved.
 
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Volumes(SlotTypes slotType)
+        public Volumes(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName = "Volumes";

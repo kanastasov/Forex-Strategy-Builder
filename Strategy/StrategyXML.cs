@@ -8,10 +8,11 @@ using System;
 using System.Globalization;
 using System.Windows.Forms;
 using System.Xml;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
-    public class StrategyXML
+    public static class StrategyXML
     {
         /// <summary>
         /// Represents the Strategy as a XmlDocument.
@@ -237,7 +238,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Pareses a strategy from a xml document.
         /// </summary>
-        public Strategy ParseXmlStrategy(XmlDocument xmlDocStrategy)
+        public static Strategy ParseXmlStrategy(XmlDocument xmlDocStrategy, IDataSet dataSet)
         {
             // Read the number of slots
             int openFilters = int.Parse(xmlDocStrategy.GetElementsByTagName("openFilters")[0].InnerText);
@@ -247,34 +248,25 @@ namespace Forex_Strategy_Builder
             var tempStrategy = new Strategy(openFilters, closeFilters);
 
             // Same and Opposite direction Actions
-            tempStrategy.SameSignalAction =
-                (SameDirSignalAction)
-                Enum.Parse(typeof (SameDirSignalAction),
-                           xmlDocStrategy.GetElementsByTagName("sameDirSignalAction")[0].InnerText);
-            tempStrategy.OppSignalAction =
-                (OppositeDirSignalAction)
-                Enum.Parse(typeof (OppositeDirSignalAction),
-                           xmlDocStrategy.GetElementsByTagName("oppDirSignalAction")[0].InnerText);
+            tempStrategy.SameSignalAction = (SameDirSignalAction)
+                Enum.Parse(typeof (SameDirSignalAction), xmlDocStrategy.GetElementsByTagName("sameDirSignalAction")[0].InnerText);
+            tempStrategy.OppSignalAction = (OppositeDirSignalAction)
+                Enum.Parse(typeof (OppositeDirSignalAction), xmlDocStrategy.GetElementsByTagName("oppDirSignalAction")[0].InnerText);
 
             // Market
             tempStrategy.Symbol = xmlDocStrategy.GetElementsByTagName("instrumentSymbol")[0].InnerText;
-            tempStrategy.DataPeriod =
-                (DataPeriods)
+            tempStrategy.DataPeriod = (DataPeriods)
                 Enum.Parse(typeof (DataPeriods), xmlDocStrategy.GetElementsByTagName("instrumentPeriod")[0].InnerText);
 
             // Permanent Stop Loss
-            tempStrategy.PermanentSL =
-                Math.Abs(int.Parse(xmlDocStrategy.GetElementsByTagName("permanentStopLoss")[0].InnerText));
-                // Math.Abs() removes the negative sign from previous versions.
-            XmlAttributeCollection xmlAttributeCollection =
-                xmlDocStrategy.GetElementsByTagName("permanentStopLoss")[0].Attributes;
+            tempStrategy.PermanentSL = Math.Abs(int.Parse(xmlDocStrategy.GetElementsByTagName("permanentStopLoss")[0].InnerText));
+            XmlAttributeCollection xmlAttributeCollection = xmlDocStrategy.GetElementsByTagName("permanentStopLoss")[0].Attributes;
             if (xmlAttributeCollection != null)
             {
                 tempStrategy.UsePermanentSL = bool.Parse(xmlAttributeCollection["usePermanentSL"].InnerText);
                 try
                 {
-                    tempStrategy.PermanentSLType =
-                        (PermanentProtectionType)
+                    tempStrategy.PermanentSLType = (PermanentProtectionType)
                         Enum.Parse(typeof (PermanentProtectionType), xmlAttributeCollection["permanentSLType"].InnerText);
                 }
                 catch
@@ -285,15 +277,13 @@ namespace Forex_Strategy_Builder
 
             // Permanent Take Profit
             tempStrategy.PermanentTP = int.Parse(xmlDocStrategy.GetElementsByTagName("permanentTakeProfit")[0].InnerText);
-            XmlAttributeCollection attributeCollection =
-                xmlDocStrategy.GetElementsByTagName("permanentTakeProfit")[0].Attributes;
+            XmlAttributeCollection attributeCollection = xmlDocStrategy.GetElementsByTagName("permanentTakeProfit")[0].Attributes;
             if (attributeCollection != null)
             {
                 tempStrategy.UsePermanentTP = bool.Parse(attributeCollection["usePermanentTP"].InnerText);
                 try
                 {
-                    tempStrategy.PermanentTPType =
-                        (PermanentProtectionType)
+                    tempStrategy.PermanentTPType = (PermanentProtectionType)
                         Enum.Parse(typeof (PermanentProtectionType), attributeCollection["permanentTPType"].InnerText);
                 }
                 catch
@@ -387,7 +377,7 @@ namespace Forex_Strategy_Builder
 
                     // Indicator name.
                     string indicatorName = xmlSlotTagList[0].InnerText;
-                    Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, slotType);
+                    Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, dataSet, slotType);
 
                     for (int tag = 1; tag < xmlSlotTagList.Count; tag++)
                     {
@@ -479,7 +469,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Converts a string to a double number.
         /// </summary>
-        private double StringToDouble(string input)
+        private static double StringToDouble(string input)
         {
             string decimalPoint = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator;
 
@@ -495,7 +485,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Gets the default logical group of the slot.
         /// </summary>
-        private string GetDefaultGroup(SlotTypes slotType, int slotIndex, int closeSlotIndex)
+        private static string GetDefaultGroup(SlotTypes slotType, int slotIndex, int closeSlotIndex)
         {
             string group = "";
 

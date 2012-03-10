@@ -478,7 +478,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             _cycles++;
 
             _backtester.Strategy.SetFirstBar();
-            _backtester.Strategy.AdjustUsePreviousBarValue();
+            _backtester.Strategy.AdjustUsePreviousBarValue(_backtester.DataSet);
 
             // Sets default logical group for all slots that are open (not locked or linked).
             foreach (IndicatorSlot slot in _backtester.Strategy.Slot)
@@ -823,7 +823,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         {
             string indicatorName = _backtester.Strategy.Slot[slot].IndicatorName;
             SlotTypes slotType = _backtester.Strategy.GetSlotType(slot);
-            Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, slotType);
+            Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, _backtester.DataSet, slotType);
 
             // List parameters
             foreach (ListParam list in indicator.IndParam.ListParam)
@@ -1000,7 +1000,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             {
                 string indicatorName = indSlot.IndicatorName;
                 SlotTypes slotType = indSlot.SlotType;
-                Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, slotType);
+                Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, _backtester.DataSet, slotType);
 
                 indicator.IndParam = indSlot.IndParam;
                 indicator.Calculate(slotType);

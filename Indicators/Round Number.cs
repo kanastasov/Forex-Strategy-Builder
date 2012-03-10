@@ -7,6 +7,7 @@
 
 using System;
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -18,7 +19,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Constructor
         /// </summary>
-        public Round_Number(SlotTypes slotType)
+        public Round_Number(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Round Number";

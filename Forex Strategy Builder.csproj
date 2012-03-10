@@ -142,7 +142,8 @@
     <Compile Include="Interfaces\IDataSet.cs" />
     <Compile Include="Market\DataSet.cs" />
     <Compile Include="Market\DataStatistics.cs" />
-    <Compile Include="Strategy\ForumFormatReport.cs" />
+    <Compile Include="Strategy\StrategyFormatForum.cs" />
+    <Compile Include="Strategy\StrategyIO.cs" />
     <Compile Include="UserInterface\SmallBalanceChartData.cs" />
     <Compile Include="Utils\ColorMagic.cs" />
     <Compile Include="Utils\FileIconExtractor.cs" />
@@ -443,7 +444,7 @@
     <Compile Include="Dialogs\StrategyProperties.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Strategy\OverviewFormatReport.cs" />
+    <Compile Include="Strategy\StrategyFormatOverview.cs" />
     <Compile Include="Backtester\WayPoint.cs" />
     <Compile Include="Dialogs\Scanner.cs">
       <SubType>Form</SubType>

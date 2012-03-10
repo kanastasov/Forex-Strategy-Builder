@@ -8,6 +8,7 @@
 // Indicator corrected by Denis
 
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -19,7 +20,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Accumulation_Distribution(SlotTypes slotType)
+        public Accumulation_Distribution(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Accumulation Distribution";

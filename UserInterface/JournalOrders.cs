@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Interfaces;
 using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
@@ -41,12 +42,15 @@ namespace Forex_Strategy_Builder
         private int _visibleWidth; // The width of the panel visible part
         private int[] _xColumns; // The horizontal position of the column
         private int[] _xScaled; // The scaled horizontal position of the column
+        private readonly IDataSet _dataSet;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public JournalOrders()
+        public JournalOrders(IDataSet dataSet)
         {
+            _dataSet = dataSet;
+
             InitializeJournal();
             SetUpJournal();
         }
@@ -206,8 +210,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void UpdateJournalData()
         {
-            if (!Data.IsResult)
-                return;
+            if (!StatsBuffer.IsBufferReady) return;
 
             _journalData = new string[_orders,_columns];
             _orderIcons = new Image[_orders];
@@ -223,10 +226,10 @@ namespace Forex_Strategy_Builder
                 _journalData[row, 2] = Language.T(order.OrdType.ToString());
                 _journalData[row, 3] = Configs.AccountInMoney
                                            ? (order.OrdDir == OrderDirection.Sell ? "-" : "") +
-                                             (order.OrdLots*Data.DataSet.InstrProperties.LotSize)
+                                             (order.OrdLots*_dataSet.InstrProperties.LotSize)
                                            : order.OrdLots.ToString(CultureInfo.InvariantCulture);
-                _journalData[row, 4] = order.OrdPrice.ToString(Data.FF);
-                _journalData[row, 5] = (order.OrdPrice2 > 0 ? order.OrdPrice2.ToString(Data.FF) : "-");
+                _journalData[row, 4] = order.OrdPrice.ToString(_dataSet.FF);
+                _journalData[row, 5] = (order.OrdPrice2 > 0 ? order.OrdPrice2.ToString(_dataSet.FF) : "-");
                 _journalData[row, 6] = Language.T(order.OrdStatus.ToString());
                 _journalData[row, 7] = order.OrdNote;
 
@@ -279,7 +282,9 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void SetSizes()
         {
-            _orders = Data.IsResult ? StatsBuffer.Orders(_selectedBar) : 0;
+            if (!StatsBuffer.IsBufferReady) return;
+
+            _orders = StatsBuffer.Orders(_selectedBar);
             _rows = ClientSize.Height > 2*_rowHeight + Border
                         ? (ClientSize.Height - 2*_rowHeight - Border)/_rowHeight
                         : 0;

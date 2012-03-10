@@ -123,7 +123,7 @@ namespace Forex_Strategy_Builder
                 }
                 else
                 {
-                    SetMarket(Data.Symbol, Data.DataSet.Period);
+                    SetMarket(Backtester.DataSet.Symbol, Backtester.DataSet.Period);
                 }
             }
             else
@@ -177,20 +177,22 @@ namespace Forex_Strategy_Builder
         protected override void MenuStrategyPasteOnClick(object sender, EventArgs e)
         {
             DialogResult dialogResult = WhetherSaveChangedStrategy();
-
-            if (dialogResult == DialogResult.Yes)
-                SaveStrategy();
-            else if (dialogResult == DialogResult.Cancel)
-                return;
+            switch (dialogResult)
+            {
+                case DialogResult.Yes:
+                    SaveStrategy();
+                    break;
+                case DialogResult.Cancel:
+                    return;
+            }
 
             var xmlDoc = new XmlDocument();
-            var strategyXML = new StrategyXML();
             Strategy tempStrategy;
 
             try
             {
                 xmlDoc.InnerXml = Clipboard.GetText();
-                tempStrategy = strategyXML.ParseXmlStrategy(xmlDoc);
+                tempStrategy = StrategyXML.ParseXmlStrategy(xmlDoc, Backtester.DataSet);
             }
             catch (Exception exception)
             {
@@ -199,7 +201,6 @@ namespace Forex_Strategy_Builder
             }
 
             Backtester.Strategy = tempStrategy;
-            Backtester.Strategy.StrategyName = tempStrategy.StrategyName;
 
             SetStrategyIndicators();
             RebuildStrategyLayout();
@@ -332,7 +333,7 @@ namespace Forex_Strategy_Builder
             Configs.Autoscan = toolStripMenuItem.Checked;
             Calculate(false);
 
-            if (toolStripMenuItem.Checked && !Data.DataSet.IsIntrabarData)
+            if (toolStripMenuItem.Checked && !Backtester.DataSet.IsIntrabarData)
                 PrepareScannerCompactMode();
         }
 
@@ -575,12 +576,12 @@ namespace Forex_Strategy_Builder
                     break;
                 case "miExportAsCI":
                     Cursor = Cursors.WaitCursor;
-                    StrategyToIndicator.ExportStrategyToIndicator();
+                    StrategyToIndicator.ExportStrategyToIndicator(Backtester);
                     ReloadCustomIndicators();
                     Cursor = Cursors.Default;
                     break;
                 case "miCheckInd":
-                    CustomIndicators.TestCustomIndicators();
+                    CustomIndicators.TestCustomIndicators(Backtester.DataSet);
                     break;
                 case "Calculator":
                     ShowCalculator();
@@ -644,10 +645,10 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ResetSettings()
         {
-            DialogResult result = MessageBox.Show(
-                Language.T("Do you want to reset all settings?") + Environment.NewLine + Environment.NewLine +
-                Language.T("Restart the program to activate the changes!"),
-                Language.T("Reset Settings"), MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            string message = Language.T("Do you want to reset all settings?") + Environment.NewLine +
+                             Environment.NewLine + Language.T("Restart the program to activate the changes!");
+            DialogResult result = MessageBox.Show(message, Language.T("Reset Settings"), MessageBoxButtons.OKCancel,
+                                                  MessageBoxIcon.Question);
 
             if (result == DialogResult.OK)
                 Configs.ResetParams();
@@ -730,7 +731,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowAnalyzer(string menuItem)
         {
-            var analyzer = new Analyzer(menuItem) {SetParrentForm = this};
+            var analyzer = new Analyzer(Backtester, menuItem) {SetParrentForm = this};
             analyzer.ShowDialog();
         }
 
@@ -748,7 +749,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowProfitCalculator()
         {
-            var profitCalculator = new ProfitCalculator();
+            var profitCalculator = new ProfitCalculator(Backtester);
             profitCalculator.Show();
         }
 
@@ -757,7 +758,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowPivotPoints()
         {
-            var pivotPointsCalculator = new PivotPointsCalculator();
+            var pivotPointsCalculator = new PivotPointsCalculator(Backtester);
             pivotPointsCalculator.Show();
         }
 
@@ -766,7 +767,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowFibonacciLevels()
         {
-            var fibonacciLevelsCalculator = new FibonacciLevelsCalculator();
+            var fibonacciLevelsCalculator = new FibonacciLevelsCalculator(Backtester);
             fibonacciLevelsCalculator.Show();
         }
 
@@ -775,7 +776,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowCommandConsole()
         {
-            var commandConsole = new CommandConsole();
+            var commandConsole = new CommandConsole(Backtester);
             commandConsole.Show();
         }
 
@@ -906,7 +907,7 @@ namespace Forex_Strategy_Builder
         }
         protected override void DetachBalanceChart()
         {
-            if(!Data.IsData || !Data.IsResult) return;
+            if(!Backtester.IsData || !Backtester.IsResult) return;
 
             var balanceChart = new SeparateBalanceChart(Backtester);
             balanceChart.ShowDialog();
@@ -931,9 +932,9 @@ namespace Forex_Strategy_Builder
 
                 Calculate(false);
                 RebuildStrategyLayout();
-                InfoPanelMarketStatistics.Update(Data.DataStats.MarketStatsParam,
-                                                 Data.DataStats.MarketStatsValue,
-                                                 Data.DataStats.MarketStatsFlag,
+                InfoPanelMarketStatistics.Update(Backtester.DataStats.MarketStatsParam,
+                                                 Backtester.DataStats.MarketStatsValue,
+                                                 Backtester.DataStats.MarketStatsFlag,
                                                  Language.T("Market Statistics"));
                 SetupJournal();
                 PanelWorkspace.Invalidate(true);
@@ -955,13 +956,14 @@ namespace Forex_Strategy_Builder
         /// </summary>
         protected override void MenuStrategyOverviewOnClick(object sender, EventArgs e)
         {
-            var so = new Browser(Language.T("Strategy Overview"), OverviewFormatReport.GenerateHTMLOverview(Backtester, IsStrDescriptionRelevant()));
-            so.Show();
+            string htmlReport = StrategyFormatOverview.FormatOverview(Backtester, IsStrDescriptionRelevant());
+            var browser = new Browser(Language.T("Strategy Overview"), htmlReport);
+            browser.Show();
         }
 
         protected override void ShowFullBalanceChart()
         {
-            if (!Data.IsData || !Data.IsResult) return;
+            if (!Backtester.IsData || !Backtester.IsResult) return;
 
             var chart = new Chart(Backtester)
             {
@@ -1003,7 +1005,7 @@ namespace Forex_Strategy_Builder
 
         protected override void ShowFullIndicatorChart()
         {
-            if (!Data.IsData || !Data.IsResult) return;
+            if (!Backtester.IsData || !Backtester.IsResult) return;
 
             var chart = new Chart(Backtester)
             {
@@ -1042,6 +1044,5 @@ namespace Forex_Strategy_Builder
             Configs.IndicatorChartTrueCharts = chart.TrueCharts;
             Configs.IndicatorChartProtections = chart.ShowProtections;
         }
-
     }
 }

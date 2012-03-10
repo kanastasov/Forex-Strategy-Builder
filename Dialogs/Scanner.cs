@@ -10,7 +10,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using Forex_Strategy_Builder.Market;
 using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
@@ -37,15 +36,17 @@ namespace Forex_Strategy_Builder
         private bool _isLoadingNow;
         private int _progressPercent;
         private string _warningMessage;
-        private Backtester Backtester { get; set; }
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public Scanner()
+        public Scanner(Backtester backtester)
         {
+            _backtester = backtester;
+
             InfoPanel = new Panel();
-            BalanceChart = new SmallBalanceChart();
+            BalanceChart = new SmallBalanceChart(_backtester.DataSet);
             ProgressBar = new ProgressBar();
             LblProgress = new Label();
             ChbAutoscan = new CheckBox();
@@ -139,18 +140,16 @@ namespace Forex_Strategy_Builder
                 BalanceChart.Visible = false;
                 LblProgress.Visible = true;
                 ChbAutoscan.Visible = false;
-
                 Width = 300;
                 Height = 95;
                 TopMost = true;
-
                 StartLoading();
             }
             else
             {
                 LblProgress.Visible = false;
                 ChbAutoscan.Visible = true;
-                BalanceChart.SetChartData(Backtester);
+                BalanceChart.SetChartData(_backtester);
                 Width = 460;
                 Height = 540;
                 if (!_isTickDataFile)
@@ -226,13 +225,13 @@ namespace Forex_Strategy_Builder
             if (CompactMode)
                 return;
 
-            if (!Data.DataSet.IsIntrabarData)
+            if (!_backtester.DataSet.IsIntrabarData)
             {
                 StartLoading();
             }
             else
             {
-                Backtester.Calculate(Backtester.Strategy, Data.DataSet);
+                _backtester.Calculate();
                 ShowScanningResult();
                 ProgressBar.Value = 100;
                 BtnClose.Focus();
@@ -265,7 +264,7 @@ namespace Forex_Strategy_Builder
             Graphics g = e.Graphics;
             g.Clear(LayoutColors.ColorControlBack);
 
-            if (!Data.IsData || !Data.IsResult) return;
+            if (!_backtester.IsData || !_backtester.IsResult) return;
 
             var pnl = (Panel) sender;
             const int border = 2;
@@ -332,27 +331,27 @@ namespace Forex_Strategy_Builder
             if (_isTickDataFile)
             {
                 g.DrawString(Language.T("Tick"), _fontInfo, brush, (xp1 + xp0)/2, 2*_infoRowHeight, sf);
-                if (Data.DataSet.IsTickData && Configs.UseTickData)
+                if (_backtester.DataSet.IsTickData && Configs.UseTickData)
                 {
                     int firstBarWithTicks = -1;
                     int lastBarWithTicks = -1;
                     int tickBars = 0;
-                    for (int b = 0; b < Data.DataSet.Bars; b++)
+                    for (int b = 0; b < _backtester.DataSet.Bars; b++)
                     {
-                        if (firstBarWithTicks == -1 && Data.DataSet.TickData[b] != null)
+                        if (firstBarWithTicks == -1 && _backtester.DataSet.TickData[b] != null)
                             firstBarWithTicks = b;
-                        if (Data.DataSet.TickData[b] != null)
+                        if (_backtester.DataSet.TickData[b] != null)
                         {
                             lastBarWithTicks = b;
                             tickBars++;
                         }
                     }
-                    double percentage = 100d*tickBars/Data.DataSet.Bars;
+                    double percentage = 100d*tickBars/_backtester.DataSet.Bars;
 
                     int y = 2*_infoRowHeight;
-                    string ticks = (Data.DataSet.Ticks > 999999) 
-                        ? (Data.DataSet.Ticks / 1000).ToString(CultureInfo.InvariantCulture) + "K" 
-                        : Data.DataSet.Ticks.ToString(CultureInfo.InvariantCulture);
+                    string ticks = (_backtester.DataSet.Ticks > 999999) 
+                        ? (_backtester.DataSet.Ticks / 1000).ToString(CultureInfo.InvariantCulture) + "K" 
+                        : _backtester.DataSet.Ticks.ToString(CultureInfo.InvariantCulture);
                     g.DrawString(ticks, _fontInfo, brush, (xp2 + xp1)/2, y, sf);
                     g.DrawString((firstBarWithTicks + 1).ToString(CultureInfo.InvariantCulture), _fontInfo, brush, (xp3 + xp2)/2, y, sf);
                     g.DrawString((lastBarWithTicks + 1).ToString(CultureInfo.InvariantCulture), _fontInfo, brush, (xp4 + xp3)/2, y, sf);
@@ -372,7 +371,7 @@ namespace Forex_Strategy_Builder
                 int y = (prd + startY)*_infoRowHeight;
 
                 var period = (DataPeriods) Enum.GetValues(typeof (DataPeriods)).GetValue(prd);
-                int intraBars = Data.DataSet.IntraBars == null || !Data.DataSet.IsIntrabarData ? 0 : Data.DataSet.IntraBars[prd];
+                int intraBars = _backtester.DataSet.IntraBars == null || !_backtester.DataSet.IsIntrabarData ? 0 : _backtester.DataSet.IntraBars[prd];
                 int fromBar = 0;
                 int untilBar = 0;
                 int coveredBars = 0;
@@ -383,29 +382,29 @@ namespace Forex_Strategy_Builder
                 {
                     bool isFromBarFound = false;
                     bool isUntilBarFound = false;
-                    untilBar = Data.DataSet.Bars;
-                    for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+                    untilBar = _backtester.DataSet.Bars;
+                    for (int bar = 0; bar < _backtester.DataSet.Bars; bar++)
                     {
-                        if (!isFromBarFound && Data.DataSet.IntraBarsPeriods[bar] == period)
+                        if (!isFromBarFound && _backtester.DataSet.IntraBarsPeriods[bar] == period)
                         {
                             fromBar = bar;
                             isFromBarFound = true;
                         }
                         if (isFromBarFound && !isUntilBarFound &&
-                            (Data.DataSet.IntraBarsPeriods[bar] != period || bar == Data.DataSet.Bars - 1))
+                            (_backtester.DataSet.IntraBarsPeriods[bar] != period || bar == _backtester.DataSet.Bars - 1))
                         {
-                            if (bar < Data.DataSet.Bars - 1)
+                            if (bar < _backtester.DataSet.Bars - 1)
                             {
                                 isUntilBarFound = true;
                                 untilBar = bar;
                             }
                             else
                             {
-                                untilBar = Data.DataSet.Bars;
+                                untilBar = _backtester.DataSet.Bars;
                             }
                             coveredBars = untilBar - fromBar;
                         }
-                        if (isFromBarFound && isUntilBarFound && Data.DataSet.IntraBarsPeriods[bar] == period)
+                        if (isFromBarFound && isUntilBarFound && _backtester.DataSet.IntraBarsPeriods[bar] == period)
                         {
                             isMultyAreas = true;
                             coveredBars++;
@@ -413,7 +412,7 @@ namespace Forex_Strategy_Builder
                     }
                     if (isFromBarFound)
                     {
-                        percentage = 100d*coveredBars/Data.DataSet.Bars;
+                        percentage = 100d*coveredBars/_backtester.DataSet.Bars;
                         fromBar++;
                     }
                     else
@@ -424,18 +423,18 @@ namespace Forex_Strategy_Builder
                         percentage = 0;
                     }
                 }
-                else if (period == Data.DataSet.Period)
+                else if (period == _backtester.DataSet.Period)
                 {
-                    intraBars = Data.DataSet.Bars;
+                    intraBars = _backtester.DataSet.Bars;
                     fromBar = 1;
-                    untilBar = Data.DataSet.Bars;
-                    coveredBars = Data.DataSet.Bars;
+                    untilBar = _backtester.DataSet.Bars;
+                    coveredBars = _backtester.DataSet.Bars;
                     percentage = 100;
                 }
 
                 g.DrawString(Data.DataPeriodToString(period), _fontInfo, brush, (xp1 + xp0)/2, y, sf);
 
-                if (coveredBars > 0 || period == Data.DataSet.Period)
+                if (coveredBars > 0 || period == _backtester.DataSet.Period)
                 {
                     g.DrawString(intraBars.ToString(CultureInfo.InvariantCulture), _fontInfo, brush, (xp2 + xp1)/2, y, sf);
                     g.DrawString(fromBar.ToString(CultureInfo.InvariantCulture), _fontInfo, brush, (xp3 + xp2)/2, y, sf);
@@ -520,19 +519,21 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void BgWorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (Data.DataSet.IsIntrabarData || Configs.UseTickData && Data.DataSet.IsTickData || Data.DataSet.Period == DataPeriods.min1)
-                Backtester.Calculate(Backtester.Strategy, Data.DataSet);
+            if (_backtester.DataSet.IsIntrabarData || Configs.UseTickData &&
+                _backtester.DataSet.IsTickData || _backtester.DataSet.Period == DataPeriods.min1)
+                _backtester.Scan();
 
             if (!CompactMode)
                 ShowScanningResult();
             CompleteScanning();
 
             if (_warningMessage != string.Empty && Configs.CheckData)
-                MessageBox.Show(_warningMessage + Environment.NewLine + Environment.NewLine +
-                                Language.T("The data is probably incomplete and the scanning may not be reliable!") +
-                                Environment.NewLine +
-                                Language.T("You can try also \"Cut Off Bad Data\"."),
-                                Language.T("Scanner"), MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            {
+                string message = _warningMessage + Environment.NewLine + Environment.NewLine +
+                                 Language.T("The data is probably incomplete and the scanning may not be reliable!") +
+                                 Environment.NewLine + Language.T("You can try also \"Cut Off Bad Data\".");
+                MessageBox.Show(message, Language.T("Scanner"), MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
 
             if (CompactMode)
                 Close();
@@ -543,7 +544,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void ShowScanningResult()
         {
-            BalanceChart.SetChartData(Backtester);
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
             InfoPanel.Invalidate();
@@ -575,23 +576,23 @@ namespace Forex_Strategy_Builder
         {
             int periodsToLoad = 0;
             int allPeriods = Enum.GetValues(typeof (DataPeriods)).Length;
-            Data.DataSet.IntraBars = new int[allPeriods];
-            Data.DataSet.IntraBarData = new Bar[Data.DataSet.Bars][];
-            Data.DataSet.IntraBarBars = new int[Data.DataSet.Bars];
-            Data.DataSet.IntraBarsPeriods = new DataPeriods[Data.DataSet.Bars];
-            Data.DataSet.LoadedIntraBarPeriods = 0;
+            _backtester.DataSet.IntraBars = new int[allPeriods];
+            _backtester.DataSet.IntraBarData = new Bar[_backtester.DataSet.Bars][];
+            _backtester.DataSet.IntraBarBars = new int[_backtester.DataSet.Bars];
+            _backtester.DataSet.IntraBarsPeriods = new DataPeriods[_backtester.DataSet.Bars];
+            _backtester.DataSet.LoadedIntraBarPeriods = 0;
 
-            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+            for (int bar = 0; bar < _backtester.DataSet.Bars; bar++)
             {
-                Data.DataSet.IntraBarsPeriods[bar] = Data.DataSet.Period;
-                Data.DataSet.IntraBarBars[bar] = 0;
+                _backtester.DataSet.IntraBarsPeriods[bar] = _backtester.DataSet.Period;
+                _backtester.DataSet.IntraBarBars[bar] = 0;
             }
 
             // Counts how many periods to load
             for (int prd = 0; prd < allPeriods; prd++)
             {
                 var period = (DataPeriods) Enum.GetValues(typeof (DataPeriods)).GetValue(prd);
-                if (period < Data.DataSet.Period)
+                if (period < _backtester.DataSet.Period)
                 {
                     periodsToLoad++;
                 }
@@ -607,22 +608,22 @@ namespace Forex_Strategy_Builder
 
                 SetLabelProgressText(Language.T("Loading:") + " " + Data.DataPeriodToString(period) + "...");
 
-                if (period < Data.DataSet.Period)
+                if (period < _backtester.DataSet.Period)
                 {
                     loadedBars = LoadIntrabarData(period);
                     if (loadedBars > 0)
                     {
-                        Data.DataSet.IsIntrabarData = true;
-                        Data.DataSet.LoadedIntraBarPeriods++;
+                        _backtester.DataSet.IsIntrabarData = true;
+                        _backtester.DataSet.LoadedIntraBarPeriods++;
                     }
                 }
-                else if (period == Data.DataSet.Period)
+                else if (period == _backtester.DataSet.Period)
                 {
-                    loadedBars = Data.DataSet.Bars;
-                    Data.DataSet.LoadedIntraBarPeriods++;
+                    loadedBars = _backtester.DataSet.Bars;
+                    _backtester.DataSet.LoadedIntraBarPeriods++;
                 }
 
-                Data.DataSet.IntraBars[prd] = loadedBars;
+                _backtester.DataSet.IntraBars[prd] = loadedBars;
 
                 // Report progress as a percentage of the total task.
                 int percentComplete = periodsToLoad > 0 ? 100*(prd + 1)/periodsToLoad : 100;
@@ -657,7 +658,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private int LoadIntrabarData(DataPeriods period)
         {
-            var instrument = new Instrument(Data.DataSet.InstrProperties.Clone(), (int) period)
+            var instrument = new Instrument(_backtester.DataSet.InstrProperties.Clone(), (int) period)
                                  {
                                      DataDir = Data.OfflineDataDir,
                                      MaxBars = Configs.MaxIntraBars
@@ -670,48 +671,48 @@ namespace Forex_Strategy_Builder
 
             if (loadingResult == 0 && loadedIntrabars > 0)
             {
-                if (Data.DataSet.Period != DataPeriods.week)
+                if (_backtester.DataSet.Period != DataPeriods.week)
                 {
                     if (instrument.DaysOff > 5)
-                        _warningMessage += Environment.NewLine + Language.T("Data for:") + " " + Data.Symbol + " " +
+                        _warningMessage += Environment.NewLine + Language.T("Data for:") + " " + _backtester.DataSet.Symbol + " " +
                                            Data.DataPeriodToString(period) + " - " + Language.T("Maximum days off:") +
                                            " " + instrument.DaysOff;
-                    if (Data.DataStats.Update - instrument.Update > new TimeSpan(24, 0, 0))
-                        _warningMessage += Environment.NewLine + Language.T("Data for:") + " " + Data.Symbol + " " +
+                    if (_backtester.DataStats.Update - instrument.Update > new TimeSpan(24, 0, 0))
+                        _warningMessage += Environment.NewLine + Language.T("Data for:") + " " + _backtester.DataSet.Symbol + " " +
                                            Data.DataPeriodToString(period) + " - " + Language.T("Updated on:") + " " +
                                            instrument.Update.ToString(CultureInfo.InvariantCulture);
                 }
 
                 int startBigBar;
-                for (startBigBar = 0; startBigBar < Data.DataSet.Bars; startBigBar++)
-                    if (Data.DataSet.Time[startBigBar] >= instrument.Time(0))
+                for (startBigBar = 0; startBigBar < _backtester.DataSet.Bars; startBigBar++)
+                    if (_backtester.DataSet.Time[startBigBar] >= instrument.Time(0))
                         break;
 
                 int stopBigBar;
-                for (stopBigBar = startBigBar; stopBigBar < Data.DataSet.Bars; stopBigBar++)
-                    if (Data.DataSet.IntraBarsPeriods[stopBigBar] != Data.DataSet.Period)
+                for (stopBigBar = startBigBar; stopBigBar < _backtester.DataSet.Bars; stopBigBar++)
+                    if (_backtester.DataSet.IntraBarsPeriods[stopBigBar] != _backtester.DataSet.Period)
                         break;
 
                 // Seek for a place to put the intrabars.
                 int lastIntraBar = 0;
                 for (int bar = startBigBar; bar < stopBigBar; bar++)
                 {
-                    Data.DataSet.IntraBarData[bar] = new Bar[(int)Data.DataSet.Period / (int)period];
-                    DateTime endTime = Data.DataSet.Time[bar] + new TimeSpan(0, (int)Data.DataSet.Period, 0);
+                    _backtester.DataSet.IntraBarData[bar] = new Bar[(int)_backtester.DataSet.Period / (int)period];
+                    DateTime endTime = _backtester.DataSet.Time[bar] + new TimeSpan(0, (int)_backtester.DataSet.Period, 0);
                     int indexBar = 0;
                     for (int intrabar = lastIntraBar;
                          intrabar < loadedIntrabars && instrument.Time(intrabar) < endTime;
                          intrabar++)
                     {
-                        if (instrument.Time(intrabar) >= Data.DataSet.Time[bar])
+                        if (instrument.Time(intrabar) >= _backtester.DataSet.Time[bar])
                         {
-                            Data.DataSet.IntraBarData[bar][indexBar].Time = instrument.Time(intrabar);
-                            Data.DataSet.IntraBarData[bar][indexBar].Open = instrument.Open(intrabar);
-                            Data.DataSet.IntraBarData[bar][indexBar].High = instrument.High(intrabar);
-                            Data.DataSet.IntraBarData[bar][indexBar].Low = instrument.Low(intrabar);
-                            Data.DataSet.IntraBarData[bar][indexBar].Close = instrument.Close(intrabar);
-                            Data.DataSet.IntraBarsPeriods[bar] = period;
-                            Data.DataSet.IntraBarBars[bar]++;
+                            _backtester.DataSet.IntraBarData[bar][indexBar].Time = instrument.Time(intrabar);
+                            _backtester.DataSet.IntraBarData[bar][indexBar].Open = instrument.Open(intrabar);
+                            _backtester.DataSet.IntraBarData[bar][indexBar].High = instrument.High(intrabar);
+                            _backtester.DataSet.IntraBarData[bar][indexBar].Low = instrument.Low(intrabar);
+                            _backtester.DataSet.IntraBarData[bar][indexBar].Close = instrument.Close(intrabar);
+                            _backtester.DataSet.IntraBarsPeriods[bar] = period;
+                            _backtester.DataSet.IntraBarBars[bar]++;
                             indexBar++;
                             lastIntraBar = intrabar;
                         }
@@ -728,17 +729,17 @@ namespace Forex_Strategy_Builder
         private void CheckIntrabarData()
         {
             int inraBarDataStarts = 0;
-            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+            for (int bar = 0; bar < _backtester.DataSet.Bars; bar++)
             {
-                if (inraBarDataStarts == 0 && Data.DataSet.IntraBarsPeriods[bar] != Data.DataSet.Period)
+                if (inraBarDataStarts == 0 && _backtester.DataSet.IntraBarsPeriods[bar] != _backtester.DataSet.Period)
                     inraBarDataStarts = bar;
 
-                if (inraBarDataStarts > 0 && Data.DataSet.IntraBarsPeriods[bar] == Data.DataSet.Period)
+                if (inraBarDataStarts > 0 && _backtester.DataSet.IntraBarsPeriods[bar] == _backtester.DataSet.Period)
                 {
                     inraBarDataStarts = 0;
                     _warningMessage += Environment.NewLine +
                                        Language.T("There is no intrabar data from bar No:") + " " +
-                                       (bar + 1) + " - " + Data.DataSet.Time[bar];
+                                       (bar + 1) + " - " + _backtester.DataSet.Time[bar];
                 }
             }
         }
@@ -748,44 +749,44 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void RepairIntrabarData()
         {
-            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+            for (int bar = 0; bar < _backtester.DataSet.Bars; bar++)
             {
-                if (Data.DataSet.IntraBarsPeriods[bar] != Data.DataSet.Period)
+                if (_backtester.DataSet.IntraBarsPeriods[bar] != _backtester.DataSet.Period)
                 {
                     // We have intrabar data here
 
                     // Repair the Opening prices
-                    double price = Data.DataSet.Open[bar];
+                    double price = _backtester.DataSet.Open[bar];
                     int b = 0;
-                    Data.DataSet.IntraBarData[bar][b].Open = Data.DataSet.Open[bar];
-                    if (price > Data.DataSet.IntraBarData[bar][b].High &&
-                        price > Data.DataSet.IntraBarData[bar][b].Low)
+                    _backtester.DataSet.IntraBarData[bar][b].Open = _backtester.DataSet.Open[bar];
+                    if (price > _backtester.DataSet.IntraBarData[bar][b].High &&
+                        price > _backtester.DataSet.IntraBarData[bar][b].Low)
                     {
                         // Adjust the High price
-                        Data.DataSet.IntraBarData[bar][b].High = price;
+                        _backtester.DataSet.IntraBarData[bar][b].High = price;
                     }
-                    else if (price < Data.DataSet.IntraBarData[bar][b].High &&
-                             price < Data.DataSet.IntraBarData[bar][b].Low)
+                    else if (price < _backtester.DataSet.IntraBarData[bar][b].High &&
+                             price < _backtester.DataSet.IntraBarData[bar][b].Low)
                     {
                         // Adjust the Low price
-                        Data.DataSet.IntraBarData[bar][b].Low = price;
+                        _backtester.DataSet.IntraBarData[bar][b].Low = price;
                     }
 
                     // Repair the Closing prices
-                    price = Data.DataSet.Close[bar];
-                    b = Data.DataSet.IntraBarBars[bar] - 1;
-                    Data.DataSet.IntraBarData[bar][b].Close = Data.DataSet.Close[bar];
-                    if (price > Data.DataSet.IntraBarData[bar][b].High &&
-                        price > Data.DataSet.IntraBarData[bar][b].Low)
+                    price = _backtester.DataSet.Close[bar];
+                    b = _backtester.DataSet.IntraBarBars[bar] - 1;
+                    _backtester.DataSet.IntraBarData[bar][b].Close = _backtester.DataSet.Close[bar];
+                    if (price > _backtester.DataSet.IntraBarData[bar][b].High &&
+                        price > _backtester.DataSet.IntraBarData[bar][b].Low)
                     {
                         // Adjust the High price
-                        Data.DataSet.IntraBarData[bar][b].High = price;
+                        _backtester.DataSet.IntraBarData[bar][b].High = price;
                     }
-                    else if (price < Data.DataSet.IntraBarData[bar][b].High &&
-                             price < Data.DataSet.IntraBarData[bar][b].Low)
+                    else if (price < _backtester.DataSet.IntraBarData[bar][b].High &&
+                             price < _backtester.DataSet.IntraBarData[bar][b].Low)
                     {
                         // Adjust the Low price
-                        Data.DataSet.IntraBarData[bar][b].Low = price;
+                        _backtester.DataSet.IntraBarData[bar][b].Low = price;
                     }
 
                     int minIntrabar = -1; // Contains the min price
@@ -793,45 +794,45 @@ namespace Forex_Strategy_Builder
                     double minPrice = double.MaxValue;
                     double maxPrice = double.MinValue;
 
-                    for (b = 0; b < Data.DataSet.IntraBarBars[bar]; b++)
+                    for (b = 0; b < _backtester.DataSet.IntraBarBars[bar]; b++)
                     {
                         // Find min and max
-                        if (Data.DataSet.IntraBarData[bar][b].Low < minPrice)
+                        if (_backtester.DataSet.IntraBarData[bar][b].Low < minPrice)
                         {
                             // Min found
-                            minPrice = Data.DataSet.IntraBarData[bar][b].Low;
+                            minPrice = _backtester.DataSet.IntraBarData[bar][b].Low;
                             minIntrabar = b;
                         }
-                        if (Data.DataSet.IntraBarData[bar][b].High > maxPrice)
+                        if (_backtester.DataSet.IntraBarData[bar][b].High > maxPrice)
                         {
                             // Max found
-                            maxPrice = Data.DataSet.IntraBarData[bar][b].High;
+                            maxPrice = _backtester.DataSet.IntraBarData[bar][b].High;
                             maxIntrabar = b;
                         }
                         if (b > 0)
                         {
                             // Repair the Opening prices
-                            price = Data.DataSet.IntraBarData[bar][b - 1].Close;
-                            Data.DataSet.IntraBarData[bar][b].Open = price;
-                            if (price > Data.DataSet.IntraBarData[bar][b].High &&
-                                price > Data.DataSet.IntraBarData[bar][b].Low)
+                            price = _backtester.DataSet.IntraBarData[bar][b - 1].Close;
+                            _backtester.DataSet.IntraBarData[bar][b].Open = price;
+                            if (price > _backtester.DataSet.IntraBarData[bar][b].High &&
+                                price > _backtester.DataSet.IntraBarData[bar][b].Low)
                             {
                                 // Adjust the High price
-                                Data.DataSet.IntraBarData[bar][b].High = price;
+                                _backtester.DataSet.IntraBarData[bar][b].High = price;
                             }
-                            else if (price < Data.DataSet.IntraBarData[bar][b].High &&
-                                     price < Data.DataSet.IntraBarData[bar][b].Low)
+                            else if (price < _backtester.DataSet.IntraBarData[bar][b].High &&
+                                     price < _backtester.DataSet.IntraBarData[bar][b].Low)
                             {
                                 // Adjust the Low price
-                                Data.DataSet.IntraBarData[bar][b].Low = price;
+                                _backtester.DataSet.IntraBarData[bar][b].Low = price;
                             }
                         }
                     }
 
-                    if (minPrice > Data.DataSet.Low[bar]) // Repair the Bottom
-                        Data.DataSet.IntraBarData[bar][minIntrabar].Low = Data.DataSet.Low[bar];
-                    if (maxPrice < Data.DataSet.High[bar]) // Repair the Top
-                        Data.DataSet.IntraBarData[bar][maxIntrabar].High = Data.DataSet.High[bar];
+                    if (minPrice > _backtester.DataSet.Low[bar]) // Repair the Bottom
+                        _backtester.DataSet.IntraBarData[bar][minIntrabar].Low = _backtester.DataSet.Low[bar];
+                    if (maxPrice < _backtester.DataSet.High[bar]) // Repair the Top
+                        _backtester.DataSet.IntraBarData[bar][maxIntrabar].High = _backtester.DataSet.High[bar];
                 }
             }
         }
@@ -841,9 +842,9 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void LoadTickData()
         {
-            var fileStream = new FileStream(Data.OfflineDataDir + Data.Symbol + "0.bin", FileMode.Open);
+            var fileStream = new FileStream(Data.OfflineDataDir + _backtester.DataSet.Symbol + "0.bin", FileMode.Open);
             var binaryReader = new BinaryReader(fileStream);
-            Data.DataSet.TickData = new double[Data.DataSet.Bars][];
+            _backtester.DataSet.TickData = new double[_backtester.DataSet.Bars][];
             int bar = 0;
 
             long totalVolume = 0;
@@ -866,23 +867,23 @@ namespace Forex_Strategy_Builder
                     bidTicks[i] = binaryReader.ReadDouble();
                 pos += count*sizeof (Double);
 
-                while (bar < Data.DataSet.Bars - 1 && Data.DataSet.Time[bar] < time)
+                while (bar < _backtester.DataSet.Bars - 1 && _backtester.DataSet.Time[bar] < time)
                 {
-                    if (time < Data.DataSet.Time[bar + 1])
+                    if (time < _backtester.DataSet.Time[bar + 1])
                         break;
                     bar++;
                 }
 
-                if (time == Data.DataSet.Time[bar])
+                if (time == _backtester.DataSet.Time[bar])
                 {
-                    Data.DataSet.TickData[bar] = bidTicks;
+                    _backtester.DataSet.TickData[bar] = bidTicks;
                 }
-                else if ((bar < Data.DataSet.Bars - 1 && time > Data.DataSet.Time[bar] && time < Data.DataSet.Time[bar + 1]) ||
-                         bar == Data.DataSet.Bars - 1)
+                else if ((bar < _backtester.DataSet.Bars - 1 && time > _backtester.DataSet.Time[bar] && time < _backtester.DataSet.Time[bar + 1]) ||
+                         bar == _backtester.DataSet.Bars - 1)
                 {
-                    if (Data.DataSet.TickData[bar] == null &&
-                        (Math.Abs(Data.DataSet.Open[bar] - bidTicks[0]) < 10 * Data.DataSet.InstrProperties.Pip))
-                        Data.DataSet.TickData[bar] = bidTicks;
+                    if (_backtester.DataSet.TickData[bar] == null &&
+                        (Math.Abs(_backtester.DataSet.Open[bar] - bidTicks[0]) < 10 * _backtester.DataSet.InstrProperties.Pip))
+                        _backtester.DataSet.TickData[bar] = bidTicks;
                     else
                         AddTickData(bar, bidTicks);
                 }
@@ -893,16 +894,16 @@ namespace Forex_Strategy_Builder
             binaryReader.Close();
             fileStream.Close();
 
-            Data.DataSet.IsTickData = false;
+            _backtester.DataSet.IsTickData = false;
             var barsWithTicks = 0;
-            for (var b = 0; b < Data.DataSet.Bars; b++)
-                if (Data.DataSet.TickData[b] != null)
+            for (var b = 0; b < _backtester.DataSet.Bars; b++)
+                if (_backtester.DataSet.TickData[b] != null)
                     barsWithTicks++;
 
             if (barsWithTicks > 0)
             {
-                Data.DataSet.Ticks = totalVolume;
-                Data.DataSet.IsTickData = true;
+                _backtester.DataSet.Ticks = totalVolume;
+                _backtester.DataSet.IsTickData = true;
             }
         }
 
@@ -911,7 +912,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private bool CheckTickDataFile()
         {
-            return File.Exists(Data.OfflineDataDir + Data.Symbol + "0.bin");
+            return File.Exists(Data.OfflineDataDir + _backtester.DataSet.Symbol + "0.bin");
         }
 
         /// <summary>
@@ -919,38 +920,11 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void AddTickData(int bar, double[] bidTicks)
         {
-            if (Data.DataSet.TickData[bar] == null) return;
-            int oldLenght = Data.DataSet.TickData[bar].Length;
+            if (_backtester.DataSet.TickData[bar] == null) return;
+            int oldLenght = _backtester.DataSet.TickData[bar].Length;
             int ticksAdd = bidTicks.Length;
-            Array.Resize(ref Data.DataSet.TickData[bar], oldLenght + ticksAdd);
-            Array.Copy(bidTicks, 0, Data.DataSet.TickData[bar], oldLenght, ticksAdd);
-        }
-
-        /// <summary>
-        /// Export tick data to a .CSV file.
-        /// </summary>
-        private void ExportTickToCSV()
-        {
-            using (var sw = new StreamWriter(Data.OfflineDataDir + Data.Symbol + "0.csv"))
-            {
-                for (var bar = 0; bar < Data.DataSet.Bars; bar++)
-                {
-                    if (Data.DataSet.TickData[bar] == null)
-                    {
-                        sw.WriteLine((bar + 1).ToString(CultureInfo.InvariantCulture) + "\t" +
-                                     Data.DataSet.Time[bar].ToString("yyyy-MM-dd HH:mm") + "\t" +
-                                     Data.DataSet.Time[bar].DayOfWeek);
-                    }
-                    else
-                    {
-                        sw.Write((bar + 1) + "\t" + Data.DataSet.Time[bar].ToString("yyyy-MM-dd HH:mm") + "\t");
-                        foreach (var tick in Data.DataSet.TickData[bar])
-                            sw.Write(tick.ToString("F5") + "\t");
-                        sw.WriteLine();
-                    }
-                }
-                sw.Close();
-            }
+            Array.Resize(ref _backtester.DataSet.TickData[bar], oldLenght + ticksAdd);
+            Array.Copy(bidTicks, 0, _backtester.DataSet.TickData[bar], oldLenght, ticksAdd);
         }
 
         /// <summary>

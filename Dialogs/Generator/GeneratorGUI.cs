@@ -99,9 +99,16 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
         /// </summary>
         public Generator(Backtester backtester)
         {
-            _backtester = new Backtester {Strategy = backtester.Strategy.Clone(), DataSet = Data.DataSet};
+            _backtester = new Backtester
+                              {
+                                  Strategy = backtester.Strategy.Clone(),
+                                  DataSet = backtester.DataSet,
+                                  DataStats = backtester.DataStats,
+                                  IsData = true
+                              };
             _backtester.Calculate();
             _backtester.CalculateAccountStats();
+            _backtester.IsResult = true;
             SetStrategyIndicators();
             StrategyOriginalDescription = _backtester.Strategy.Description;
 
@@ -123,7 +130,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             PnlSettings = new FancyPanel(Language.T("Settings"));
             PnlTop10 = new FancyPanel(Language.T("Top 10"));
             PnlIndicators = new FancyPanel(Language.T("Indicators"));
-            BalanceChart = new SmallBalanceChart();
+            BalanceChart = new SmallBalanceChart(_backtester.DataSet);
             InfpnlAccountStatistics = new InfoPanel();
             ProgressBar = new ProgressBar();
             LblCalcStrInfo = new Label();
@@ -144,7 +151,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             FormBorderStyle = FormBorderStyle.FixedDialog;
             BackColor = LayoutColors.ColorFormBack;
             AcceptButton = BtnGenerate;
-            Text = Language.T("Strategy Generator") + " - " + _backtester.DataSet.Symbol + " " + Data.PeriodString + ", " +
+            Text = Language.T("Strategy Generator") + " - " + _backtester.DataSet.Symbol + " " + _backtester.DataSet.PeriodString + ", " +
                    _backtester.DataSet.Bars + " " + Language.T("bars");
             FormClosing += GeneratorFormClosing;
 
@@ -207,7 +214,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             BtnGenerate.Click += BtnGenerateClick;
             BtnGenerate.UseVisualStyleBackColor = true;
 
-            //Button Accept
+            // Button Accept
             BtnAccept.Parent = this;
             BtnAccept.Name = "Accept";
             BtnAccept.Text = Language.T("Accept");
@@ -216,7 +223,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             BtnAccept.UseVisualStyleBackColor = true;
             BtnAccept.Click += BtnAcceptOnClick;
 
-            //Button Cancel
+            // Button Cancel
             BtnCancel.Parent = this;
             BtnCancel.Text = Language.T("Cancel");
             BtnCancel.DialogResult = DialogResult.Cancel;
@@ -867,17 +874,17 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             const int nudWidth = 55;
             const int optionsHeight = 228;
 
-            //Button Cancel
+            // Button Cancel
             BtnCancel.Size = new Size(buttonWidth, buttonHeight);
             BtnCancel.Location = new Point(ClientSize.Width - buttonWidth - btnHrzSpace,
                                            ClientSize.Height - buttonHeight - btnVertSpace);
 
-            //Button Accept
+            // Button Accept
             BtnAccept.Size = new Size(buttonWidth, buttonHeight);
             BtnAccept.Location = new Point(BtnCancel.Left - buttonWidth - btnHrzSpace,
                                            ClientSize.Height - buttonHeight - btnVertSpace);
 
-            //Button Generate
+            // Button Generate
             BtnGenerate.Size = new Size(buttonWidth, buttonHeight);
             BtnGenerate.Location = new Point(BtnAccept.Left - buttonWidth - btnHrzSpace,
                                              ClientSize.Height - buttonHeight - btnVertSpace);
@@ -940,20 +947,20 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             //chbPreservbreakEven
             ChbPreservBreakEven.Location = new Point(border + 2, ChbPreservPermTP.Bottom + border + 4);
 
-            // chbPseudoOpt
+            // ChbInitialOptimisation
             ChbInitialOptimisation.Location = new Point(border + 2, ChbPreservBreakEven.Bottom + border + 4);
 
-            // chbMaxOpeningLogicSlots
+            // ChbMaxOpeningLogicSlots
             ChbMaxOpeningLogicSlots.Location = new Point(border + 2, ChbInitialOptimisation.Bottom + border + 4);
 
-            // nudMaxOpeningLogicSlots
+            // NUDMaxOpeningLogicSlots
             NUDMaxOpeningLogicSlots.Width = nudWidth;
             NUDMaxOpeningLogicSlots.Location = new Point(NUDAmbiguousBars.Left, ChbMaxOpeningLogicSlots.Top - 1);
 
-            // chbMaxClosingLogicSlots
+            // ChbMaxClosingLogicSlots
             ChbMaxClosingLogicSlots.Location = new Point(border + 2, ChbMaxOpeningLogicSlots.Bottom + border + 4);
 
-            // nudMaxClosingLogicSlots
+            // NUDMaxClosingLogicSlots
             NUDMaxClosingLogicSlots.Width = nudWidth;
             NUDMaxClosingLogicSlots.Location = new Point(NUDAmbiguousBars.Left, ChbMaxClosingLogicSlots.Top - 1);
 
@@ -968,10 +975,10 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             LblWorkingMinutes.Location = new Point(NUDWorkingMinutes.Left - LblWorkingMinutes.Width - 3,
                                                    LblCalcStrInfo.Top);
 
-            // chbAmbiguousBars
+            // ChbAmbiguousBars
             ChbAmbiguousBars.Location = new Point(border + 2, 25);
 
-            // nudAmbiguousBars
+            // NUDAmbiguousBars
             NUDAmbiguousBars.Width = nudWidth;
             NUDAmbiguousBars.Location = new Point(PnlLimitations.ClientSize.Width - nudWidth - border - 2,
                                                   ChbAmbiguousBars.Top - 1);
@@ -1215,7 +1222,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
                 string indName = _backtester.Strategy.Slot[slot].IndicatorName;
-                Indicator indicator = IndicatorStore.ConstructIndicator(indName, _backtester.Strategy.Slot[slot].SlotType);
+                Indicator indicator = IndicatorStore.ConstructIndicator(indName, _backtester.DataSet, _backtester.Strategy.Slot[slot].SlotType);
                 if (indicator.CustomIndicator)
                 {
                     customIndCount++;
@@ -1442,7 +1449,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
             if (GeneratedDescription != string.Empty)
                 _backtester.Strategy.Description = GeneratedDescription;
 
-            var so = new Browser(Language.T("Strategy Overview"), OverviewFormatReport.GenerateHTMLOverview(_backtester, IsStrDescriptionRelevant()));
+            var so = new Browser(Language.T("Strategy Overview"), StrategyFormatOverview.FormatOverview(_backtester, IsStrDescriptionRelevant()));
             so.Show();
         }
 

@@ -14,6 +14,7 @@ using System.Text;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Interfaces;
 using Forex_Strategy_Builder.Properties;
 using Forex_Strategy_Builder.Utils;
 
@@ -67,6 +68,12 @@ namespace Forex_Strategy_Builder
         private int _yBottom;
         private float _yScale;
         private int _yTop;
+        private readonly IDataSet _dataSet;
+
+        public SmallHistogramChart(IDataSet dataSet)
+        {
+            _dataSet = dataSet;
+        }
 
         /// <summary>
         /// Whether to show dynamic info
@@ -84,12 +91,12 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Calculates Data to draw in histogram
         /// </summary>
-        private static void CalculateHistogramData()
+        private void CalculateHistogramData()
         {
             // crummy way to get number of trades for init array
             // TBD -- find better property
             int ctr = 0;
-            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+            for (int bar = 0; bar < _dataSet.Bars; bar++)
             {
                 for (int pos = 0; pos < StatsBuffer.Positions(bar); pos++)
                 {
@@ -103,7 +110,7 @@ namespace Forex_Strategy_Builder
 
             _tradeResults = new int[ctr];
             ctr = 0;
-            for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+            for (int bar = 0; bar < _dataSet.Bars; bar++)
             {
                 for (int pos = 0; pos < StatsBuffer.Positions(bar); pos++)
                 {
@@ -170,7 +177,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public void SetChartData()
         {
-            _isNotPaint = !Data.IsData || !Data.IsResult || Data.DataSet.Bars <= StatsBuffer.FirstBar;
+            _isNotPaint = _dataSet.Bars <= StatsBuffer.FirstBar;
 
             if (_isNotPaint) return;
 
@@ -354,7 +361,7 @@ namespace Forex_Strategy_Builder
         {
             base.OnMouseMove(e);
 
-            if (!_isShowDynamicInfo || !Data.IsData || !Data.IsResult) return;
+            if (!_isShowDynamicInfo) return;
 
             int bar = (int) ((e.X - _xLeft)/_xScale) + _firstBar;
 

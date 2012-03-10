@@ -35,7 +35,7 @@ namespace Forex_Strategy_Builder
             PanelJournalRight = new Panel {Parent = PanelJournal, Dock = DockStyle.Fill};
 
             // Journal Orders
-            JournalOrders = new JournalOrders {Parent = PanelJournalRight, Dock = DockStyle.Fill, Cursor = Cursors.Hand};
+            JournalOrders = new JournalOrders(Backtester.DataSet) {Parent = PanelJournalRight, Dock = DockStyle.Fill, Cursor = Cursors.Hand};
             JournalOrders.Click += PnlJournalMouseClick;
             JournalOrders.CloseButton.Visible = true;
             JournalOrders.CloseButton.Click += ContextMenuCloseJournalClick;
@@ -45,14 +45,14 @@ namespace Forex_Strategy_Builder
             new Splitter {Parent = PanelJournalRight, Dock = DockStyle.Bottom, Height = Gap};
 
             // Journal Position
-            JournalPositions = new JournalPositions {Parent = PanelJournalRight, Dock = DockStyle.Bottom, Cursor = Cursors.Hand};
+            JournalPositions = new JournalPositions(Backtester.DataSet) { Parent = PanelJournalRight, Dock = DockStyle.Bottom, Cursor = Cursors.Hand };
             JournalPositions.Click += PnlJournalMouseClick;
             toolTip.SetToolTip(JournalPositions, Language.T("Click to view Bar Explorer."));
 
             VerticalSplitter = new Splitter {Parent = PanelJournal, Dock = DockStyle.Left, Width = Gap};
 
             // Journal by Bars
-            JournalByBars = new JournalByBars {Name = "JournalByBars", Parent = PanelJournal, Dock = DockStyle.Left};
+            JournalByBars = new JournalByBars(Backtester.DataSet) {Name = "JournalByBars", Parent = PanelJournal, Dock = DockStyle.Left};
             JournalByBars.PopUpContextMenu.Items.AddRange(GetJournalContextMenuItems());
             JournalByBars.IsContextButtonVisible = true;
             JournalByBars.SelectedBarChange += PnlJournalSelectedBarChange;
@@ -60,7 +60,7 @@ namespace Forex_Strategy_Builder
             toolTip.SetToolTip(JournalByBars, Language.T("Click to select a bar.") + Environment.NewLine + Language.T("Double click to view Bar Explorer."));
 
             // Journal by Positions
-            JournalByPositions = new JournalByPositions {Name = "JournalByPositions", Parent = PanelJournal, Dock = DockStyle.Fill};
+            JournalByPositions = new JournalByPositions(Backtester.DataSet) {Name = "JournalByPositions", Parent = PanelJournal, Dock = DockStyle.Fill};
             JournalByPositions.PopUpContextMenu.Items.AddRange(GetJournalContextMenuItems());
             JournalByPositions.IsContextButtonVisible = true;
             JournalByPositions.CloseButton.Visible = true;

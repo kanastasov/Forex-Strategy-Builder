@@ -6,6 +6,7 @@
 // This code or any part of it cannot be used in other applications without a permission.
 
 using System.Drawing;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Donchian_Channel(SlotTypes slotType)
+        public Donchian_Channel(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName = "Donchian Channel";

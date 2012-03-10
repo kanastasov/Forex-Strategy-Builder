@@ -22,7 +22,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private readonly Random _rand = new Random();
         private readonly ToolTip _toolTip = new ToolTip();
         private int[] _aiChecked; // An array of the checked parameters
-        private int _barOOS = Data.DataSet.Bars - 1;
+        private int _barOOS;
         private int _checkedParams; // Count of the checked parameters
         private Color _colorText;
         private int _computedCycles; // Currently completed cycles
@@ -41,12 +41,16 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private StringBuilder _sbReport;
         private OptimizerButtons _lastSelectButton = OptimizerButtons.SelectRandom;
         private int _lastSetStepButtonValue = 5;
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public Optimizer()
+        public Optimizer(Backtester backtester)
         {
+            _backtester = backtester;
+            _barOOS = _backtester.DataSet.Bars - 1;
+
             Icon = Data.Icon;
             BackColor = LayoutColors.ColorFormBack;
             AcceptButton = BtnAccept;

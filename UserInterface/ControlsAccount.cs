@@ -76,7 +76,7 @@ namespace Forex_Strategy_Builder
             new Splitter {Parent = PanelAccount, Dock = DockStyle.Bottom, BorderStyle = BorderStyle.None, Height = Gap};
 
             // Small Balance Chart
-            BalanceChart = new SmallBalanceChart
+            BalanceChart = new SmallBalanceChart(Backtester.DataSet)
             {
                 Parent = PanelAccount,
                 Cursor = Cursors.Hand,
@@ -161,7 +161,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void SmallBalanceChartMouseUp(object sender, MouseEventArgs e)
         {
-            if(!Data.IsData || !Data.IsResult) return;
+            if(!Backtester.IsData || !Backtester.IsResult) return;
 
             switch (e.Button)
             {

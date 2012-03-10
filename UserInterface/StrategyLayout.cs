@@ -29,7 +29,7 @@ namespace Forex_Strategy_Builder
 
         public StrategyLayout()
         {
-            _strategy = Strategy.GenerateNew();
+            _strategy = new Strategy(0, 0);
             InitializeStrategyLayout();
         }
 

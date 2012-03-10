@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -60,8 +61,9 @@ namespace Forex_Strategy_Builder
         /// Load file, compile it and create/load the indicators into the CustomIndicatorsList.
         /// </summary>
         /// <param name="filePath">Path to the source file</param>
+        /// <param name="dataSet">Data set</param>
         /// <param name="errorMessages">Resulting error messages, if any.</param>
-        public void LoadCompileSourceFile(string filePath, out string errorMessages)
+        public void LoadCompileSourceFile(string filePath, IDataSet dataSet, out string errorMessages)
         {
             string errorLoadSourceFile;
             string source = LoadSourceFile(filePath, out errorLoadSourceFile);
@@ -94,7 +96,7 @@ namespace Forex_Strategy_Builder
 
             string errorGetIndicator;
             string indicatorFileName = Path.GetFileNameWithoutExtension(filePath);
-            Indicator newIndicator = GetIndicatorInstanceFromAssembly(assembly, indicatorFileName, out errorGetIndicator);
+            Indicator newIndicator = GetIndicatorInstanceFromAssembly(assembly, indicatorFileName, dataSet, out errorGetIndicator);
 
             if (newIndicator == null)
             {
@@ -170,7 +172,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Creates an indicator instance from the assembly given.
         /// </summary>
-        private static Indicator GetIndicatorInstanceFromAssembly(Assembly assembly, string indicatorFileName,
+        private static Indicator GetIndicatorInstanceFromAssembly(Assembly assembly, string indicatorFileName, IDataSet dataSet,
                                                                   out string errorMessage)
         {
             Type[] assemblyTypes = assembly.GetTypes();
@@ -186,13 +188,14 @@ namespace Forex_Strategy_Builder
                         ParameterInfo[] parameterInfo = constructorInfo.GetParameters();
                         if (constructorInfo.IsConstructor &&
                             constructorInfo.IsPublic &&
-                            parameterInfo.Length == 1 &&
-                            parameterInfo[0].ParameterType == typeof (SlotTypes))
+                            parameterInfo.Length == 2 &&
+                            parameterInfo[0].ParameterType == typeof (IDataSet) &&
+                            parameterInfo[1].ParameterType == typeof(SlotTypes))
                         {
                             try
                             {
                                 errorMessage = string.Empty;
-                                return (Indicator) constructorInfo.Invoke(new object[] {SlotTypes.NotDefined});
+                                return (Indicator)constructorInfo.Invoke(new object[] { dataSet, SlotTypes.NotDefined });
                             }
                             catch (Exception exc)
                             {

@@ -1,4 +1,4 @@
-// OverviewFormatReport
+// StrategyFormatOverview
 // Part of Forex Strategy Builder
 // Website http://forexsb.com/
 // Copyright (c) 2006 - 2012 Miroslav Popov - All rights reserved.
@@ -11,15 +11,15 @@ using System.Text;
 
 namespace Forex_Strategy_Builder
 {
-    public static class OverviewFormatReport
+    public static class StrategyFormatOverview
     {
         private static Backtester _backtester;
 
         /// <summary>
         /// Generate Overview in HTML code
         /// </summary>
-        /// <returns>the HTML code</returns>
-        public static string GenerateHTMLOverview(Backtester backtester, bool isDescriptionRelevant)
+        /// <returns>HTML code</returns>
+        public static string FormatOverview(Backtester backtester, bool isDescriptionRelevant)
         {
             _backtester = backtester;
 
@@ -214,7 +214,7 @@ namespace Forex_Strategy_Builder
             var sb = new StringBuilder();
             string indicatorName = _backtester.Strategy.Slot[0].IndicatorName;
 
-            Indicator indOpen = IndicatorStore.ConstructIndicator(indicatorName, SlotTypes.Open);
+            Indicator indOpen = IndicatorStore.ConstructIndicator(indicatorName, _backtester.DataSet, SlotTypes.Open);
             indOpen.IndParam = _backtester.Strategy.Slot[0].IndParam;
             indOpen.SetDescription(SlotTypes.Open);
 
@@ -293,6 +293,7 @@ namespace Forex_Strategy_Builder
 
                         Indicator indOpenFilter =
                             IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                              _backtester.DataSet,
                                                               SlotTypes.OpenFilter);
                         indOpenFilter.IndParam = _backtester.Strategy.Slot[slot].IndParam;
                         indOpenFilter.SetDescription(SlotTypes.OpenFilter);
@@ -379,6 +380,7 @@ namespace Forex_Strategy_Builder
 
                         Indicator indOpenFilter =
                             IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                              _backtester.DataSet,
                                                               SlotTypes.OpenFilter);
                         indOpenFilter.IndParam = _backtester.Strategy.Slot[slot].IndParam;
                         indOpenFilter.SetDescription(SlotTypes.OpenFilter);
@@ -413,7 +415,7 @@ namespace Forex_Strategy_Builder
             int closingSlotNmb = _backtester.Strategy.CloseSlot;
             string indicatorName = _backtester.Strategy.Slot[closingSlotNmb].IndicatorName;
 
-            Indicator indClose = IndicatorStore.ConstructIndicator(indicatorName, SlotTypes.Close);
+            Indicator indClose = IndicatorStore.ConstructIndicator(indicatorName, _backtester.DataSet, SlotTypes.Close);
             indClose.IndParam = _backtester.Strategy.Slot[closingSlotNmb].IndParam;
             indClose.SetDescription(SlotTypes.Close);
 
@@ -486,6 +488,7 @@ namespace Forex_Strategy_Builder
 
                         Indicator indCloseFilter =
                             IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                              _backtester.DataSet,
                                                               SlotTypes.CloseFilter);
                         indCloseFilter.IndParam = _backtester.Strategy.Slot[slot].IndParam;
                         indCloseFilter.SetDescription(SlotTypes.CloseFilter);
@@ -566,6 +569,7 @@ namespace Forex_Strategy_Builder
 
                         Indicator indCloseFilter =
                             IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                              _backtester.DataSet,
                                                               SlotTypes.CloseFilter);
                         indCloseFilter.IndParam = _backtester.Strategy.Slot[slot].IndParam;
                         indCloseFilter.SetDescription(SlotTypes.CloseFilter);
@@ -727,20 +731,20 @@ namespace Forex_Strategy_Builder
         {
             var sb = new StringBuilder();
 
-            string swapUnit = (Data.DataSet.InstrProperties.SwapType == CommissionType.money
-                                   ? Data.DataSet.InstrProperties.PriceIn
-                                   : Language.T(Data.DataSet.InstrProperties.SwapType.ToString()));
-            string commission = Language.T("Commission") + " " + Data.DataSet.InstrProperties.CommissionScopeToString +
-                                " " + Data.DataSet.InstrProperties.CommissionTimeToString;
-            string commUnit = (Data.DataSet.InstrProperties.CommissionType == CommissionType.money
-                                   ? Data.DataSet.InstrProperties.PriceIn
-                                   : Language.T(Data.DataSet.InstrProperties.CommissionType.ToString()));
+            string swapUnit = (_backtester.DataSet.InstrProperties.SwapType == CommissionType.money
+                                   ? _backtester.DataSet.InstrProperties.PriceIn
+                                   : Language.T(_backtester.DataSet.InstrProperties.SwapType.ToString()));
+            string commission = Language.T("Commission") + " " + _backtester.DataSet.InstrProperties.CommissionScopeToString +
+                                " " + _backtester.DataSet.InstrProperties.CommissionTimeToString;
+            string commUnit = (_backtester.DataSet.InstrProperties.CommissionType == CommissionType.money
+                                   ? _backtester.DataSet.InstrProperties.PriceIn
+                                   : Language.T(_backtester.DataSet.InstrProperties.CommissionType.ToString()));
 
             sb.AppendLine("<h3>" + Language.T("Market") + "</h3>");
             sb.AppendLine("<table class=\"fsb_table_cleen\" cellspacing=\"0\">");
-            sb.AppendLine("<tr><td>" + Language.T("Symbol") + "</td><td> - <strong>" + Data.Symbol +
+            sb.AppendLine("<tr><td>" + Language.T("Symbol") + "</td><td> - <strong>" + _backtester.DataSet.Symbol +
                           "</strong></td></tr>");
-            sb.AppendLine("<tr><td>" + Language.T("Time frame") + "</td><td> - <strong>" + Data.PeriodString +
+            sb.AppendLine("<tr><td>" + Language.T("Time frame") + "</td><td> - <strong>" + _backtester.DataSet.PeriodString +
                           "</strong></td></tr>");
             sb.AppendLine("</table>");
 
@@ -748,36 +752,36 @@ namespace Forex_Strategy_Builder
             sb.AppendLine("<table class=\"fsb_table_cleen\" cellspacing=\"0\">");
             sb.AppendLine("<tr><td>" + Language.T("Initial account") + "</td><td> - " +
                           Configs.InitialAccount.ToString("F2") + " " + Configs.AccountCurrency + "</td></tr>");
-            sb.AppendLine("<tr><td>" + Language.T("Lot size") + "</td><td> - " + Data.DataSet.InstrProperties.LotSize +
+            sb.AppendLine("<tr><td>" + Language.T("Lot size") + "</td><td> - " + _backtester.DataSet.InstrProperties.LotSize +
                           "</td></tr>");
             sb.AppendLine("<tr><td>" + Language.T("Leverage") + "</td><td> - 1/" + Configs.Leverage + "</td></tr>");
             sb.AppendLine("<tr><td>" + Language.T("Required margin") + "</td><td> - " +
-                          _backtester.RequiredMargin(1, Data.DataSet.Bars - 1).ToString("F2") + " " +
+                          _backtester.RequiredMargin(1, _backtester.DataSet.Bars - 1).ToString("F2") + " " +
                           Configs.AccountCurrency + "* " + Language.T("for each open lot") + "</td></tr>");
             sb.AppendLine("</table>");
 
             sb.AppendLine("<h3>" + Language.T("Charges") + "</h3>");
             sb.AppendLine("<table class=\"fsb_table_cleen\" cellspacing=\"0\">");
             sb.AppendLine("<tr><td>" + Language.T("Spread") + "</td><td> - " +
-                          Data.DataSet.InstrProperties.Spread.ToString("F2") + " " + Language.T("pips") + "</td><td>(" +
-                          _backtester.PipsToMoney(Data.DataSet.InstrProperties.Spread, Data.DataSet.Bars - 1).ToString(
+                          _backtester.DataSet.InstrProperties.Spread.ToString("F2") + " " + Language.T("pips") + "</td><td>(" +
+                          _backtester.PipsToMoney(_backtester.DataSet.InstrProperties.Spread, _backtester.DataSet.Bars - 1).ToString(
                               "F2") + " " + Configs.AccountCurrency + "*)</td></tr>");
             sb.AppendLine("<tr><td>" + Language.T("Swap number for a long position rollover") + "</td><td> - " +
-                          Data.DataSet.InstrProperties.SwapLong.ToString("F2") + " " + swapUnit + "</td><td>(" +
-                          _backtester.RolloverInMoney(PosDirection.Long, 1, 1, Data.DataSet.Close[Data.DataSet.Bars - 1])
+                          _backtester.DataSet.InstrProperties.SwapLong.ToString("F2") + " " + swapUnit + "</td><td>(" +
+                          _backtester.RolloverInMoney(PosDirection.Long, 1, 1, _backtester.DataSet.Close[_backtester.DataSet.Bars - 1])
                               .ToString("F2") + " " + Configs.AccountCurrency + "*)</td></tr>");
             sb.AppendLine("<tr><td>" + Language.T("Swap number for a short position rollover") + "</td><td> - " +
-                          Data.DataSet.InstrProperties.SwapShort.ToString("F2") + " " + swapUnit + "</td><td>(" +
+                          _backtester.DataSet.InstrProperties.SwapShort.ToString("F2") + " " + swapUnit + "</td><td>(" +
                           _backtester.RolloverInMoney(PosDirection.Short, 1, 1,
-                                                      Data.DataSet.Close[Data.DataSet.Bars - 1]).ToString("F2") + " " +
+                                                      _backtester.DataSet.Close[_backtester.DataSet.Bars - 1]).ToString("F2") + " " +
                           Configs.AccountCurrency + "*)</td></tr>");
             sb.AppendLine("<tr><td>" + commission + "</td><td> - " +
-                          Data.DataSet.InstrProperties.Commission.ToString("F2") + " " + commUnit + "</td><td>(" +
-                          _backtester.CommissionInMoney(1, Data.DataSet.Close[Data.DataSet.Bars - 1], false).ToString(
+                          _backtester.DataSet.InstrProperties.Commission.ToString("F2") + " " + commUnit + "</td><td>(" +
+                          _backtester.CommissionInMoney(1, _backtester.DataSet.Close[_backtester.DataSet.Bars - 1], false).ToString(
                               "F2") + " " + Configs.AccountCurrency + "*)</td></tr>");
             sb.AppendLine("<tr><td>" + Language.T("Slippage") + "</td><td> - " +
-                          Plural("pip", Data.DataSet.InstrProperties.Slippage) + "</td><td>(" +
-                          _backtester.PipsToMoney(Data.DataSet.InstrProperties.Slippage, Data.DataSet.Bars - 1).ToString
+                          Plural("pip", _backtester.DataSet.InstrProperties.Slippage) + "</td><td>(" +
+                          _backtester.PipsToMoney(_backtester.DataSet.InstrProperties.Slippage, _backtester.DataSet.Bars - 1).ToString
                               ("F2") + " " + Configs.AccountCurrency + "*)</td></tr>");
             sb.AppendLine("</table>");
 
@@ -984,7 +988,7 @@ namespace Forex_Strategy_Builder
         private static StringBuilder TradingStatsHTMLReport()
         {
             var sb = new StringBuilder();
-            int rows = Math.Max(Data.DataStats.MarketStatsParam.Length, _backtester.AccountStatsParam.Length);
+            int rows = Math.Max(_backtester.DataStats.MarketStatsParam.Length, _backtester.AccountStatsParam.Length);
 
             sb.AppendLine("<table class=\"fsb_table\" cellspacing=\"0\" cellpadding=\"5\">");
             sb.AppendLine("<tr><th colspan=\"2\">" + Language.T("Market") + "</th><th colspan=\"2\">" +
@@ -992,9 +996,9 @@ namespace Forex_Strategy_Builder
             for (int i = 0; i < rows; i++)
             {
                 sb.Append("<tr>");
-                if (i < Data.DataStats.MarketStatsParam.Length)
-                    sb.Append("<td><strong>" + Data.DataStats.MarketStatsParam[i] + "</strong></td><td>" +
-                              Data.DataStats.MarketStatsValue[i] + "</td>");
+                if (i < _backtester.DataStats.MarketStatsParam.Length)
+                    sb.Append("<td><strong>" + _backtester.DataStats.MarketStatsParam[i] + "</strong></td><td>" +
+                              _backtester.DataStats.MarketStatsValue[i] + "</td>");
                 else
                     sb.Append("<td></td><td></td>");
                 if (i < _backtester.AccountStatsParam.Length)

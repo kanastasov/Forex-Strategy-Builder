@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Oscillator_of_Trix(SlotTypes slotType)
+        public Oscillator_of_Trix(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Oscillator of Trix";
@@ -105,14 +107,14 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            Trix_Index Trix1 = new Trix_Index(slotType);
+            Trix_Index Trix1 = new Trix_Index(DataSet, slotType);
             Trix1.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             Trix1.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             Trix1.IndParam.NumParam[0].Value = IndParam.NumParam[0].Value;
             Trix1.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;
             Trix1.Calculate(slotType);
 
-            Trix_Index Trix2 = new Trix_Index(slotType);
+            Trix_Index Trix2 = new Trix_Index(DataSet, slotType);
             Trix2.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             Trix2.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             Trix2.IndParam.NumParam[0].Value = IndParam.NumParam[1].Value;

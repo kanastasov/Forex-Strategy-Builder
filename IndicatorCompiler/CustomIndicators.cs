@@ -9,17 +9,19 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
     public static class CustomIndicators
     {
         private static IndicatorCompilationManager _indicatorManager;
+        private static IDataSet _dataSet;
 
         /// <summary>
         /// Load Source Files
         /// </summary>
-        public static void LoadCustomIndicators()
+        public static void LoadCustomIndicators(IDataSet dataSet)
         {
             _indicatorManager = new IndicatorCompilationManager();
 
@@ -27,7 +29,7 @@ namespace Forex_Strategy_Builder
             {
                 MessageBox.Show("Custom indicators folder does not exist!", Language.T("Custom Indicators"));
                 IndicatorStore.ResetCustomIndicators(null);
-                IndicatorStore.CombineAllIndicators();
+                IndicatorStore.CombineAllIndicators(dataSet);
                 return;
             }
 
@@ -35,7 +37,7 @@ namespace Forex_Strategy_Builder
             if (pathInputFiles.Length == 0)
             {
                 IndicatorStore.ResetCustomIndicators(null);
-                IndicatorStore.CombineAllIndicators();
+                IndicatorStore.CombineAllIndicators(dataSet);
                 return;
             }
 
@@ -46,7 +48,7 @@ namespace Forex_Strategy_Builder
             foreach (string filePath in pathInputFiles)
             {
                 string errorMessages;
-                _indicatorManager.LoadCompileSourceFile(filePath, out errorMessages);
+                _indicatorManager.LoadCompileSourceFile(filePath, dataSet, out errorMessages);
 
                 if (!string.IsNullOrEmpty(errorMessages))
                 {
@@ -61,7 +63,7 @@ namespace Forex_Strategy_Builder
 
             // Adds the custom indicators
             IndicatorStore.ResetCustomIndicators(_indicatorManager.CustomIndicatorsList);
-            IndicatorStore.CombineAllIndicators();
+            IndicatorStore.CombineAllIndicators(dataSet);
 
             if (isError)
             {
@@ -77,8 +79,10 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Tests the Custom Indicators.
         /// </summary>
-        public static void TestCustomIndicators()
+        public static void TestCustomIndicators(IDataSet dataSet)
         {
+            _dataSet = dataSet;
+
             var bgWorker = new BackgroundWorker();
             bgWorker.DoWork += DoWorkTestCustomIndicators;
             bgWorker.RunWorkerCompleted += WorkerRunWorkerCompleted;
@@ -102,7 +106,7 @@ namespace Forex_Strategy_Builder
             foreach (string indicatorName in IndicatorStore.CustomIndicatorNames)
             {
                 string errorList;
-                if (!IndicatorTester.CustomIndicatorThoroughTest(indicatorName, out errorList))
+                if (!IndicatorTester.CustomIndicatorThoroughTest(_dataSet, indicatorName, out errorList))
                 {
                     isErrors = true;
                     errorReport.AppendLine("<h2>" + indicatorName + "</h2>");

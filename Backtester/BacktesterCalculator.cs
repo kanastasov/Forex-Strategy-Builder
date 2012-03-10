@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Forex_Strategy_Builder.Interfaces;
+using Forex_Strategy_Builder.Market;
 
 namespace Forex_Strategy_Builder
 {
@@ -18,6 +19,9 @@ namespace Forex_Strategy_Builder
     {
         public Strategy Strategy { get; set; }
         public IDataSet DataSet { get; set; }
+        public DataStatistics DataStats { get; set; }
+        public bool IsData { get; set; }
+        public bool IsResult { get; set; }
     
         // Private fields
         private int _totalPositions;

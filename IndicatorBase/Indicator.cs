@@ -5,6 +5,7 @@
 // This code or any part of it cannot be used in other applications without a permission.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -16,8 +17,10 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// The default constructor
         /// </summary>
-        protected Indicator()
+        public Indicator(IDataSet dataSet)
         {
+            DataSet = dataSet;
+
             ExitFilterShortDescription = "Not defined";
             EntryFilterShortDescription = "Not defined";
             ExitFilterLongDescription = "Not defined";
@@ -39,6 +42,11 @@ namespace Forex_Strategy_Builder
             IndParam = new IndicatorParam();
             Component = new IndicatorComp[] {};
         }
+
+        /// <summary>
+        /// Current data set;
+        /// </summary>
+        public IDataSet DataSet { get; set; }
 
         /// <summary>
         /// Gets or sets the indicator name.
@@ -143,89 +151,89 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Time frame of the loaded historical data
         /// </summary>
-        protected static DataPeriods Period
+        protected DataPeriods Period
         {
-            get { return Data.DataSet.Period; }
+            get { return DataSet.Period; }
         }
 
         /// <summary>
         /// The minimal price change.
         /// </summary>
-        protected static double Point
+        protected double Point
         {
-            get { return Data.DataSet.InstrProperties.Point; }
+            get { return DataSet.InstrProperties.Point; }
         }
 
         /// <summary>
         /// Number of digits after the decimal point of the historical data.
         /// </summary>
-        protected static int Digits
+        protected int Digits
         {
-            get { return Data.DataSet.InstrProperties.Digits; }
+            get { return DataSet.InstrProperties.Digits; }
         }
 
         /// <summary>
         /// Number of loaded bars
         /// </summary>
-        protected static int Bars
+        protected int Bars
         {
-            get { return Data.DataSet.Bars; }
+            get { return DataSet.Bars; }
         }
 
         /// <summary>
         /// Obsolete! Use 'Time' instead.
         /// </summary>
-        protected static DateTime[] Date
+        protected DateTime[] Date
         {
-            get { return Data.DataSet.Time; }
+            get { return DataSet.Time; }
         }
 
         /// <summary>
         /// Bar opening date and time
         /// </summary>
-        protected static DateTime[] Time
+        protected DateTime[] Time
         {
-            get { return Data.DataSet.Time; }
+            get { return DataSet.Time; }
         }
 
         /// <summary>
         /// Bar opening price
         /// </summary>
-        protected static double[] Open
+        protected double[] Open
         {
-            get { return Data.DataSet.Open; }
+            get { return DataSet.Open; }
         }
 
         /// <summary>
         /// Bar highest price
         /// </summary>
-        protected static double[] High
+        protected double[] High
         {
-            get { return Data.DataSet.High; }
+            get { return DataSet.High; }
         }
 
         /// <summary>
         /// Bar lowest price
         /// </summary>
-        protected static double[] Low
+        protected double[] Low
         {
-            get { return Data.DataSet.Low; }
+            get { return DataSet.Low; }
         }
 
         /// <summary>
         /// Bar closing price
         /// </summary>
-        protected static double[] Close
+        protected double[] Close
         {
-            get { return Data.DataSet.Close; }
+            get { return DataSet.Close; }
         }
 
         /// <summary>
         /// Bar volume
         /// </summary>
-        protected static int[] Volume
+        protected int[] Volume
         {
-            get { return Data.DataSet.Volume; }
+            get { return DataSet.Volume; }
         }
 
         /// <summary>
@@ -269,7 +277,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         /// <param name="priceType">The base price type.</param>
         /// <returns>Base price.</returns>
-        protected static double[] Price(BasePrice priceType)
+        protected double[] Price(BasePrice priceType)
         {
             var price = new double[Bars];
 
@@ -331,7 +339,7 @@ namespace Forex_Strategy_Builder
         /// <param name="maMethod">Method of calculation</param>
         /// <param name="source">The array of source data</param>
         /// <returns>the Moving Average</returns>
-        protected static double[] MovingAverage(int period, int shift, MAMethod maMethod, double[] source)
+        protected double[] MovingAverage(int period, int shift, MAMethod maMethod, double[] source)
         {
             var movingAverage = new double[Bars];
 
@@ -428,13 +436,13 @@ namespace Forex_Strategy_Builder
                     sigma = 0;
                     break;
                 case 1:
-                    sigma = Data.DataSet.InstrProperties.Point*0.5;
+                    sigma = DataSet.InstrProperties.Point*0.5;
                     break;
                 case 2:
-                    sigma = Data.DataSet.InstrProperties.Point*0.05;
+                    sigma = DataSet.InstrProperties.Point*0.05;
                     break;
                 case 3:
-                    sigma = Data.DataSet.InstrProperties.Point*0.005;
+                    sigma = DataSet.InstrProperties.Point*0.005;
                     break;
                 case 4:
                     sigma = 0.00005;

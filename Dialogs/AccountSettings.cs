@@ -22,12 +22,15 @@ namespace Forex_Strategy_Builder
         private int _leverage;
         private double _rateToEUR;
         private double _rateToUSD;
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public AccountSettings()
+        public AccountSettings(Backtester backtester)
         {
+            _backtester = backtester;
+
             PnlBase = new FancyPanel();
 
             LblAccountCurrency = new Label();
@@ -330,7 +333,7 @@ namespace Forex_Strategy_Builder
         {
             LblExchangeRate.Text = Language.T("Account exchange rate");
 
-            if (Data.DataSet.InstrProperties.PriceIn == CbxAccountCurrency.Text)
+            if (_backtester.DataSet.InstrProperties.PriceIn == CbxAccountCurrency.Text)
             {
                 TbxExchangeRate.Text = Language.T("Not used");
                 TbxExchangeRate.Visible = true;
@@ -341,8 +344,8 @@ namespace Forex_Strategy_Builder
                 else if (CbxAccountCurrency.Text == "EUR")
                     _rateToEUR = 1;
             }
-            else if (Data.DataSet.InstrProperties.InstrType == InstrumetType.Forex &&
-                     Data.DataSet.InstrProperties.Symbol.StartsWith(CbxAccountCurrency.Text))
+            else if (_backtester.DataSet.InstrProperties.InstrType == InstrumetType.Forex &&
+                     _backtester.DataSet.InstrProperties.Symbol.StartsWith(CbxAccountCurrency.Text))
             {
                 TbxExchangeRate.Text = Language.T("Deal price");
                 TbxExchangeRate.Visible = true;
@@ -355,7 +358,7 @@ namespace Forex_Strategy_Builder
             }
             else
             {
-                LblExchangeRate.Text += " " + CbxAccountCurrency.Text + Data.DataSet.InstrProperties.PriceIn;
+                LblExchangeRate.Text += " " + CbxAccountCurrency.Text + _backtester.DataSet.InstrProperties.PriceIn;
                 TbxExchangeRate.Visible = false;
                 if (CbxAccountCurrency.Text == "USD")
                     NUDExchangeRate.Value = (decimal) _rateToUSD;

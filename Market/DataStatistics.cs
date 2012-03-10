@@ -11,6 +11,10 @@ namespace Forex_Strategy_Builder.Market
         }
 
         // Statistical information for the instrument data
+        public string Symbol { get; set; }
+        public DataPeriods Period { get; set; }
+        public int Bars { get; set; }
+        public DateTime Beginning { get; set; }
         public DateTime Update { get; set; }
         public double MinPrice { get; set; }
         public double MaxPrice { get; set; }
@@ -77,13 +81,13 @@ namespace Forex_Strategy_Builder.Market
         /// </summary>
         public void GenerateMarketStats()
         {
-            MarketStatsValue[0] = Data.DataSet.Symbol;
-            MarketStatsValue[1] = Data.DataPeriodToString(Data.DataSet.Period);
-            MarketStatsValue[2] = Data.DataSet.Bars.ToString(CultureInfo.InvariantCulture);
+            MarketStatsValue[0] = Symbol;
+            MarketStatsValue[1] = Data.DataPeriodToString(Period);
+            MarketStatsValue[2] = Bars.ToString(CultureInfo.InvariantCulture);
             MarketStatsValue[3] = Update.ToString(Data.DF);
             MarketStatsValue[4] = Update.ToString("HH:mm");
-            MarketStatsValue[5] = Data.DataSet.Time[0].ToString(Data.DF);
-            MarketStatsValue[6] = Data.DataSet.Time[0].ToString("HH:mm");
+            MarketStatsValue[5] = Beginning.ToString(Data.DF);
+            MarketStatsValue[6] = Beginning.ToString("HH:mm");
             MarketStatsValue[7] = MinPrice.ToString(CultureInfo.InvariantCulture);
             MarketStatsValue[8] = MaxPrice.ToString(CultureInfo.InvariantCulture);
             MarketStatsValue[9] = AverageGap + " " + Language.T("pips");

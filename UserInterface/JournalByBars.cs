@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Interfaces;
 using Forex_Strategy_Builder.Properties;
 using Forex_Strategy_Builder.Utils;
 
@@ -33,12 +34,15 @@ namespace Forex_Strategy_Builder
         private string[] _titlesInPips; // Journal title second row
         private int[] _xPositions; // The horizontal position of the column
         private int[] _xScaled; // The scaled horizontal position of the column
+        private readonly IDataSet _dataSet;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public JournalByBars()
+        public JournalByBars(IDataSet dataSet)
         {
+            _dataSet = dataSet;
+
             InitializeJournal();
             SetUpJournal();
             UpdateJournalData();
@@ -187,7 +191,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public void SetUpJournal()
         {
-            _bars = Data.DataSet.Bars;
+            _bars = _dataSet.Bars;
 
             if (_bars == 0)
             {
@@ -245,17 +249,17 @@ namespace Forex_Strategy_Builder
                 bool inMoney = Configs.AccountInMoney;
 
                 _journalData[row, col++] = (bar + 1).ToString(CultureInfo.InvariantCulture);
-                _journalData[row, col++] = Data.DataSet.Time[bar].ToString(Data.DF);
-                _journalData[row, col++] = Data.DataSet.Time[bar].ToString("HH:mm");
-                _journalData[row, col++] = Data.DataSet.Open[bar].ToString(Data.FF);
-                _journalData[row, col++] = Data.DataSet.High[bar].ToString(Data.FF);
-                _journalData[row, col++] = Data.DataSet.Low[bar].ToString(Data.FF);
-                _journalData[row, col++] = Data.DataSet.Close[bar].ToString(Data.FF);
-                _journalData[row, col++] = Data.DataSet.Volume[bar].ToString(CultureInfo.InvariantCulture);
+                _journalData[row, col++] = _dataSet.Time[bar].ToString(Data.DF);
+                _journalData[row, col++] = _dataSet.Time[bar].ToString("HH:mm");
+                _journalData[row, col++] = _dataSet.Open[bar].ToString(_dataSet.FF);
+                _journalData[row, col++] = _dataSet.High[bar].ToString(_dataSet.FF);
+                _journalData[row, col++] = _dataSet.Low[bar].ToString(_dataSet.FF);
+                _journalData[row, col++] = _dataSet.Close[bar].ToString(_dataSet.FF);
+                _journalData[row, col++] = _dataSet.Volume[bar].ToString(CultureInfo.InvariantCulture);
                 _journalData[row, col++] = isPos ? Language.T(StatsBuffer.SummaryTrans(bar).ToString()) : "";
                 _journalData[row, col++] = isPos ? Language.T(StatsBuffer.SummaryDir(bar).ToString()) : "";
                 _journalData[row, col++] = isPos ? GetPositionAmmountString(bar) : "";
-                _journalData[row, col++] = isPos ? StatsBuffer.SummaryPrice(bar).ToString(Data.FF) : "";
+                _journalData[row, col++] = isPos ? StatsBuffer.SummaryPrice(bar).ToString(_dataSet.FF) : "";
                 _journalData[row, col++] = isPos ? GetPositionProfitString(bar) : "";
                 _journalData[row, col++] = isPos ? GetPositionFloatingPLString(bar) : "";
                 _journalData[row, col++] = inMoney

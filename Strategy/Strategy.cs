@@ -6,8 +6,8 @@
 
 using System;
 using System.IO;
-using System.Windows.Forms;
-using System.Xml;
+using System.Text;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -231,7 +231,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public string StrategyPath
         {
-            get { return Path.Combine(Data.StrategyDir, StrategyName); }
+            get { return Path.Combine(Data.StrategyDir, StrategyName + ".xml"); }
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Generates a new strategy.
         /// </summary>
-        public static Strategy GenerateNew()
+        public static Strategy GenerateNew(IDataSet dataSet)
         {
             var strategy = new Strategy(0, 0);
 
@@ -262,7 +262,7 @@ namespace Forex_Strategy_Builder
 
             strategy.StrategyName = "New";
 
-            var barOpening = new Bar_Opening(SlotTypes.Open);
+            var barOpening = new Bar_Opening(dataSet, SlotTypes.Open);
             barOpening.Calculate(SlotTypes.Open);
             strategy.Slot[openSlotNum].IndParam = barOpening.IndParam;
             strategy.Slot[openSlotNum].IndicatorName = barOpening.IndicatorName;
@@ -273,7 +273,7 @@ namespace Forex_Strategy_Builder
             strategy.Slot[openSlotNum].MinValue = barOpening.SeparatedChartMinValue;
             strategy.Slot[openSlotNum].IsDefined = true;
 
-            var barClosing = new Bar_Closing(SlotTypes.Close);
+            var barClosing = new Bar_Closing(dataSet, SlotTypes.Close);
             barClosing.Calculate(SlotTypes.Close);
             strategy.Slot[closeSlotNum].IndParam = barClosing.IndParam;
             strategy.Slot[closeSlotNum].IndicatorName = barClosing.IndicatorName;
@@ -312,18 +312,18 @@ namespace Forex_Strategy_Builder
         public string GetDefaultGroup(int slot)
         {
             string group = "";
-            string sIndicatorName = Slot[slot].IndicatorName;
+            string indicatorName = Slot[slot].IndicatorName;
             SlotTypes slotType = GetSlotType(slot);
             if (slotType == SlotTypes.OpenFilter)
             {
-                if (sIndicatorName == "Data Bars Filter" ||
-                    sIndicatorName == "Date Filter" ||
-                    sIndicatorName == "Day of Month" ||
-                    sIndicatorName == "Enter Once" ||
-                    sIndicatorName == "Entry Time" ||
-                    sIndicatorName == "Long or Short" ||
-                    sIndicatorName == "Lot Limiter" ||
-                    sIndicatorName == "Random Filter")
+                if (indicatorName == "Data Bars Filter" ||
+                    indicatorName == "Date Filter" ||
+                    indicatorName == "Day of Month" ||
+                    indicatorName == "Enter Once" ||
+                    indicatorName == "Entry Time" ||
+                    indicatorName == "Long or Short" ||
+                    indicatorName == "Lot Limiter" ||
+                    indicatorName == "Random Filter")
                     group = "All";
                 else
                     group = "A";
@@ -344,17 +344,17 @@ namespace Forex_Strategy_Builder
         public int AddOpenFilter()
         {
             OpenFilters++;
-            var aIndSlotOld = (IndicatorSlot[]) Slot.Clone();
+            var oldSlots = (IndicatorSlot[]) Slot.Clone();
             Slot = new IndicatorSlot[Slots];
             int newSlotNumb = OpenFilters; // The number of new open filter slot.
 
             // Copy the open slot and all old open filters.
             for (int slot = 0; slot < newSlotNumb; slot++)
-                Slot[slot] = aIndSlotOld[slot];
+                Slot[slot] = oldSlots[slot];
 
             // Copy the close slot and all close filters.
             for (int slot = newSlotNumb + 1; slot < Slots; slot++)
-                Slot[slot] = aIndSlotOld[slot - 1];
+                Slot[slot] = oldSlots[slot - 1];
 
             // Create the new slot.
             Slot[newSlotNumb] = new IndicatorSlot {SlotType = SlotTypes.OpenFilter};
@@ -373,13 +373,13 @@ namespace Forex_Strategy_Builder
         public int AddCloseFilter()
         {
             CloseFilters++;
-            var aIndSlotOld = (IndicatorSlot[]) Slot.Clone();
+            var oldSlots = (IndicatorSlot[]) Slot.Clone();
             Slot = new IndicatorSlot[Slots];
             int newSlotNumb = Slots - 1; // The number of new close filter slot.
 
             // Copy all old slots.
             for (int slot = 0; slot < newSlotNumb; slot++)
-                Slot[slot] = aIndSlotOld[slot];
+                Slot[slot] = oldSlots[slot];
 
             // Create the new slot.
             Slot[newSlotNumb] = new IndicatorSlot {SlotType = SlotTypes.CloseFilter};
@@ -404,16 +404,16 @@ namespace Forex_Strategy_Builder
                 OpenFilters--;
             else
                 CloseFilters--;
-            var indSlotOld = (IndicatorSlot[]) Slot.Clone();
+            var oldSlots = (IndicatorSlot[]) Slot.Clone();
             Slot = new IndicatorSlot[Slots];
 
             // Copy all filters before this that has to be removed.
             for (int slot = 0; slot < slotToRemove; slot++)
-                Slot[slot] = indSlotOld[slot];
+                Slot[slot] = oldSlots[slot];
 
             // Copy all filters after this that has to be removed.
             for (int slot = slotToRemove; slot < Slots; slot++)
-                Slot[slot] = indSlotOld[slot + 1];
+                Slot[slot] = oldSlots[slot + 1];
 
             // Sets the slot numbers.
             for (int slot = 0; slot < Slots; slot++)
@@ -426,12 +426,12 @@ namespace Forex_Strategy_Builder
         public void RemoveAllCloseFilters()
         {
             CloseFilters = 0;
-            var indSlotOld = (IndicatorSlot[]) Slot.Clone();
+            var oldSlots = (IndicatorSlot[]) Slot.Clone();
             Slot = new IndicatorSlot[Slots];
 
             // Copy all slots except the close filters.
             for (int slot = 0; slot < Slots; slot++)
-                Slot[slot] = indSlotOld[slot];
+                Slot[slot] = oldSlots[slot];
         }
 
         /// <summary>
@@ -469,27 +469,30 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public void DuplicateFilter(int slotToDuplicate)
         {
-            if (Slot[slotToDuplicate].SlotType == SlotTypes.OpenFilter && OpenFilters < MaxOpenFilters ||
-                Slot[slotToDuplicate].SlotType == SlotTypes.CloseFilter && CloseFilters < MaxCloseFilters)
+            SlotTypes slotType = Slot[slotToDuplicate].SlotType;
+            IndicatorSlot tempSlot = Slot[slotToDuplicate].Clone();
+
+            switch (slotType)
             {
-                IndicatorSlot tempSlot = Slot[slotToDuplicate].Clone();
-
-                if (Slot[slotToDuplicate].SlotType == SlotTypes.OpenFilter)
-                {
-                    int iAddedslot = AddOpenFilter();
-                    Slot[iAddedslot] = tempSlot.Clone();
-                }
-
-                if (Slot[slotToDuplicate].SlotType == SlotTypes.CloseFilter)
-                {
-                    int addedslot = AddCloseFilter();
-                    Slot[addedslot] = tempSlot.Clone();
-                }
-
-                // Sets the slot numbers.
-                for (int slot = 0; slot < Slots; slot++)
-                    Slot[slot].SlotNumber = slot;
+                case SlotTypes.OpenFilter:
+                    {
+                        if (OpenFilters >= MaxOpenFilters) return;
+                        int addedSlot = AddOpenFilter();
+                        Slot[addedSlot] = tempSlot.Clone();
+                    }
+                    break;
+                case SlotTypes.CloseFilter:
+                    {
+                        if (CloseFilters >= MaxCloseFilters) return;
+                        int addedSlot = AddCloseFilter();
+                        Slot[addedSlot] = tempSlot.Clone();
+                    }
+                    break;
             }
+
+            // Sets the slot numbers.
+            for (int slot = 0; slot < Slots; slot++)
+                Slot[slot].SlotNumber = slot;
         }
 
         /// <summary>
@@ -508,7 +511,7 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets Use previous bar value automatically
         /// </summary>
-        public bool AdjustUsePreviousBarValue()
+        public bool AdjustUsePreviousBarValue(IDataSet dataSet)
         {
             bool isSomethingChanged = false;
             if (Data.AutoUsePrvBarValue == false)
@@ -524,9 +527,9 @@ namespace Forex_Strategy_Builder
             {
                 for (int slot = 0; slot < Slots; slot++)
                 {
-                    string sIndicatorName = Slot[slot].IndicatorName;
+                    string indicatorName = Slot[slot].IndicatorName;
                     SlotTypes slotType = Slot[slot].SlotType;
-                    Indicator indicator = IndicatorStore.ConstructIndicator(sIndicatorName, slotType);
+                    Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, dataSet, slotType);
 
                     indicator.IndParam = Slot[slot].IndParam;
 
@@ -594,51 +597,6 @@ namespace Forex_Strategy_Builder
         }
 
         /// <summary>
-        /// Saves the strategy in XML format.
-        /// </summary>
-        public void Save(string fileName)
-        {
-            StrategyName = Path.GetFileNameWithoutExtension(fileName);
-            Symbol = Data.Symbol;
-            DataPeriod = Data.DataSet.Period;
-
-            XmlDocument xmlDocStrategy = StrategyXML.CreateStrategyXmlDoc(this);
-
-            try
-            {
-                xmlDocStrategy.Save(fileName); // Save the document to a file.
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
-        }
-
-        /// <summary>
-        /// Loads the strategy from a file in XML format.
-        /// </summary>
-        public static Strategy Load(string filename)
-        {
-            var xmlDocStrategy = new XmlDocument();
-
-            try
-            {
-                xmlDocStrategy.Load(filename);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message, Language.T("Strategy Loading"));
-
-                return null;
-            }
-
-            var strategyXML = new StrategyXML();
-            var strategy = strategyXML.ParseXmlStrategy(xmlDocStrategy);
-
-            return strategy;
-        }
-
-        /// <summary>
         /// Returns a copy of the current strategy.
         /// </summary>
         public Strategy Clone()
@@ -684,37 +642,35 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public override string ToString()
         {
-            string nl = Environment.NewLine;
-            string str = String.Empty;
-            str += "Strategy Name - " + StrategyName + nl;
-            str += "Symbol - " + Symbol + nl;
-            str += "Period - " + DataPeriod + nl;
-            str += "Same dir signal - " + SameSignalAction + nl;
-            str += "Opposite dir signal - " + OppSignalAction + nl;
-            str += "Use account % entry - " + UseAccountPercentEntry + nl;
-            str += "Max open lots - " + MaxOpenLots + nl;
-            str += "Entry lots - " + EntryLots + nl;
-            str += "Adding lots - " + AddingLots + nl;
-            str += "Reducing lots - " + ReducingLots + nl;
-            str += "Use Martingale MM - " + UseMartingale + nl;
-            str += "Martingale multiplier - " + MartingaleMultiplier + nl;
-            str += "Use Permanent S/L - " + UsePermanentSL + nl;
-            str += "Permanent S/L - " + PermanentSLType + " " + PermanentSL + nl;
-            str += "Use Permanent T/P - " + UsePermanentTP + nl;
-            str += "Permanent T/P - " + PermanentTPType + " " + PermanentTP + nl;
-            str += "Use Break Even - " + UseBreakEven + nl;
-            str += "Break Even - " + BreakEven + nl + nl;
-            str += "Description:" + nl + Description + nl + nl;
+            var sb = new StringBuilder();
+            sb.AppendLine("Strategy Name - " + StrategyName);
+            sb.AppendLine("Symbol - " + Symbol);
+            sb.AppendLine("Period - " + DataPeriod);
+            sb.AppendLine("Same dir signal - " + SameSignalAction);
+            sb.AppendLine("Opposite dir signal - " + OppSignalAction);
+            sb.AppendLine("Use account % entry - " + UseAccountPercentEntry);
+            sb.AppendLine("Max open lots - " + MaxOpenLots);
+            sb.AppendLine("Entry lots - " + EntryLots);
+            sb.AppendLine("Adding lots - " + AddingLots);
+            sb.AppendLine("Reducing lots - " + ReducingLots);
+            sb.AppendLine("Use Martingale MM - " + UseMartingale);
+            sb.AppendLine("Martingale multiplier - " + MartingaleMultiplier);
+            sb.AppendLine("Use Permanent S/L - " + UsePermanentSL);
+            sb.AppendLine("Permanent S/L - " + PermanentSLType + " " + PermanentSL);
+            sb.AppendLine("Use Permanent T/P - " + UsePermanentTP);
+            sb.AppendLine("Permanent T/P - " + PermanentTPType + " " + PermanentTP);
+            sb.AppendLine("Use Break Even - " + UseBreakEven);
+            sb.AppendLine("Break Even - " + BreakEven);
+            sb.AppendLine("Description:" + Environment.NewLine + Description);
 
             for (int slot = 0; slot < Slots; slot++)
             {
-                str += Slot[slot].SlotType + nl;
-                str += Slot[slot].IndicatorName + nl;
-                str += Slot[slot].IndParam + nl + nl;
+                sb.AppendLine(Slot[slot].SlotType.ToString());
+                sb.AppendLine(Slot[slot].IndicatorName);
+                sb.AppendLine(Slot[slot].IndParam.ToString());
             }
 
-            return str;
+            return sb.ToString();
         }
-
     }
 }

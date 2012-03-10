@@ -18,7 +18,6 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
     public sealed partial class Optimizer
     {
         private double[] _initialValues;
-        private Backtester Backtester { get; set; }
 
         /// <summary>
         /// Sets the parameters.
@@ -39,12 +38,12 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             }
 
             int param = _protections;
-            for (int slot = 0; slot < Backtester.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
                 for (int numParam = 0; numParam < 6; numParam++)
                 {
-                    if (!Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled) continue;
-                    AParameter[param] = new Parameter(Backtester, OptimizerParameterType.Indicator, slot, numParam);
+                    if (!_backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled) continue;
+                    AParameter[param] = new Parameter(_backtester, OptimizerParameterType.Indicator, slot, numParam);
                     SetParametersValues(param);
                     param++;
                 }
@@ -70,9 +69,9 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         /// </summary>
         private void CountParameters()
         {
-            for (int slot = 0; slot < Backtester.Strategy.Slots; slot++)
+            for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
                 for (int numParam = 0; numParam < 6; numParam++)
-                    if (Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled)
+                    if (_backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Enabled)
                         _parameters++;
         }
 
@@ -81,17 +80,17 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         /// </summary>
         private void CountPermanentProtections()
         {
-            if (Backtester.Strategy.UsePermanentSL)
+            if (_backtester.Strategy.UsePermanentSL)
             {
                 _parameters++;
                 _protections++;
             }
-            if (Backtester.Strategy.UsePermanentTP)
+            if (_backtester.Strategy.UsePermanentTP)
             {
                 _parameters++;
                 _protections++;
             }
-            if (Backtester.Strategy.UseBreakEven)
+            if (_backtester.Strategy.UseBreakEven)
             {
                 _parameters++;
                 _protections++;
@@ -132,19 +131,19 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private void CreateProtectionParameters()
         {
             int par = 0;
-            if (Backtester.Strategy.UsePermanentSL)
+            if (_backtester.Strategy.UsePermanentSL)
             {
-                AParameter[par] = new Parameter(Backtester, OptimizerParameterType.PermanentSL, -1, 0);
+                AParameter[par] = new Parameter(_backtester, OptimizerParameterType.PermanentSL, -1, 0);
                 par++;
             }
-            if (Backtester.Strategy.UsePermanentTP)
+            if (_backtester.Strategy.UsePermanentTP)
             {
-                AParameter[par] = new Parameter(Backtester, OptimizerParameterType.PermanentTP, -1, 0);
+                AParameter[par] = new Parameter(_backtester, OptimizerParameterType.PermanentTP, -1, 0);
                 par++;
             }
-            if (Backtester.Strategy.UseBreakEven)
+            if (_backtester.Strategy.UseBreakEven)
             {
-                AParameter[par] = new Parameter(Backtester,OptimizerParameterType.BreakEven, -1, 0);
+                AParameter[par] = new Parameter(_backtester,OptimizerParameterType.BreakEven, -1, 0);
             }
         }
 
@@ -322,9 +321,9 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
 
                 AchbxParameterName[param].Checked = false;
 
-                if (Backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Caption == "Level")
+                if (_backtester.Strategy.Slot[slot].IndParam.NumParam[numParam].Caption == "Level")
                 {
-                    if (Backtester.Strategy.Slot[slot].IndParam.ListParam[0].Text.Contains("Level"))
+                    if (_backtester.Strategy.Slot[slot].IndParam.ListParam[0].Text.Contains("Level"))
                     {
                         if (_rand.Next(100) > 20 && checkedChBoxes < 6)
                         {
@@ -473,9 +472,9 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         /// </summary>
         private void BgWorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            Backtester.Calculate(Backtester.Strategy, Data.DataSet);
-            Backtester.CalculateAccountStats();
-            BalanceChart.SetChartData(Backtester);
+            _backtester.Calculate(_backtester.Strategy, _backtester.DataSet);
+            _backtester.CalculateAccountStats();
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
 
@@ -515,7 +514,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         /// </summary>
         private void SetStrategyToGeneratorHistory()
         {
-            Data.GeneratorHistory.Add(Backtester.Strategy.Clone());
+            Data.GeneratorHistory.Add(_backtester.Strategy.Clone());
 
             if (Data.GeneratorHistory.Count >= 110)
                 Data.GeneratorHistory.RemoveRange(0, 10);
@@ -528,7 +527,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         /// </summary>
         private void OptimizeParams(BackgroundWorker worker, DoWorkEventArgs e)
         {
-            int bestBalance = (_isOOS ? Backtester.Balance(_barOOS) : Backtester.NetBalance);
+            int bestBalance = (_isOOS ? _backtester.Balance(_barOOS) : _backtester.NetBalance);
 
             // First Optimization Cycle
             for (int round = 0; round < _checkedParams && _isOptimizing; round++)
@@ -549,18 +548,18 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                     if (AParameter[param].Type == OptimizerParameterType.Indicator)
                         CalculateIndicator(AParameter[param].SlotNumber);
 
-                    Backtester.Calculate(Backtester.Strategy, Data.DataSet);
-                    Backtester.CalculateAccountStats();
+                    _backtester.Calculate(_backtester.Strategy, _backtester.DataSet);
+                    _backtester.CalculateAccountStats();
                     if (ChbOptimizerWritesReport.Checked)
                         FillInReport();
 
-                    int balance = _isOOS ? Backtester.Balance(_barOOS) : Backtester.NetBalance;
+                    int balance = _isOOS ? _backtester.Balance(_barOOS) : _backtester.NetBalance;
                     if (balance > bestBalance && IsLimitationsFulfilled())
                     {
                         bestBalance = balance;
                         AParameter[param].BestValue = value;
                         ShowParamBestValue(param);
-                        BalanceChart.SetChartData(Backtester);
+                        BalanceChart.SetChartData(_backtester);
                         BalanceChart.InitChart();
                         BalanceChart.Invalidate();
                         _isStartegyChanged = true;
@@ -581,8 +580,8 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                 AParameter[param].Value = AParameter[param].BestValue;
                 if (AParameter[param].Type == OptimizerParameterType.Indicator)
                     CalculateIndicator(AParameter[param].SlotNumber);
-                Backtester.Calculate(Backtester.Strategy, Data.DataSet);
-                Backtester.CalculateAccountStats();
+                _backtester.Calculate(_backtester.Strategy, _backtester.DataSet);
+                _backtester.CalculateAccountStats();
             }
 
             if (worker.CancellationPending)
@@ -676,12 +675,12 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                         }
 
                         // Calculates the Strategy
-                        Backtester.Calculate(Backtester.Strategy, Data.DataSet);
-                        Backtester.CalculateAccountStats();
+                        _backtester.Calculate(_backtester.Strategy, _backtester.DataSet);
+                        _backtester.CalculateAccountStats();
                         if (ChbOptimizerWritesReport.Checked)
                             FillInReport();
 
-                        int balance = _isOOS ? Backtester.Balance(_barOOS) : Backtester.NetBalance;
+                        int balance = _isOOS ? _backtester.Balance(_barOOS) : _backtester.NetBalance;
                         if (balance > bestBalance && IsLimitationsFulfilled())
                         {
                             bestBalance = balance;
@@ -689,7 +688,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                             AParameter[param2].BestValue = value2;
                             ShowParamBestValue(param1);
                             ShowParamBestValue(param2);
-                            BalanceChart.SetChartData(Backtester);
+                            BalanceChart.SetChartData(_backtester);
                             BalanceChart.InitChart();
                             BalanceChart.Invalidate();
                             _isStartegyChanged = true;
@@ -724,8 +723,8 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                         CalculateIndicator(AParameter[param2].SlotNumber);
                 }
 
-                Backtester.Calculate(Backtester.Strategy, Data.DataSet);
-                Backtester.CalculateAccountStats();
+                _backtester.Calculate(_backtester.Strategy, _backtester.DataSet);
+                _backtester.CalculateAccountStats();
             }
 
             if (worker.CancellationPending)
@@ -739,8 +738,8 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         /// </summary>
         private void CalculateIndicator(int slot)
         {
-            IndicatorParam ip = Backtester.Strategy.Slot[slot].IndParam;
-            Indicator indicator = IndicatorStore.ConstructIndicator(ip.IndicatorName, ip.SlotType);
+            IndicatorParam ip = _backtester.Strategy.Slot[slot].IndParam;
+            Indicator indicator = IndicatorStore.ConstructIndicator(ip.IndicatorName, _backtester.DataSet, ip.SlotType);
 
             // List parameters
             for (int i = 0; i < 5; i++)
@@ -767,17 +766,17 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             indicator.Calculate(ip.SlotType);
 
             // Sets Backtester.Strategy
-            Backtester.Strategy.Slot[slot].IndicatorName = indicator.IndicatorName;
-            Backtester.Strategy.Slot[slot].IndParam = indicator.IndParam;
-            Backtester.Strategy.Slot[slot].Component = indicator.Component;
-            Backtester.Strategy.Slot[slot].SeparatedChart = indicator.SeparatedChart;
-            Backtester.Strategy.Slot[slot].SpecValue = indicator.SpecialValues;
-            Backtester.Strategy.Slot[slot].MinValue = indicator.SeparatedChartMinValue;
-            Backtester.Strategy.Slot[slot].MaxValue = indicator.SeparatedChartMaxValue;
-            Backtester.Strategy.Slot[slot].IsDefined = true;
+            _backtester.Strategy.Slot[slot].IndicatorName = indicator.IndicatorName;
+            _backtester.Strategy.Slot[slot].IndParam = indicator.IndParam;
+            _backtester.Strategy.Slot[slot].Component = indicator.Component;
+            _backtester.Strategy.Slot[slot].SeparatedChart = indicator.SeparatedChart;
+            _backtester.Strategy.Slot[slot].SpecValue = indicator.SpecialValues;
+            _backtester.Strategy.Slot[slot].MinValue = indicator.SeparatedChartMinValue;
+            _backtester.Strategy.Slot[slot].MaxValue = indicator.SeparatedChartMaxValue;
+            _backtester.Strategy.Slot[slot].IsDefined = true;
 
             // Search the indicators' components to determine the Backtester.Strategy.FirstBar
-            Backtester.Strategy.SetFirstBar();
+            _backtester.Strategy.SetFirstBar();
         }
 
         /// <summary>
@@ -786,37 +785,37 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private bool IsLimitationsFulfilled()
         {
             // Limitation Max Ambiguous Bars
-            if (ChbAmbiguousBars.Checked && Backtester.AmbiguousBars > NUDAmbiguousBars.Value)
+            if (ChbAmbiguousBars.Checked && _backtester.AmbiguousBars > NUDAmbiguousBars.Value)
                 return false;
 
             // Limitation Max Equity Drawdown
             double maxEquityDrawdown = Configs.AccountInMoney
-                                           ? Backtester.MaxMoneyEquityDrawdown
-                                           : Backtester.MaxEquityDrawdown;
+                                           ? _backtester.MaxMoneyEquityDrawdown
+                                           : _backtester.MaxEquityDrawdown;
             if (ChbMaxDrawdown.Checked && maxEquityDrawdown > (double) NUDMaxDrawdown.Value)
                 return false;
 
             // Limitation Max Equity percent drawdown
-            if (ChbEquityPercent.Checked && Backtester.MoneyEquityPercentDrawdown > (double) NUDEquityPercent.Value)
+            if (ChbEquityPercent.Checked && _backtester.MoneyEquityPercentDrawdown > (double) NUDEquityPercent.Value)
                 return false;
 
             // Limitation Min Trades
-            if (ChbMinTrades.Checked && Backtester.ExecutedOrders < NUDMinTrades.Value)
+            if (ChbMinTrades.Checked && _backtester.ExecutedOrders < NUDMinTrades.Value)
                 return false;
 
             // Limitation Max Trades
-            if (ChbMaxTrades.Checked && Backtester.ExecutedOrders > NUDMaxTrades.Value)
+            if (ChbMaxTrades.Checked && _backtester.ExecutedOrders > NUDMaxTrades.Value)
                 return false;
 
             // Limitation Win / Loss ratio
-            if (ChbWinLossRatio.Checked && Backtester.WinLossRatio < (double) NUDWinLossRatio.Value)
+            if (ChbWinLossRatio.Checked && _backtester.WinLossRatio < (double) NUDWinLossRatio.Value)
                 return false;
 
             // OOS Pattern filter
             if (ChbOOSPatternFilter.Checked && ChbOutOfSample.Checked)
             {
-                int netBalance = Backtester.NetBalance;
-                int oosBalance = Backtester.Balance(_barOOS);
+                int netBalance = _backtester.NetBalance;
+                int oosBalance = _backtester.Balance(_barOOS);
                 float targetBalanceRatio = 1 + (int) NUDOutOfSample.Value/100.0F;
                 var targetBalance = (int) (oosBalance*targetBalanceRatio);
                 var minBalance = (int) (targetBalance*(1 - NUDOOSPatternPercent.Value/100));
@@ -832,11 +831,11 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
 
                 for (int i = 1; i <= checkPoints; i++)
                 {
-                    int firstBar = Backtester.Strategy.FirstBar;
-                    int bar = Backtester.Strategy.FirstBar + i*(Data.DataSet.Bars - firstBar)/(checkPoints + 1);
-                    double netBalance = Backtester.NetMoneyBalance;
-                    double startBalance = Backtester.MoneyBalance(firstBar);
-                    double checkPointBalance = Backtester.MoneyBalance(bar);
+                    int firstBar = _backtester.Strategy.FirstBar;
+                    int bar = _backtester.Strategy.FirstBar + i*(_backtester.DataSet.Bars - firstBar)/(checkPoints + 1);
+                    double netBalance = _backtester.NetMoneyBalance;
+                    double startBalance = _backtester.MoneyBalance(firstBar);
+                    double checkPointBalance = _backtester.MoneyBalance(bar);
                     double targetBalance = startBalance + i*(netBalance - startBalance)/(checkPoints + 1);
                     double minBalance = targetBalance*(1 - maxPercentDeviation);
                     double maxBalance = targetBalance*(1 + maxPercentDeviation);
@@ -846,9 +845,9 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                     if (Configs.AdditionalStatistics)
                     {
                         // Long balance line
-                        netBalance = Backtester.NetLongMoneyBalance;
-                        checkPointBalance = Backtester.LongMoneyBalance(bar);
-                        startBalance = Backtester.LongMoneyBalance(firstBar);
+                        netBalance = _backtester.NetLongMoneyBalance;
+                        checkPointBalance = _backtester.LongMoneyBalance(bar);
+                        startBalance = _backtester.LongMoneyBalance(firstBar);
                         targetBalance = startBalance + i*(netBalance - startBalance)/(checkPoints + 1);
                         minBalance = targetBalance*(1 - maxPercentDeviation);
                         maxBalance = targetBalance*(1 + maxPercentDeviation);
@@ -856,9 +855,9 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                             return false;
 
                         // Short balance line
-                        netBalance = Backtester.NetShortMoneyBalance;
-                        checkPointBalance = Backtester.ShortMoneyBalance(bar);
-                        startBalance = Backtester.ShortMoneyBalance(firstBar);
+                        netBalance = _backtester.NetShortMoneyBalance;
+                        checkPointBalance = _backtester.ShortMoneyBalance(bar);
+                        startBalance = _backtester.ShortMoneyBalance(firstBar);
                         targetBalance = startBalance + i*(netBalance - startBalance)/(checkPoints + 1);
                         minBalance = targetBalance*(1 - maxPercentDeviation);
                         maxBalance = targetBalance*(1 + maxPercentDeviation);
@@ -958,9 +957,9 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
                 CalculateIndicator(lastSlot);
             }
 
-            Backtester.Calculate(Backtester.Strategy, Data.DataSet);
-            Backtester.CalculateAccountStats();
-            BalanceChart.SetChartData(Backtester);
+            _backtester.Calculate(_backtester.Strategy, _backtester.DataSet);
+            _backtester.CalculateAccountStats();
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
             _isStartegyChanged = false;

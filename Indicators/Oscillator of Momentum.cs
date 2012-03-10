@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Oscillator_of_Momentum(SlotTypes slotType)
+        public Oscillator_of_Momentum(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Oscillator of Momentum";
@@ -105,14 +107,14 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            Momentum Momentum1 = new Momentum(slotType);
+            Momentum Momentum1 = new Momentum(DataSet, slotType);
             Momentum1.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             Momentum1.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             Momentum1.IndParam.NumParam[0].Value = IndParam.NumParam[0].Value;
             Momentum1.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;
             Momentum1.Calculate(slotType);
 
-            Momentum Momentum2 = new Momentum(slotType);
+            Momentum Momentum2 = new Momentum(DataSet, slotType);
             Momentum2.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             Momentum2.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             Momentum2.IndParam.NumParam[0].Value = IndParam.NumParam[1].Value;

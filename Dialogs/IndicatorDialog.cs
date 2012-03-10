@@ -103,7 +103,7 @@ namespace Forex_Strategy_Builder
             }
 
             TrvIndicators = new TreeView();
-            BalanceChart = new SmallBalanceChart();
+            BalanceChart = new SmallBalanceChart(_backtester.DataSet);
             BtnAccept = new Button();
             BtnHelp = new Button();
             BtnDefault = new Button();
@@ -663,7 +663,7 @@ namespace Forex_Strategy_Builder
                 var trn = new TreeNode {Tag = true, Name = name, Text = name};
                 trnAll.Nodes.Add(trn);
 
-                Indicator indicator = IndicatorStore.ConstructIndicator(name, _slotType);
+                Indicator indicator = IndicatorStore.ConstructIndicator(name, _backtester.DataSet, _slotType);
                 TypeOfIndicator type = indicator.IndParam.IndicatorType;
 
                 if (indicator.CustomIndicator)
@@ -725,7 +725,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void TrvIndicatorsLoadIndicator()
         {
-            Indicator indicator = IndicatorStore.ConstructIndicator(TrvIndicators.SelectedNode.Text, _slotType);
+            Indicator indicator = IndicatorStore.ConstructIndicator(TrvIndicators.SelectedNode.Text, _backtester.DataSet, _slotType);
             UpdateFromIndicatorParam(indicator.IndParam);
             SetDefaultGroup();
             CalculateIndicator(true);
@@ -737,7 +737,7 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void BtnDefaultClick(object sender, EventArgs e)
         {
-            Indicator indicator = IndicatorStore.ConstructIndicator(_indicatorName, _slotType);
+            Indicator indicator = IndicatorStore.ConstructIndicator(_indicatorName, _backtester.DataSet, _slotType);
             UpdateFromIndicatorParam(indicator.IndParam);
             SetDefaultGroup();
             CalculateIndicator(true);
@@ -802,12 +802,12 @@ namespace Forex_Strategy_Builder
         /// </summary>
         private void CalculateIndicator(bool bCalculateStrategy)
         {
-            if (!Data.IsData || !Data.IsResult || !_isPaint) return;
+            if (!_backtester.IsData || !_backtester.IsResult || !_isPaint) return;
 
             SetOppositeSignalBehaviour();
             SetClosingLogicConditions();
 
-            Indicator indicator = IndicatorStore.ConstructIndicator(_indicatorName, _slotType);
+            Indicator indicator = IndicatorStore.ConstructIndicator(_indicatorName, _backtester.DataSet, _slotType);
 
             // List parameters
             for (int i = 0; i < 5; i++)
@@ -852,20 +852,20 @@ namespace Forex_Strategy_Builder
                 _backtester.Strategy.SetFirstBar();
 
                 // Check "Use previous bar value"
-                if (_backtester.Strategy.AdjustUsePreviousBarValue())
+                if (_backtester.Strategy.AdjustUsePreviousBarValue(_backtester.DataSet))
                 {
                     for (int i = 0; i < 2; i++)
                         if (indicator.IndParam.CheckParam[i].Caption == "Use previous bar value")
                             AChbCheck[i].Checked = _backtester.Strategy.Slot[_slot].IndParam.CheckParam[i].Checked;
                 }
 
-                _backtester.Calculate(_backtester.Strategy, Data.DataSet);
+                _backtester.Calculate();
                 _backtester.CalculateAccountStats();
             }
 
             SetIndicatorNotification(indicator);
 
-            Data.IsResult = true;
+            _backtester.IsResult = true;
         }
 
         /// <summary>

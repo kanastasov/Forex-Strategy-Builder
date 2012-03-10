@@ -35,7 +35,7 @@ namespace Forex_Strategy_Builder
         {
             Chart = new Bitmap(width, height);
 
-            if (!Data.IsData || !Data.IsResult || Data.DataSet.Bars <= _backtester.Strategy.FirstBar) return;
+            if (!_backtester.IsData || !_backtester.IsResult || _backtester.DataSet.Bars <= _backtester.Strategy.FirstBar) return;
 
             const int border = 1;
             const int space = 2;
@@ -44,8 +44,8 @@ namespace Forex_Strategy_Builder
             int minimum;
 
             int firstBar = _backtester.Strategy.FirstBar;
-            int bars = Data.DataSet.Bars;
-            int chartBars = Data.DataSet.Bars - firstBar;
+            int bars = _backtester.DataSet.Bars;
+            int chartBars = _backtester.DataSet.Bars - firstBar;
             int maxBalance = Configs.AccountInMoney ? (int) _backtester.MaxMoneyBalance : _backtester.MaxBalance;
             int minBalance = Configs.AccountInMoney ? (int) _backtester.MinMoneyBalance : _backtester.MinBalance;
             int maxEquity = Configs.AccountInMoney ? (int) _backtester.MaxMoneyEquity : _backtester.MaxEquity;

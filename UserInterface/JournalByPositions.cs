@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using Forex_Strategy_Builder.Common;
 using Forex_Strategy_Builder.CustomControls;
+using Forex_Strategy_Builder.Interfaces;
 using Forex_Strategy_Builder.Utils;
 
 namespace Forex_Strategy_Builder
@@ -47,12 +48,15 @@ namespace Forex_Strategy_Builder
         private string[] _titlesInMoney; // Journal title
         private string[] _titlesInPips; // Journal title
         private VScrollBar _vScrollBar;
+        private readonly IDataSet _dataSet;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public JournalByPositions()
+        public JournalByPositions(IDataSet dataSet)
         {
+            _dataSet = dataSet;
+
             InitializeJournal();
             SetUpJournal();
             SetJournalColors();
@@ -91,7 +95,7 @@ namespace Forex_Strategy_Builder
             {
                 _posNumbers = StatsBuffer.PositionsTotal > 0 ? new int[StatsBuffer.PositionsTotal] : new int[1];
                 _positions = 0;
-                for (int bar = 0; bar < Data.DataSet.Bars; bar++)
+                for (int bar = 0; bar < _dataSet.Bars; bar++)
                 {
                     for (int pos = 0; pos < StatsBuffer.Positions(bar); pos++)
                     {
@@ -311,7 +315,7 @@ namespace Forex_Strategy_Builder
 
                 string posAmount = Configs.AccountInMoney
                                        ? (position.PosDir == PosDirection.Short ? "-" : "") +
-                                         (position.PosLots*Data.DataSet.InstrProperties.LotSize).ToString(
+                                         (position.PosLots*_dataSet.InstrProperties.LotSize).ToString(
                                              CultureInfo.InvariantCulture)
                                        : position.PosLots.ToString(CultureInfo.InvariantCulture);
 
@@ -326,12 +330,12 @@ namespace Forex_Strategy_Builder
                 int p = 0;
                 _journalData[row, p++] = (posNumber + 1).ToString(CultureInfo.InvariantCulture);
                 _journalData[row, p++] = (bar + 1).ToString(CultureInfo.InvariantCulture);
-                _journalData[row, p++] = Data.DataSet.Time[bar].ToString(Data.DF) + Data.DataSet.Time[bar].ToString(" HH:mm");
+                _journalData[row, p++] = _dataSet.Time[bar].ToString(Data.DF) + _dataSet.Time[bar].ToString(" HH:mm");
                 _journalData[row, p++] = Language.T(position.Transaction.ToString());
                 _journalData[row, p++] = Language.T(position.PosDir.ToString());
                 _journalData[row, p++] = posAmount;
-                _journalData[row, p++] = position.FormOrdPrice.ToString(Data.FF);
-                _journalData[row, p++] = position.PosPrice.ToString(Data.FF);
+                _journalData[row, p++] = position.FormOrdPrice.ToString(_dataSet.FF);
+                _journalData[row, p++] = position.PosPrice.ToString(_dataSet.FF);
                 _journalData[row, p++] = position.RequiredMargin.ToString("F2");
 
                 // Charges

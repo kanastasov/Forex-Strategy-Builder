@@ -18,12 +18,15 @@ namespace Forex_Strategy_Builder
     {
         private readonly Color _colorText;
         private bool _editInstrument;
+        private readonly Backtester _backtester;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public TradingCharges()
+        public TradingCharges(Backtester backtester)
         {
+            _backtester = backtester;
+
             PnlBase = new FancyPanel();
 
             LblSpread = new Label();
@@ -50,7 +53,7 @@ namespace Forex_Strategy_Builder
             Icon = Data.Icon;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             AcceptButton = BtnAccept;
-            Text = Language.T("Trading Charges") + " - " + Data.Symbol;
+            Text = Language.T("Trading Charges") + " - " + _backtester.DataSet.Symbol;
 
             var toolTip = new ToolTip();
 
@@ -71,9 +74,9 @@ namespace Forex_Strategy_Builder
             LblSwapLong.BackColor = Color.Transparent;
             LblSwapLong.AutoSize = true;
             LblSwapLong.Text = Language.T("Swap number for a long position rollover") + " [" +
-                               (Data.DataSet.InstrProperties.SwapType == CommissionType.money
-                                    ? Data.DataSet.InstrProperties.PriceIn
-                                    : Language.T(Data.DataSet.InstrProperties.SwapType.ToString())) + "]" +
+                               (_backtester.DataSet.InstrProperties.SwapType == CommissionType.money
+                                    ? _backtester.DataSet.InstrProperties.PriceIn
+                                    : Language.T(_backtester.DataSet.InstrProperties.SwapType.ToString())) + "]" +
                                Environment.NewLine +
                                "(" + Language.T("A positive value decreases your profit.") + ")";
 
@@ -83,9 +86,9 @@ namespace Forex_Strategy_Builder
             LblSwapShort.BackColor = Color.Transparent;
             LblSwapShort.AutoSize = true;
             LblSwapShort.Text = Language.T("Swap number for a short position rollover") + " [" +
-                                (Data.DataSet.InstrProperties.SwapType == CommissionType.money
-                                     ? Data.DataSet.InstrProperties.PriceIn
-                                     : Language.T(Data.DataSet.InstrProperties.SwapType.ToString())) + "]" +
+                                (_backtester.DataSet.InstrProperties.SwapType == CommissionType.money
+                                     ? _backtester.DataSet.InstrProperties.PriceIn
+                                     : Language.T(_backtester.DataSet.InstrProperties.SwapType.ToString())) + "]" +
                                 Environment.NewLine +
                                 "(" + Language.T("A negative value decreases your profit.") + ")";
 
@@ -95,11 +98,11 @@ namespace Forex_Strategy_Builder
             LblCommission.BackColor = Color.Transparent;
             LblCommission.AutoSize = true;
             LblCommission.Text = Language.T("Commission in") + " " +
-                                 Data.DataSet.InstrProperties.CommissionTypeToString + " " +
-                                 Data.DataSet.InstrProperties.CommissionScopeToString + " " +
-                                 Data.DataSet.InstrProperties.CommissionTimeToString +
-                                 (Data.DataSet.InstrProperties.CommissionType == CommissionType.money
-                                      ? " [" + Data.DataSet.InstrProperties.PriceIn + "]"
+                                 _backtester.DataSet.InstrProperties.CommissionTypeToString + " " +
+                                 _backtester.DataSet.InstrProperties.CommissionScopeToString + " " +
+                                 _backtester.DataSet.InstrProperties.CommissionTimeToString +
+                                 (_backtester.DataSet.InstrProperties.CommissionType == CommissionType.money
+                                      ? " [" + _backtester.DataSet.InstrProperties.PriceIn + "]"
                                       : "");
 
             // Label Slippage

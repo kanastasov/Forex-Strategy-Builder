@@ -108,7 +108,7 @@ namespace Forex_Strategy_Builder
             _backtester = backtester;
 
             BarPixels = 8;
-            Text = Language.T("Chart") + " " + _backtester.DataSet.Symbol + " " + Data.PeriodString + " - " + Data.ProgramName;
+            Text = Language.T("Chart") + " " + _backtester.DataSet.Symbol + " " + _backtester.DataSet.PeriodString + " - " + Data.ProgramName;
             Icon = Data.Icon;
             BackColor = LayoutColors.ColorFormBack;
 
@@ -219,7 +219,7 @@ namespace Forex_Strategy_Builder
             PnlCharts.Padding = ShowInfoPanel ? new Padding(0, 0, 2, 0) : new Padding(0);
 
             if (ShowInfoPanel)
-                Text = Language.T("Chart") + " " + Data.Symbol + " " + Data.PeriodString + " - " + Data.ProgramName;
+                Text = Language.T("Chart") + " " + _backtester.DataSet.Symbol + " " + _backtester.DataSet.PeriodString + " - " + Data.ProgramName;
             else
                 Text = Data.ProgramName + @"   http://forexsb.com";
 
@@ -372,6 +372,7 @@ namespace Forex_Strategy_Builder
             for (int slot = 0; slot < _backtester.Strategy.Slots; slot++)
             {
                 Indicator indicator = IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                                        _backtester.DataSet,
                                                                         _backtester.Strategy.Slot[slot].SlotType);
                 indicator.IndParam = _backtester.Strategy.Slot[slot].IndParam;
                 asIndicatorTexts[slot] = indicator.ToString();
@@ -486,7 +487,7 @@ namespace Forex_Strategy_Builder
         private void SetupChartTitle()
         {
             // Chart title
-            _chartTitle = Data.Symbol + "  " + Data.PeriodString + " " + _backtester.Strategy.StrategyName;
+            _chartTitle = _backtester.DataSet.Symbol + "  " + _backtester.DataSet.PeriodString + " " + _backtester.Strategy.StrategyName;
 
             if (!ShowIndicators) return;
 
@@ -506,6 +507,7 @@ namespace Forex_Strategy_Builder
                 if (isChart)
                 {
                     Indicator indicator = IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                                            _backtester.DataSet,
                                                                             _backtester.Strategy.Slot[slot].SlotType);
                     indicator.IndParam = _backtester.Strategy.Slot[slot].IndParam;
                     if (!_chartTitle.Contains(indicator.ToString()))
@@ -639,7 +641,7 @@ namespace Forex_Strategy_Builder
             for (double label = _minPrice; label <= _maxPrice + _backtester.DataSet.InstrProperties.Point; label += deltaLabel)
             {
                 var iLabelY = (int) Math.Round(_yBottom - (label - _minPrice)*_yScale);
-                g.DrawString(label.ToString(Data.FF), Font, _brushFore, _xRight, iLabelY - Font.Height/2 - 1);
+                g.DrawString(label.ToString(_backtester.DataSet.FF), Font, _brushFore, _xRight, iLabelY - Font.Height / 2 - 1);
                 if (ShowGrid || Math.Abs(label - _minPrice) < 0.000001)
                     g.DrawLine(_penGrid, _spcLeft, iLabelY, _xRight, iLabelY);
                 else
@@ -702,7 +704,7 @@ namespace Forex_Strategy_Builder
                     // Price Window
                     g.FillRectangle(_brushLabelBkgrd, rec);
                     g.DrawRectangle(_penCross, rec);
-                    string sPrice = ((_yBottom - _mouseY)/_yScale + _minPrice).ToString(Data.FF);
+                    string sPrice = ((_yBottom - _mouseY) / _yScale + _minPrice).ToString(_backtester.DataSet.FF);
                     g.DrawString(sPrice, _font, _brushLabelFore, point);
                 }
             }
@@ -1619,6 +1621,7 @@ namespace Forex_Strategy_Builder
 
             // Chart title
             Indicator indicator = IndicatorStore.ConstructIndicator(_backtester.Strategy.Slot[slot].IndicatorName,
+                                                                    _backtester.DataSet,
                                                                     _backtester.Strategy.Slot[slot].SlotType);
             indicator.IndParam = _backtester.Strategy.Slot[slot].IndParam;
             string indicatorText = indicator.ToString();
@@ -2093,10 +2096,11 @@ namespace Forex_Strategy_Builder
             }
             else
             {
-                _asInfoValue[row++] = _backtester.DataSet.Open[bar].ToString(Data.FF);
-                _asInfoValue[row++] = _backtester.DataSet.High[bar].ToString(Data.FF);
-                _asInfoValue[row++] = _backtester.DataSet.Low[bar].ToString(Data.FF);
-                _asInfoValue[row++] = _backtester.DataSet.Close[bar].ToString(Data.FF);
+                string ff = _backtester.DataSet.FF;
+                _asInfoValue[row++] = _backtester.DataSet.Open[bar].ToString(ff);
+                _asInfoValue[row++] = _backtester.DataSet.High[bar].ToString(ff);
+                _asInfoValue[row++] = _backtester.DataSet.Low[bar].ToString(ff);
+                _asInfoValue[row++] = _backtester.DataSet.Close[bar].ToString(ff);
             }
             _asInfoValue[row++] = _backtester.DataSet.Volume[bar].ToString(CultureInfo.InvariantCulture);
 
@@ -2204,8 +2208,8 @@ namespace Forex_Strategy_Builder
                 _asInfoValue[row++] = _backtester.PosLots(bar, pos).ToString(CultureInfo.InvariantCulture);
                 _asInfoValue[row++] = Language.T(_backtester.PosTransaction(bar, pos).ToString());
                 _asInfoValue[row++] = _backtester.PosOrdNumb(bar, pos).ToString(CultureInfo.InvariantCulture);
-                _asInfoValue[row++] = _backtester.PosOrdPrice(bar, pos).ToString(Data.FF);
-                _asInfoValue[row++] = _backtester.PosPrice(bar, pos).ToString(Data.FF);
+                _asInfoValue[row++] = _backtester.PosOrdPrice(bar, pos).ToString(_backtester.DataSet.FF);
+                _asInfoValue[row++] = _backtester.PosPrice(bar, pos).ToString(_backtester.DataSet.FF);
 
                 // Profit Loss
                 if (_backtester.PosTransaction(bar, pos) == Transaction.Close ||
@@ -3003,7 +3007,7 @@ namespace Forex_Strategy_Builder
                 PnlInfo.Visible = ShowInfoPanel;
                 PnlCharts.Padding = ShowInfoPanel ? new Padding(0, 0, 2, 0) : new Padding(0);
                 Text = ShowInfoPanel
-                           ? Language.T("Chart") + " " + Data.Symbol + " " + Data.PeriodString
+                           ? Language.T("Chart") + " " + _backtester.DataSet.Symbol + " " + _backtester.DataSet.PeriodString
                            : Data.ProgramName + @"   http://forexsb.com";
                 AChartButtons[(int) ChartButtons.DynamicInfo].Checked = ShowInfoPanel;
                 AChartButtons[(int) ChartButtons.DInfoUp].Visible = ShowInfoPanel;

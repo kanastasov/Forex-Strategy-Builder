@@ -6,6 +6,7 @@
 
 using System;
 using System.Text;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -240,10 +241,11 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Performs thorough indicator test.
         /// </summary>
+        /// <param name="dataSet">Current market data</param>
         /// <param name="indicatorName">The indicator name.</param>
         /// <param name="errorsList">Error message.</param>
         /// <returns>True, if the test succeed.</returns>
-        public static bool CustomIndicatorThoroughTest(string indicatorName, out string errorsList)
+        public static bool CustomIndicatorThoroughTest(IDataSet dataSet, string indicatorName, out string errorsList)
         {
             bool isOk = true;
 
@@ -256,7 +258,7 @@ namespace Forex_Strategy_Builder
                 if (slotType == SlotTypes.NotDefined)
                     continue;
 
-                Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, slotType);
+                Indicator indicator = IndicatorStore.ConstructIndicator(indicatorName, dataSet, slotType);
 
                 if (!indicator.TestPossibleSlot(slotType))
                     continue;

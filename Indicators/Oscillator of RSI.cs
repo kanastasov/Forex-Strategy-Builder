@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Oscillator_of_RSI(SlotTypes slotType)
+        public Oscillator_of_RSI(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Oscillator of RSI";
@@ -105,14 +107,14 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            RSI rsi1 = new RSI(slotType);
+            RSI rsi1 = new RSI(DataSet, slotType);
             rsi1.IndParam.ListParam[1].Index    = IndParam.ListParam[1].Index;
             rsi1.IndParam.ListParam[2].Index    = IndParam.ListParam[2].Index;
             rsi1.IndParam.NumParam[0].Value     = IndParam.NumParam[0].Value;
             rsi1.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;
             rsi1.Calculate(slotType);
 
-            RSI rsi2 = new RSI(slotType);
+            RSI rsi2 = new RSI(DataSet, slotType);
             rsi2.IndParam.ListParam[1].Index    = IndParam.ListParam[1].Index;
             rsi2.IndParam.ListParam[2].Index    = IndParam.ListParam[2].Index;
             rsi2.IndParam.NumParam[0].Value     = IndParam.NumParam[1].Value;

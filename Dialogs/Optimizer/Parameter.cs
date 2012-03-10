@@ -189,7 +189,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             {
                 return Type == OptimizerParameterType.Indicator
                            ? Math.Round(Math.Pow(10, -Point), Point)
-                           : (Data.DataSet.InstrProperties.IsFiveDigits ? 10 : 1);
+                           : (_backtester.DataSet.InstrProperties.IsFiveDigits ? 10 : 1);
             }
         }
 

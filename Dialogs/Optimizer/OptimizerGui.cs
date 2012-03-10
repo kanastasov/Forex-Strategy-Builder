@@ -30,7 +30,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             PnlLimitations = new FancyPanel(Language.T("Limitations"));
             PnlSettings = new FancyPanel(Language.T("Settings"));
             ScrollBar = new VScrollBar();
-            BalanceChart = new SmallBalanceChart();
+            BalanceChart = new SmallBalanceChart(_backtester.DataSet);
             ProgressBar = new ProgressBar();
             BtnOptimize = new Button();
             BtnAccept = new Button();
@@ -86,7 +86,7 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
             // Small Balance Chart
             BalanceChart.Parent = this;
             BalanceChart.BackColor = LayoutColors.ColorControlBack;
-            BalanceChart.SetChartData(Backtester);
+            BalanceChart.SetChartData(_backtester);
 
             // ProgressBar
             ProgressBar.Parent = this;
@@ -536,12 +536,12 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private void NudOutOfSampleValueChanged(object sender, EventArgs e)
         {
             _isOOS = ChbOutOfSample.Checked;
-            _barOOS = Data.DataSet.Bars - Data.DataSet.Bars*(int) NUDOutOfSample.Value/100 - 1;
+            _barOOS = _backtester.DataSet.Bars - _backtester.DataSet.Bars*(int) NUDOutOfSample.Value/100 - 1;
 
             BalanceChart.OOSBar = _barOOS;
 
             if (!_isOOS) return;
-            BalanceChart.SetChartData(Backtester);
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
         }
@@ -552,12 +552,12 @@ namespace Forex_Strategy_Builder.Dialogs.Optimizer
         private void ChbOutOfSampleCheckedChanged(object sender, EventArgs e)
         {
             _isOOS = ChbOutOfSample.Checked;
-            _barOOS = Data.DataSet.Bars - Data.DataSet.Bars*(int) NUDOutOfSample.Value/100 - 1;
+            _barOOS = _backtester.DataSet.Bars - _backtester.DataSet.Bars*(int) NUDOutOfSample.Value/100 - 1;
 
             BalanceChart.IsOOS = _isOOS;
             BalanceChart.OOSBar = _barOOS;
 
-            BalanceChart.SetChartData(Backtester);
+            BalanceChart.SetChartData(_backtester);
             BalanceChart.InitChart();
             BalanceChart.Invalidate();
         }

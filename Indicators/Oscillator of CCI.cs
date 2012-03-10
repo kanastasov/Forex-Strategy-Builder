@@ -6,6 +6,7 @@
 // Copyright (c) 2006 - 2011 Miroslav Popov - All rights reserved.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public Oscillator_of_CCI(SlotTypes slotType)
+        public Oscillator_of_CCI(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "Oscillator of CCI";
@@ -105,14 +107,14 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            Commodity_Channel_Index CCI1 = new Commodity_Channel_Index(slotType);
+            Commodity_Channel_Index CCI1 = new Commodity_Channel_Index(DataSet, slotType);
             CCI1.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             CCI1.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             CCI1.IndParam.NumParam[0].Value  = IndParam.NumParam[0].Value;
             CCI1.IndParam.CheckParam[0].Checked = IndParam.CheckParam[0].Checked;
             CCI1.Calculate(slotType);
 
-            Commodity_Channel_Index CCI2 = new Commodity_Channel_Index(slotType);
+            Commodity_Channel_Index CCI2 = new Commodity_Channel_Index(DataSet, slotType);
             CCI2.IndParam.ListParam[1].Index = IndParam.ListParam[1].Index;
             CCI2.IndParam.ListParam[2].Index = IndParam.ListParam[2].Index;
             CCI2.IndParam.NumParam[0].Value  = IndParam.NumParam[1].Value;

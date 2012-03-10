@@ -180,7 +180,7 @@ namespace Forex_Strategy_Builder
 
                 for (int bar = 0; bar < Bars; bar++)
                 {
-                    if (Math.Abs(_aBar[bar].Open - _aBar[bar].Close) < Data.DataSet.InstrProperties.Point/2)
+                    if (Math.Abs(_aBar[bar].Open - _aBar[bar].Close) < 0.00001)
                     {
                         if (lastBar == bar - 1 || lastBar == 0)
                         {

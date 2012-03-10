@@ -6,6 +6,7 @@
 // This code or any part of it cannot be used in other applications without a permission.
 
 using System;
+using Forex_Strategy_Builder.Interfaces;
 
 namespace Forex_Strategy_Builder
 {
@@ -17,7 +18,8 @@ namespace Forex_Strategy_Builder
         /// <summary>
         /// Sets the default indicator parameters for the designated slot type
         /// </summary>
-        public CCI_MA_Oscillator(SlotTypes slotType)
+        public CCI_MA_Oscillator(IDataSet dataSet, SlotTypes slotType)
+            : base(dataSet)
         {
             // General properties
             IndicatorName  = "CCI MA Oscillator";
@@ -113,7 +115,7 @@ namespace Forex_Strategy_Builder
             double[] adOscllator  = new double[Bars];
 
 // ---------------------------------------------------------
-            Commodity_Channel_Index CCI = new Commodity_Channel_Index(slotType);
+            Commodity_Channel_Index CCI = new Commodity_Channel_Index(DataSet, slotType);
             CCI.IndParam.ListParam[1].Index    = IndParam.ListParam[1].Index;
             CCI.IndParam.ListParam[2].Index    = IndParam.ListParam[3].Index;
             CCI.IndParam.NumParam[0].Value     = IndParam.NumParam[0].Value;

@@ -10,8 +10,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using Forex_Strategy_Builder.Interfaces;
-using Forex_Strategy_Builder.Market;
 using Forex_Strategy_Builder.Properties;
 
 namespace Forex_Strategy_Builder
@@ -48,13 +46,9 @@ namespace Forex_Strategy_Builder
             DefaultOfflineDataDir = "Data" + Path.DirectorySeparatorChar;
             OfflineDataDir = "Data" + Path.DirectorySeparatorChar;
             Debug = false;
-            IsData = false;
-            IsResult = false;
             IsStrategyChanged = false;
             StackStrategy = new Stack<Strategy>();
             GeneratorHistory = new List<Strategy>();
-            DataSet = new DataSet {IsIntrabarData = false};
-            DataStats = new DataStatistics();
 
             // Program's Major, Minor, Version and Build numbers must be <= 99.
             ProgramVersion = Application.ProductVersion;
@@ -183,32 +177,12 @@ namespace Forex_Strategy_Builder
         /// </summary>
         public static bool Debug { get; set; }
 
-        public static string Symbol
-        {
-            get { return DataSet.InstrProperties.Symbol; }
-        }
-
-        public static string PeriodString
-        {
-            get { return DataPeriodToString(DataSet.Period); }
-        }
-
-        public static bool IsData { get; set; }
-        public static bool IsResult { get; set; }
         public static bool IsStrategyChanged { get; set; }
 
         /// <summary>
         /// Sets or gets value of the AutoUsePrvBarValue
         /// </summary>
         public static bool AutoUsePrvBarValue { get; set; }
-
-        /// <summary>
-        /// Gets the number format.
-        /// </summary>
-        public static string FF
-        {
-            get { return "F" + DataSet.InstrProperties.Digits; }
-        }
 
         /// <summary>
         /// Gets the date format.
@@ -234,16 +208,6 @@ namespace Forex_Strategy_Builder
         /// Relative font width
         /// </summary>
         public static float HorizontalDLU { get; set; }
-
-        /// <summary>
-        /// Loaded historical data.
-        /// </summary>
-        public static IDataSet DataSet { get; private set; }
-
-        /// <summary>
-        /// Market statistics about the loaded data.
-        /// </summary>
-        public static DataStatistics DataStats { get; set; }
 
         /// <summary>
         /// Initial settings.

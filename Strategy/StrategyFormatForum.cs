@@ -1,12 +1,22 @@
-﻿using System;
+﻿// StrategyFormatForum class
+// Part of Forex Strategy Builder
+// Website http://forexsb.com/
+// Copyright (c) 2006 - 2012 Miroslav Popov - All rights reserved.
+// This code or any part of it cannot be used in other applications without a permission.
+
+using System;
 using System.Globalization;
 using System.Text;
 
 namespace Forex_Strategy_Builder
 {
-    public static class ForumFormatReport
+    public static class StrategyFormatForum
     {
-        public static string GetReport(Backtester backtester, bool isDescriptionRelevant)
+        /// <summary>
+        /// Generates a forum post.
+        /// </summary>
+        /// <returns>BBCode</returns>
+        public static string FormatPost(Backtester backtester, bool isDescriptionRelevant)
         {
             string stage = String.Empty;
             if (Data.IsProgramBeta)
@@ -38,20 +48,20 @@ namespace Forex_Strategy_Builder
                 sb.AppendLine("   None.");
 
             sb.AppendLine();
-            sb.AppendLine("Market: " + Data.Symbol + " " + Data.PeriodString);
-            sb.AppendLine("Spread in pips: " + Data.DataSet.InstrProperties.Spread.ToString("F2"));
+            sb.AppendLine("Market: " + backtester.DataSet.Symbol + " " + backtester.DataSet.PeriodString);
+            sb.AppendLine("Spread in pips: " + backtester.DataSet.InstrProperties.Spread.ToString("F2"));
             sb.AppendLine("Swap Long in " +
-                (Data.DataSet.InstrProperties.SwapType == CommissionType.money ? Data.DataSet.InstrProperties.PriceIn : Data.DataSet.InstrProperties.SwapType.ToString()) + ": " +
-                Data.DataSet.InstrProperties.SwapLong.ToString("F2"));
+                (backtester.DataSet.InstrProperties.SwapType == CommissionType.money ? backtester.DataSet.InstrProperties.PriceIn : backtester.DataSet.InstrProperties.SwapType.ToString()) + ": " +
+                backtester.DataSet.InstrProperties.SwapLong.ToString("F2"));
             sb.AppendLine("Swap Short in " +
-                (Data.DataSet.InstrProperties.SwapType == CommissionType.money ? Data.DataSet.InstrProperties.PriceIn : Data.DataSet.InstrProperties.SwapType.ToString()) + ": " +
-                Data.DataSet.InstrProperties.SwapShort.ToString("F2"));
+                (backtester.DataSet.InstrProperties.SwapType == CommissionType.money ? backtester.DataSet.InstrProperties.PriceIn : backtester.DataSet.InstrProperties.SwapType.ToString()) + ": " +
+                backtester.DataSet.InstrProperties.SwapShort.ToString("F2"));
             sb.AppendLine("Commission per " +
-                Data.DataSet.InstrProperties.CommissionScope.ToString() + " at " +
-                (Data.DataSet.InstrProperties.CommissionTime == CommissionTime.open ? "opening" : "opening and closing") + " in " +
-                (Data.DataSet.InstrProperties.CommissionType == CommissionType.money ? Data.DataSet.InstrProperties.PriceIn : Data.DataSet.InstrProperties.CommissionType.ToString()) + ": " +
-                Data.DataSet.InstrProperties.Commission.ToString("F2"));
-            sb.AppendLine("Slippage in pips: " + Data.DataSet.InstrProperties.Slippage);
+                backtester.DataSet.InstrProperties.CommissionScope.ToString() + " at " +
+                (backtester.DataSet.InstrProperties.CommissionTime == CommissionTime.open ? "opening" : "opening and closing") + " in " +
+                (backtester.DataSet.InstrProperties.CommissionType == CommissionType.money ? backtester.DataSet.InstrProperties.PriceIn : backtester.DataSet.InstrProperties.CommissionType.ToString()) + ": " +
+                backtester.DataSet.InstrProperties.Commission.ToString("F2"));
+            sb.AppendLine("Slippage in pips: " + backtester.DataSet.InstrProperties.Slippage);
 
             sb.AppendLine(backtester.Strategy.UseAccountPercentEntry ? "Use account % for margin round to whole lots" : "");
             string tradingUnit = backtester.Strategy.UseAccountPercentEntry ? "% of the account for margin" : "";
@@ -68,29 +78,42 @@ namespace Forex_Strategy_Builder
             sb.AppendLine("Intrabar scanning: " + (backtester.IsScanPerformed ? "Accomplished" : "Not accomplished"));
             sb.AppendLine("Interpolation method: " + backtester.InterpolationMethodToString());
             sb.AppendLine("Ambiguous bars: " + backtester.AmbiguousBars);
-            sb.AppendLine("Tested bars: " + (Data.DataSet.Bars - backtester.Strategy.FirstBar));
-            sb.AppendLine("Balance: [b]" + backtester.NetBalance + " pips (" + backtester.NetMoneyBalance.ToString("F2") + " " + Data.DataSet.InstrProperties.PriceIn + ")[/b]");
-            sb.AppendLine("Minimum account: " + backtester.MinBalance + " pips (" + backtester.MinMoneyBalance.ToString("F2") + " " + Data.DataSet.InstrProperties.PriceIn + ")");
-            sb.AppendLine("Maximum drawdown: " + backtester.MaxDrawdown + " pips (" + backtester.MaxMoneyDrawdown.ToString("F2") + " " + Data.DataSet.InstrProperties.PriceIn + ")");
+            sb.AppendLine("Tested bars: " + (backtester.DataSet.Bars - backtester.Strategy.FirstBar));
+            sb.AppendLine("Balance: [b]" + backtester.NetBalance + " pips (" + backtester.NetMoneyBalance.ToString("F2") + " " + backtester.DataSet.InstrProperties.PriceIn + ")[/b]");
+            sb.AppendLine("Minimum account: " + backtester.MinBalance + " pips (" + backtester.MinMoneyBalance.ToString("F2") + " " + backtester.DataSet.InstrProperties.PriceIn + ")");
+            sb.AppendLine("Maximum drawdown: " + backtester.MaxDrawdown + " pips (" + backtester.MaxMoneyDrawdown.ToString("F2") + " " + backtester.DataSet.InstrProperties.PriceIn + ")");
             sb.AppendLine("Time in position: " + backtester.TimeInPosition + " %");
             sb.AppendLine();
 
             sb.AppendLine("[b][color=#966][Strategy Properties][/color][/b]");
-            if (backtester.Strategy.SameSignalAction == SameDirSignalAction.Add)
-                sb.AppendLine("     A same direction signal - Adds to the position");
-            else if (backtester.Strategy.SameSignalAction == SameDirSignalAction.Winner)
-                sb.AppendLine("     A same direction signal - Adds to a winning position");
-            else if (backtester.Strategy.SameSignalAction == SameDirSignalAction.Nothing)
-                sb.AppendLine("     A same direction signal - Does nothing");
+            switch (backtester.Strategy.SameSignalAction)
+            {
+                case SameDirSignalAction.Add:
+                    sb.AppendLine("     A same direction signal - Adds to the position");
+                    break;
+                case SameDirSignalAction.Winner:
+                    sb.AppendLine("     A same direction signal - Adds to a winning position");
+                    break;
+                case SameDirSignalAction.Nothing:
+                    sb.AppendLine("     A same direction signal - Does nothing");
+                    break;
+            }
 
-            if (backtester.Strategy.OppSignalAction == OppositeDirSignalAction.Close)
-                sb.AppendLine("     An opposite direction signal - Closes the position");
-            else if (backtester.Strategy.OppSignalAction == OppositeDirSignalAction.Reduce)
-                sb.AppendLine("     An opposite direction signal - Reduces the position");
-            else if (backtester.Strategy.OppSignalAction == OppositeDirSignalAction.Reverse)
-                sb.AppendLine("     An opposite direction signal - Reverses the position");
-            else
-                sb.AppendLine("     An opposite direction signal - Does nothing");
+            switch (backtester.Strategy.OppSignalAction)
+            {
+                case OppositeDirSignalAction.Close:
+                    sb.AppendLine("     An opposite direction signal - Closes the position");
+                    break;
+                case OppositeDirSignalAction.Reduce:
+                    sb.AppendLine("     An opposite direction signal - Reduces the position");
+                    break;
+                case OppositeDirSignalAction.Reverse:
+                    sb.AppendLine("     An opposite direction signal - Reverses the position");
+                    break;
+                default:
+                    sb.AppendLine("     An opposite direction signal - Does nothing");
+                    break;
+            }
 
             sb.AppendLine("     Permanent Stop Loss - " + (backtester.Strategy.UsePermanentSL ? (backtester.Strategy.PermanentSLType == PermanentProtectionType.Absolute ? "(Abs) " : "") + backtester.Strategy.PermanentSL.ToString(CultureInfo.InvariantCulture) : "None") + "");
             sb.AppendLine("     Permanent Take Profit - " + (backtester.Strategy.UsePermanentTP ? (backtester.Strategy.PermanentTPType == PermanentProtectionType.Absolute ? "(Abs) " : "") + backtester.Strategy.PermanentTP.ToString(CultureInfo.InvariantCulture) : "None") + "");
@@ -129,7 +152,7 @@ namespace Forex_Strategy_Builder
                 sb.AppendLine("[b][color=" + slotColor + "][" + slotTypeName + "][/color][/b]");
                 sb.AppendLine("     [b][color=blue]" + indSlot.IndicatorName + "[/color][/b]");
 
-                // Add the list params.
+                // Add the list parameters.
                 foreach (ListParam listParam in indSlot.IndParam.ListParam)
                     if (listParam.Enabled)
                     {
@@ -141,12 +164,12 @@ namespace Forex_Strategy_Builder
                             sb.AppendLine("     " + listParam.Caption + "  -  " + listParam.Text);
                     }
 
-                // Add the num params.
+                // Add the num parameters.
                 foreach (NumericParam numParam in indSlot.IndParam.NumParam)
                     if (numParam.Enabled)
                         sb.AppendLine("     " + numParam.Caption + "  -  " + numParam.ValueToString);
 
-                // Add the check params.
+                // Add the check parameters.
                 foreach (CheckParam checkParam in indSlot.IndParam.CheckParam)
                     if (checkParam.Enabled)
                         sb.AppendLine("     " + checkParam.Caption + "  -  " + (checkParam.Checked ? "Yes" : "No"));

@@ -32,7 +32,7 @@ namespace Forex_Strategy_Builder.Dialogs
                            };
 
             // Balance chart
-            BalanceChart = new SmallBalanceChart {Parent = this, ShowDynamicInfo = true};
+            BalanceChart = new SmallBalanceChart(backtester.DataSet) {Parent = this, ShowDynamicInfo = true};
             BalanceChart.MouseMove += BalanceChartMouseMove;
             BalanceChart.MouseLeave += BalanceChartMouseLeave;
             BalanceChart.SetChartData(backtester);

@@ -276,7 +276,7 @@ namespace Forex_Strategy_Builder.Dialogs.Generator
                         NumericParam num = _backtester.Strategy.Slot[slot].IndParam.NumParam[param];
                         if (num.Caption == "Level" && !indSlot.IndParam.ListParam[0].Text.Contains("Level")) break;
 
-                        Indicator indicator = IndicatorStore.ConstructIndicator(indSlot.IndicatorName, indSlot.SlotType);
+                        Indicator indicator = IndicatorStore.ConstructIndicator(indSlot.IndicatorName, _backtester.DataSet, indSlot.SlotType);
                         double defaultValue = indicator.IndParam.NumParam[param].Value;
 
                         double numOldValue = num.Value;

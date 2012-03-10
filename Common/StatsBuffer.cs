@@ -14,17 +14,24 @@ namespace Forex_Strategy_Builder.Common
     /// </summary>
     public static class StatsBuffer
     {
+        private static int _lotSize;
+
         /// <summary>
         /// Forces the buffer to collect data.
         /// </summary>
         public static void UpdateStatsBuffer(Backtester backtester)
         {
+            _lotSize = backtester.DataSet.InstrProperties.LotSize;
+
             Strategy = backtester.Strategy.Clone();
             PositionsTotal = backtester.PositionsTotal;
             _session = backtester.GetAllSessionsCopy();
             _posCoord = backtester.GetPosCoordinateCopy();
             _ordCoord = backtester.GetOrdCoordinateCopy();
+            IsBufferReady = true;
         }
+
+        public static bool IsBufferReady { get; set; }
 
         /// <summary>
         /// A copy of the strategy with calculated indicators.
@@ -100,7 +107,7 @@ namespace Forex_Strategy_Builder.Common
         /// </summary>
         public static int SummaryAmount(int bar)
         {
-            return (int)Math.Round(_session[bar].Summary.PosLots * Data.DataSet.InstrProperties.LotSize);
+            return (int)Math.Round(_session[bar].Summary.PosLots * _lotSize);
         }
 
         /// <summary>
