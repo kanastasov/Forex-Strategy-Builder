@@ -265,8 +265,8 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
             if (!e.Cancelled && Configs.PlaySounds)
                 SystemSounds.Exclamation.Play();
 
-            //Backtester.Calculate();
-            //Backtester.CalculateAccountStats();
+            _backtester.Calculate();
+            _backtester.CalculateAccountStats();
 
             string report = GenerateReport();
             SaveReport(report);

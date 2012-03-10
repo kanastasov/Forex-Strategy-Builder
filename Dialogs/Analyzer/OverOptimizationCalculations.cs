@@ -136,8 +136,8 @@ namespace Forex_Strategy_Builder.Dialogs.Analyzer
                                 index, parNumber);
 
                             CalculateIndicator(slot);
-                            //Backtester.Calculate();
-                            //Backtester.CalculateAccountStats();
+                            _backtester.Calculate();
+                            _backtester.CalculateAccountStats();
 
                             var statValues = new[]
                                                  {
