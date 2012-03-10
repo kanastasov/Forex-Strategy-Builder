@@ -1456,48 +1456,48 @@
   <!-- Trade Distribution Chart -->
   <str>
     <main>Trade Distribution Chart</main>
-    <alt>Trade Distribution Chart</alt>
+    <alt>Диаграмма распределения торговли</alt>
   </str>
   <str>
     <main>Count of Trades</main>
-    <alt>Count of Trades</alt>
+    <alt>Количество сделок</alt>
   </str>
   <str>
     <main>Accumulated Amount</main>
-    <alt>Accumulated Amount</alt>
+    <alt>Накопленная сумма</alt>
   </str>
   <str>
     <main>Toggle Chart Representation</main>
-    <alt>Toggle Chart Representation</alt>
+    <alt>Переключение представления диаграмм</alt>
   </str>
   <str>
     <main>Export Data to CSV File</main>
-    <alt>Export Data to CSV File</alt>
+    <alt>Экспорт данных в CSV-файл</alt>
   </str>
   <str>
     <main>Copy Data to Clipboard</main>
-    <alt>Copy Data to Clipboard</alt>
+    <alt>Копирование данных в буфер обмена</alt>
   </str>
   <str>
     <main>No trades counted</main>
-    <alt>No trades counted</alt>
+    <alt>Нет торгов</alt>
   </str>
   <str>
     <main>Result</main>
-    <alt>Result</alt>
+    <alt>Результат</alt>
   </str>
   <str>
     <main>Count</main>
-    <alt>Count</alt>
+    <alt>Счет</alt>
   </str>
   <str>
     <main>Total</main>
-    <alt>Total</alt>
+    <alt>Тотальный</alt>
   </str>
   <!-- Market Panel -->
   <str>
     <main>Full Indicator Chart</main>
-    <alt>Full Indicator Chart</alt>
+    <alt>Полная диаграмма индикаторъй</alt>
   </str>
   <!-- Strategy Panel -->
   <str>
@@ -1663,11 +1663,11 @@
   </str>
   <str>
     <main>Full Balance Chart</main>
-    <alt>Full Balance Chart</alt>
+    <alt>Полная диаграмма баланса</alt>
   </str>
   <str>
     <main>Detach Balance Chart</main>
-    <alt>Detach Balance Chart</alt>
+    <alt>Снимите график баланса</alt>
   </str>
   <!-- Journals -->
   <str>
@@ -1684,7 +1684,7 @@
   </str>
   <str>
     <main>Close Journal</main>
-    <alt>Close Journal</alt>
+    <alt>Закрыть журнал</alt>
   </str>
   <str>
     <main>Position</main>
@@ -2541,7 +2541,7 @@
   </str>
   <str>
     <main>Initial</main>
-    <alt>Initial</alt>
+    <alt>Исходный</alt>
   </str>
   <str>
     <main>Value</main>
@@ -2593,11 +2593,11 @@
   </str>
   <str>
     <main>Set Min / Max ± # steps.</main>
-    <alt>Set Min / Max ± # steps.</alt>
+    <alt>Установка Min / Max ± # шагов.</alt>
   </str>
   <str>
     <main>Reset strategy parameters.</main>
-    <alt>Reset strategy parameters.</alt>
+    <alt>Сброс параметров стратегии.</alt>
   </str>
   <str>
     <main>Show indicator parameters.</main>
